@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="PNP Game Template"
+config/name="Box Boss"
 run/main_scene="uid://ibla2eyibdxa"
 config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
@@ -21,6 +21,11 @@ SerialManager="*res://engine/services/serial_manager.gd"
 OmnistatApiClient="*res://engine/services/omnistat_api_client.gd"
 NetworkManager="*res://engine/network_manager.gd"
 MapManager="*res://engine/map_manager.gd"
+
+[display]
+
+window/size/viewport_width=1920
+window/size/viewport_height=1080
 
 [dotnet]
 

@@ -1,1 +1,6 @@
+DirectionalLight3D
+WorldEnvironment
+CollisionShape3D
+CharacterBody3D
+Camera3D
 Control
