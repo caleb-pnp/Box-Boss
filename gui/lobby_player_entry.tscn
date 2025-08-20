@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3 uid="uid://5qy887alrn6x"]
+
+[ext_resource type="Script" uid="uid://cmxvjpuwkolcx" path="res://gui/lobby_player_entry.gd" id="1_5q0e7"]
+
+[node name="LobbyPlayerEntry" type="HBoxContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 23.0
+grow_horizontal = 2
+size_flags_vertical = 0
+script = ExtResource("1_5q0e7")
+
+[node name="PlayerName" type="Label" parent="."]
+layout_mode = 2
+text = "Player Name"
+
+[node name="PlayerStatus" type="Label" parent="."]
+layout_mode = 2
+size_flags_horizontal = 10
+text = "NOT READY"
+horizontal_alignment = 2

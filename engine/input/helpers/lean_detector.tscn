@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c2o5s64wwo0vi"]
+
+[ext_resource type="Script" uid="uid://cghs5xcbibg01" path="res://engine/input/helpers/lean_detector.gd" id="1_ckp07"]
+
+[node name="LeanDetector" type="Node"]
+script = ExtResource("1_ckp07")

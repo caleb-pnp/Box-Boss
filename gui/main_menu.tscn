@@ -1,0 +1,70 @@
+[gd_scene load_steps=4 format=3 uid="uid://ktlh5xrdjx4"]
+
+[ext_resource type="Script" uid="uid://byoefft6qqbcf" path="res://gui/main_menu.gd" id="1_reecx"]
+[ext_resource type="Theme" uid="uid://bc7ta7mukaaxi" path="res://themes/main.tres" id="1_xkvi0"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_xkvi0"]
+content_margin_bottom = 40.0
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_xkvi0")
+script = ExtResource("1_reecx")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 10
+theme_override_font_sizes/font_size = 48
+theme_override_styles/normal = SubResource("StyleBoxEmpty_xkvi0")
+text = "Game Template"
+
+[node name="VBox_Main_Menu" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 2
+
+[node name="Button_StartGame" type="Button" parent="MarginContainer/VBoxContainer/VBox_Main_Menu"]
+layout_mode = 2
+text = "START GAME"
+alignment = 0
+
+[node name="Button_JoinHost" type="Button" parent="MarginContainer/VBoxContainer/VBox_Main_Menu"]
+layout_mode = 2
+text = "JOIN OR HOST"
+
+[node name="Button_Settings" type="Button" parent="MarginContainer/VBoxContainer/VBox_Main_Menu"]
+layout_mode = 2
+text = "SETTINGS"
+alignment = 0
+
+[node name="Button_Quit" type="Button" parent="MarginContainer/VBoxContainer/VBox_Main_Menu"]
+layout_mode = 2
+text = "QUIT"
+alignment = 0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[connection signal="pressed" from="MarginContainer/VBoxContainer/VBox_Main_Menu/Button_StartGame" to="." method="_on_button_start_game_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/VBox_Main_Menu/Button_JoinHost" to="." method="_on_button_join_host_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/VBox_Main_Menu/Button_Settings" to="." method="_on_button_settings_pressed"]
+[connection signal="pressed" from="MarginContainer/VBoxContainer/VBox_Main_Menu/Button_Quit" to="." method="_on_button_quit_pressed"]

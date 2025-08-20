@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://b8aghhkc015jc"]
+
+[ext_resource type="PackedScene" uid="uid://ktlh5xrdjx4" path="res://gui/main_menu.tscn" id="2_mae5d"]
+
+[node name="Menu" type="Node3D"]
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="MainMenu" parent="CanvasLayer" instance=ExtResource("2_mae5d")]
+theme = null

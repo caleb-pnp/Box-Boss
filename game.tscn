@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3 uid="uid://dmhrlnwji4kio"]
+
+[ext_resource type="Script" uid="uid://bms1agkrx66gi" path="res://game.gd" id="1_eow3j"]
+[ext_resource type="PackedScene" uid="uid://8q6ktnl4pxgi" path="res://engine/gui_manager.tscn" id="3_feb5d"]
+
+[node name="Game" type="Node3D"]
+script = ExtResource("1_eow3j")
+
+[node name="LevelContainer" type="Node3D" parent="."]
+
+[node name="GUILayer" type="CanvasLayer" parent="."]
+
+[node name="GUI_Manager" parent="GUILayer" instance=ExtResource("3_feb5d")]

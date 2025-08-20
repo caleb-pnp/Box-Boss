@@ -1,0 +1,59 @@
+[gd_scene load_steps=2 format=3 uid="uid://0slv21l3mmx2"]
+
+[ext_resource type="Script" uid="uid://n8mffvk44sd7" path="res://gui/game_hud.gd" id="1_7tqas"]
+
+[node name="GameHud" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_7tqas")
+
+[node name="GameView" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FinishedView" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SpectatingView" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="CountdownLayer" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="CountdownLayer"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CountdownLayer/Control"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CountdownNumber" type="Label" parent="CountdownLayer/Control/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 6
+theme_override_constants/shadow_offset_y = 10
+theme_override_constants/shadow_outline_size = 10
+theme_override_font_sizes/font_size = 96
+horizontal_alignment = 1

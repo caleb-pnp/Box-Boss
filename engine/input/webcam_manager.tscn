@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://bco67vstn2loq"]
+
+[ext_resource type="Script" uid="uid://bc44qmhmms11v" path="res://engine/input/webcam_manager.gd" id="1_2k5nj"]
+[ext_resource type="PackedScene" uid="uid://boi4ctjgbgup7" path="res://engine/input/helpers/login_detector.tscn" id="2_c01rl"]
+[ext_resource type="PackedScene" uid="uid://c2o5s64wwo0vi" path="res://engine/input/helpers/lean_detector.tscn" id="3_wn78q"]
+
+[node name="WebcamManager" type="Node" node_paths=PackedStringArray("login_detector", "lean_detector")]
+script = ExtResource("1_2k5nj")
+login_detector = NodePath("LoginDetector")
+lean_detector = NodePath("LeanDetector")
+
+[node name="LoginDetector" parent="." instance=ExtResource("2_c01rl")]
+
+[node name="LeanDetector" parent="." instance=ExtResource("3_wn78q")]

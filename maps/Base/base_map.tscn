@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://vbg54mu3e1or"]
+
+[ext_resource type="Script" uid="uid://c0v8q5ke6k71s" path="res://maps/Base/base_map.gd" id="1_5c6hc"]
+
+[node name="BaseMap" type="Node3D" groups=["map"]]
+script = ExtResource("1_5c6hc")

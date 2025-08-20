@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://b43o513sr0ur0"]
+
+[ext_resource type="Script" uid="uid://cyylqdie4rwmu" path="res://engine/console.gd" id="1_opune"]
+
+[node name="Console" type="CanvasLayer"]
+script = ExtResource("1_opune")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -31.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="LineEdit" type="LineEdit" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "[Console] command:params"
+keep_editing_on_text_submit = true
+
+[connection signal="console_command" from="." to="." method="_on_console_command"]
+[connection signal="text_submitted" from="HBoxContainer/LineEdit" to="." method="_on_line_edit_text_submitted"]

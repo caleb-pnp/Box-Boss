@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://ibla2eyibdxa"]
+
+[ext_resource type="Script" uid="uid://cvf8c3y6pyfh" path="res://main.gd" id="1_ig7tw"]
+[ext_resource type="PackedScene" uid="uid://b43o513sr0ur0" path="res://engine/console.tscn" id="2_0xm2m"]
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_ig7tw")
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
+spawn_path = NodePath("../SceneContainer")
+
+[node name="SceneContainer" type="Node3D" parent="."]
+
+[node name="Console" parent="." instance=ExtResource("2_0xm2m")]
+
+[node name="AlertLayer" type="CanvasLayer" parent="."]
+
+[node name="AcceptDialog" type="AcceptDialog" parent="AlertLayer"]
+
+[node name="ConnectedDeviceReconnectTimer" type="Timer" parent="."]
+wait_time = 5.0
+one_shot = true
+
+[connection signal="timeout" from="ConnectedDeviceReconnectTimer" to="." method="_on_connected_device_reconnect_timer_timeout"]

@@ -1,0 +1,67 @@
+[gd_resource type="Theme" load_steps=8 format=3 uid="uid://bc7ta7mukaaxi"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0avsd"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.18359, 0.18359, 0.18359, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wykhr"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_78ekx"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wc0q8"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7d6gw"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.113725, 0.113725, 0.113725, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_k5u3e"]
+bg_color = Color(0.176471, 0.176471, 0.176471, 0.929412)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kx4sy"]
+bg_color = Color(0.133333, 0.133333, 0.133333, 0.917647)
+
+[resource]
+Button/font_sizes/font_size = 18
+Button/fonts/font = null
+Button/styles/disabled = SubResource("StyleBoxFlat_0avsd")
+Button/styles/focus = SubResource("StyleBoxFlat_wykhr")
+Button/styles/hover = SubResource("StyleBoxFlat_78ekx")
+Button/styles/normal = SubResource("StyleBoxFlat_wc0q8")
+Button/styles/pressed = SubResource("StyleBoxFlat_7d6gw")
+Label/colors/font_color = Color(1, 1, 1, 1)
+Label/colors/font_outline_color = Color(0, 0, 0, 1)
+Label/colors/font_shadow_color = Color(0, 0, 0, 1)
+Label/constants/line_spacing = 0
+Label/constants/outline_size = 0
+Label/constants/shadow_offset_x = 0
+Label/constants/shadow_offset_y = 0
+Label/constants/shadow_outline_size = 0
+Label/font_sizes/font_size = 24
+Label/fonts/font = null
+Label/styles/normal = null
+LineEdit/font_sizes/font_size = 18
+PanelContainer/styles/panel = SubResource("StyleBoxFlat_k5u3e")
+TabContainer/font_sizes/font_size = 18
+TabContainer/fonts/font = null
+TabContainer/styles/panel = SubResource("StyleBoxFlat_kx4sy")
