@@ -31,6 +31,10 @@ window/size/viewport_height=1080
 
 project/assembly_name="PNP Game Template"
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/fbx_anim_extractor/plugin.cfg", "res://addons/gdserial/plugin.cfg")
+
 [input]
 
 toggle_console={

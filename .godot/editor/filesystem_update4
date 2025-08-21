@@ -1,8 +1,96 @@
-res://game.tscn
-res://themes/main.tres
-res://characters/Base/base_character.tscn
-res://maps/Ring One/ring_one.tscn
+res://art/Mixamo/Fighter 1A/extracted/left strafe walking.tres
+res://art/Mixamo/Fighter 1A/extracted/left strafe.tres
+res://art/Mixamo/Fighter 1A/extracted/left turn 90.tres
+res://art/Mixamo/Fighter 1A/extracted/left turn.tres
+res://art/Mixamo/Fighter 1A/extracted/right strafe walking.tres
+res://art/Mixamo/Fighter 1A/extracted/right strafe.tres
+res://art/Mixamo/Fighter 1A/extracted/right turn 90.tres
+res://art/Mixamo/Fighter 1A/extracted/right turn.tres
+res://art/Mixamo/Fighter 1A/extracted/running.tres
+res://art/Mixamo/Fighter 1A/extracted/walking.tres
+res://art/Mixamo/Fighter 2A/extracted/left strafe walking.tres
+res://art/Mixamo/Fighter 2A/extracted/left strafe.tres
+res://art/Mixamo/Fighter 2A/extracted/left turn 90.tres
+res://art/Mixamo/Fighter 2A/extracted/left turn.tres
+res://art/Mixamo/Fighter 2A/extracted/right strafe walking.tres
+res://art/Mixamo/Fighter 2A/extracted/right strafe.tres
+res://art/Mixamo/Fighter 2A/extracted/right turn 90.tres
+res://art/Mixamo/Fighter 2A/extracted/right turn.tres
+res://art/Mixamo/Fighter 2A/extracted/running.tres
+res://art/Mixamo/Fighter 2A/extracted/walking.tres
+res://art/Mixamo/Fighter 3A/extracted/left strafe walking.tres
+res://art/Mixamo/Fighter 3A/extracted/left strafe.tres
+res://art/Mixamo/Fighter 3A/extracted/left turn 90.tres
+res://art/Mixamo/Fighter 3A/extracted/left turn.tres
+res://art/Mixamo/Fighter 3A/extracted/right strafe walking.tres
+res://art/Mixamo/Fighter 3A/extracted/right strafe.tres
+res://art/Mixamo/Fighter 3A/extracted/right turn 90.tres
+res://art/Mixamo/Fighter 3A/extracted/right turn.tres
+res://art/Mixamo/Fighter 3A/extracted/running.tres
+res://art/Mixamo/Fighter 3A/extracted/walking.tres
+res://art/Mixamo/Fighter 4A/extracted/left strafe walking.tres
+res://art/Mixamo/Fighter 4A/extracted/left strafe.tres
+res://art/Mixamo/Fighter 4A/extracted/left turn 90.tres
+res://art/Mixamo/Fighter 4A/extracted/left turn.tres
+res://art/Mixamo/Fighter 4A/extracted/right strafe walking.tres
+res://art/Mixamo/Fighter 4A/extracted/right strafe.tres
+res://art/Mixamo/Fighter 4A/extracted/right turn 90.tres
+res://art/Mixamo/Fighter 4A/extracted/right turn.tres
+res://art/Mixamo/Fighter 4A/extracted/running.tres
+res://art/Mixamo/Fighter 4A/extracted/walking.tres
+res://art/Mixamo/Fighter 5A/extracted/left strafe walking.tres
+res://art/Mixamo/Fighter 5A/extracted/left strafe.tres
+res://art/Mixamo/Fighter 5A/extracted/left turn 90.tres
+res://art/Mixamo/Fighter 5A/extracted/left turn.tres
+res://art/Mixamo/Fighter 5A/extracted/right strafe walking.tres
+res://art/Mixamo/Fighter 5A/extracted/right strafe.tres
+res://art/Mixamo/Fighter 5A/extracted/right turn 90.tres
+res://art/Mixamo/Fighter 5A/extracted/right turn.tres
+res://art/Mixamo/Fighter 5A/extracted/running.tres
+res://art/Mixamo/Fighter 5A/extracted/walking.tres
+res://art/Mixamo/Fighter 6A/extracted/left strafe walking.tres
+res://art/Mixamo/Fighter 6A/extracted/left strafe.tres
+res://art/Mixamo/Fighter 6A/extracted/left turn 90.tres
+res://art/Mixamo/Fighter 6A/extracted/left turn.tres
+res://art/Mixamo/Fighter 6A/extracted/right strafe walking.tres
+res://art/Mixamo/Fighter 6A/extracted/right strafe.tres
+res://art/Mixamo/Fighter 6A/extracted/right turn 90.tres
+res://art/Mixamo/Fighter 6A/extracted/right turn.tres
+res://art/Mixamo/Fighter 6A/extracted/running.tres
+res://art/Mixamo/Fighter 6A/extracted/walking.tres
+res://art/Mixamo/Fighter 7A/extracted/left strafe walking.tres
+res://art/Mixamo/Fighter 7A/extracted/left strafe.tres
+res://art/Mixamo/Fighter 7A/extracted/left turn 90.tres
+res://art/Mixamo/Fighter 7A/extracted/left turn.tres
+res://art/Mixamo/Fighter 7A/extracted/right strafe walking.tres
+res://art/Mixamo/Fighter 7A/extracted/right strafe.tres
+res://art/Mixamo/Fighter 7A/extracted/right turn 90.tres
+res://art/Mixamo/Fighter 7A/extracted/right turn.tres
+res://art/Mixamo/Fighter 7A/extracted/running.tres
+res://art/Mixamo/Fighter 7A/extracted/walking.tres
 res://main.tscn
-res://cameras/free_fly_camera.tscn
-res://cameras/free_fly_camera.gd
-res://characters/Base/base_character.gd
+res://themes/main.tres
+res://characters/Animations/fighting_step_backward.tres
+res://characters/Models/Fighter 6A.tscn
+res://art/Mixamo/Fighter 6A/extracted/idle.tres
+res://characters/Animations/mixamo_animation_list.txt
+res://addons/fbx_anim_extractor/plugin.gd
+res://art/Mixamo/Fighter 7A/fighting/extracted/Long Left Side Step.tres
+res://art/Mixamo/Fighter 7A/fighting/extracted/Long Right Side Step.tres
+res://art/Mixamo/Fighter 7A/fighting/extracted/Long Step Forward.tres
+res://art/Mixamo/Fighter 7A/fighting/extracted/Step Backward.tres
+res://characters/Models/Fighter 7A.tscn
+res://art/Mixamo/Fighter 7A/moving/extracted/idle.tres
+res://art/Mixamo/Fighter 7A/moving/extracted/left strafe walking.tres
+res://art/Mixamo/Fighter 7A/moving/extracted/left strafe.tres
+res://art/Mixamo/Fighter 7A/moving/extracted/right strafe walking.tres
+res://art/Mixamo/Fighter 7A/moving/extracted/right strafe.tres
+res://art/Mixamo/Fighter 7A/moving/extracted/running.tres
+res://art/Mixamo/Fighter 7A/moving/extracted/walking.tres
+res://characters/Animations/Animation_Node_State_Machine_Base.res
+res://art/Mixamo/Fighter 7A/moving/extracted/Running Backward.tres
+res://art/Mixamo/Fighter 7A/moving/extracted/Walking Backwards.tres
+res://characters/Rex/Rex.tscn
+res://maps/Ring One/ring_one.tscn
+res://characters/MrT/MrT.tscn
+res://characters/Models/fighter_1a.tscn

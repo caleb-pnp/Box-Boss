@@ -1,5 +1,10 @@
-DirectionalLight3D
+SpotLight3D
 WorldEnvironment
+AnimationTree
+Node3D
+Node
+NavigationAgent3D
+DirectionalLight3D
 CollisionShape3D
 CharacterBody3D
 Camera3D
