@@ -3,10 +3,9 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cktwjuai8pnfo"
-path.s3tc="res://.godot/imported/FIGHTER_7A_0.png-236d432b3757208a119b7cc823363526.s3tc.ctex"
+path="res://.godot/imported/FIGHTER_7A_0.png-236d432b3757208a119b7cc823363526.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
 "md5": "98e13d7884e206bde75c3cd06cc45965"
@@ -15,11 +14,11 @@ generator_parameters={
 [deps]
 
 source_file="res://art/Mixamo/Fighter 7A/FIGHTER_7A_0.png"
-dest_files=["res://.godot/imported/FIGHTER_7A_0.png-236d432b3757208a119b7cc823363526.s3tc.ctex"]
+dest_files=["res://.godot/imported/FIGHTER_7A_0.png-236d432b3757208a119b7cc823363526.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=0
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/hdr_compression=1
