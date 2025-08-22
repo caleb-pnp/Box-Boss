@@ -408,5 +408,20 @@ func _refresh_filesystem_and_focus(path: String = "") -> void:
 
 func _select_file_in_dock(path: String) -> void:
 	var dock := get_editor_interface().get_file_system_dock()
-	if dock:
+	if not dock:
+		return
+
+	# Godot 4.x
+	if dock.has_method("navigate_to_path"):
+		dock.navigate_to_path(path) # works with file or directory paths
+		return
+
+	# Godot 3.x fallback
+	if dock.has_method("select_file"):
 		dock.select_file(path)
+		return
+
+	# Last resort: at least open the directory
+	var dir := path.get_base_dir()
+	if dock.has_method("navigate_to_path"):
+		dock.navigate_to_path(dir)

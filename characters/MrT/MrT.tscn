@@ -1,5 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://babpc46w0o75r"]
+[gd_scene load_steps=3 format=3 uid="uid://babpc46w0o75r"]
 
 [ext_resource type="PackedScene" uid="uid://crdju1xafvwgj" path="res://characters/Base/base_character.tscn" id="1_2g7ys"]
+[ext_resource type="PackedScene" uid="uid://bss8fmtbfracr" path="res://characters/Models/Fighter 6A.tscn" id="2_fx1pu"]
 
 [node name="MrT" instance=ExtResource("1_2g7ys")]
+
+[node name="Fighter6a" parent="Model" index="0" instance=ExtResource("2_fx1pu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.8, 0)
