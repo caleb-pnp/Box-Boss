@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b2ltvrojs2qcn"]
+
+[ext_resource type="Script" uid="uid://caamsmjfsg0uy" path="res://cameras/aim_indicator.gd" id="1_jw8bl"]
+
+[node name="AimIndicator" type="Node3D"]
+script = ExtResource("1_jw8bl")

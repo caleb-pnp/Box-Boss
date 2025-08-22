@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://dlb6hsuwxrxr4"]
+
+[ext_resource type="Script" uid="uid://uj366okfq7or" path="res://cameras/free_fly_testing_camera.gd" id="1_mpdht"]
+[ext_resource type="PackedScene" uid="uid://b2ltvrojs2qcn" path="res://cameras/aim_indicator.tscn" id="2_6hnsx"]
+
+[node name="FreeFlyTestingCamera" type="Node3D"]
+script = ExtResource("1_mpdht")
+aim_indicator_path = NodePath("AimIndicator")
+
+[node name="Camera3D" type="Camera3D" parent="."]
+
+[node name="AimIndicator" parent="." instance=ExtResource("2_6hnsx")]

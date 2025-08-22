@@ -20,6 +20,7 @@ shape = SubResource("CapsuleShape3D_k7a2e")
 
 [node name="CharacterAnimator" type="Node" parent="."]
 script = ExtResource("2_drka6")
+model_root_path = NodePath("../Model")
 
 [node name="Stats" type="Node" parent="."]
 script = ExtResource("11_a2t2k")
