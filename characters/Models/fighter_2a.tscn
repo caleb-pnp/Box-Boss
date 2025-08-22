@@ -1,4 +1,0 @@
-[gd_scene format=3 uid="uid://chh3igx4ahwc5"]
-
-[node name="FIGHTER_2A" type="Node3D"]
-transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 0, 0)

@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://b5b0ce36ypxm0"]
+
+[ext_resource type="PackedScene" uid="uid://crdju1xafvwgj" path="res://characters/Base/base_character.tscn" id="1_x6ct3"]
+[ext_resource type="PackedScene" uid="uid://nq28cnf50oec" path="res://characters/Models/Fighter 7A.tscn" id="2_b7yjl"]
+
+[node name="Joel" instance=ExtResource("1_x6ct3")]
+
+[node name="Fighter7a" parent="Model" index="0" instance=ExtResource("2_b7yjl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.8, 0)

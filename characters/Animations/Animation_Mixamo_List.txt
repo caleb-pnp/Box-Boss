@@ -1,0 +1,21 @@
+Moving:
+	Locomotion Pack (12 Animations) - 10 In Place
+	Walking Backwards (Walking Backwards) - In Place
+	Running Backwards (Backwards Running) - In Place
+
+Fighting Moving:
+	Idle (Boxing Bouncing Idle)
+	Long Step Forward (Long Boxing Step Forward) - In Place
+	Long Right Side Step (Long Right Boxing Side Step) - In Place
+	Long Left Side Step (Long Left Boxing Side Step) - In Place
+	Step Backward (Long Boxing Step Backward) - In Place
+	Short Step Forward (Short Boxing Step Forward) - In Place
+	Step Backward [RENAME TO Short Step Backawrd] (Short Boxing Step Backward) - In Place
+
+Fight Moves:
+	Lead Jab (Short Head Jab)
+	Jab Cross (Boxing Jab Cross Long)
+	Hook (Long Hook Punch To The Body)
+	Punch Combo (Four Punch Combo)
+	Uppercut Jab (Uppercut Jab And Open Palm Strike Combo)
+	Back Flip To Uppercut (Back Flip to Uppercut Combo)

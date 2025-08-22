@@ -1,10 +1,10 @@
 ea4bc82a6ad023ab7ee23ee620429895
-::res://::1755784625
+::res://::1755820560
 game.gd::GDScript/GDScript::3267424580127031128::1755677651::0::1::::Game<>Node3D<><>0<>0<><>::
 game.tscn::PackedScene/PackedScene::8017031368834104142::1755759419::0::1::::<><><>0<>0<><>::uid://bms1agkrx66gi::::res://game.gd<>uid://8q6ktnl4pxgi::::res://engine/gui_manager.tscn
 icon.svg::CompressedTexture2D/CompressedTexture2D::7298632198116411309::1755677651::1755677941::1::::<><><>0<>0<>5fa643082ec93b02962c24d2d07736fa<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 main.gd::GDScript/GDScript::184092285707731961::1755677651::0::1::::Main<>Node3D<><>0<>0<><>::
-main.tscn::PackedScene/PackedScene::564244439189605922::1755778122::0::1::::<><><>0<>0<><>::uid://cvf8c3y6pyfh::::res://main.gd<>uid://b43o513sr0ur0::::res://engine/console.tscn
+main.tscn::PackedScene/PackedScene::564244439189605922::1755786724::0::1::::<><><>0<>0<><>::uid://cvf8c3y6pyfh::::res://main.gd<>uid://b43o513sr0ur0::::res://engine/console.tscn
 menu.tscn::PackedScene/PackedScene::4703029709498934092::1755677651::0::1::::<><><>0<>0<><>::uid://ktlh5xrdjx4::::res://gui/main_menu.tscn
 ::res://addons/::1755777027
 ::res://addons/fbx_anim_extractor/::1755784477
@@ -21,7 +21,7 @@ README.md::TextFile/TextFile::-1::1755677651::0::1::::<><><>0<>0<><>::
 ::res://addons/gdserial/bin/linux-x86_64/::1755677651
 ::res://addons/gdserial/bin/macos-arm64/::1755677651
 ::res://addons/gdserial/bin/macos-x86_64/::1755677651
-::res://addons/gdserial/bin/windows-x86_64/::1755777994
+::res://addons/gdserial/bin/windows-x86_64/::1755818700
 ::res://art/::1755757268
 ::res://art/Boxing Ring/::1755701297
 vr_boxing_ring.glb::PackedScene/PackedScene::7665926154113517696::1755699672::1755701291::1::::<><><>0<>0<>a7e63bf162078be93eba7d2d5cb11dca<>res://.godot/imported/vr_boxing_ring.glb-9c9c91fcf92e568e88f7f16781c97551.scn::uid://bmx02p3rmxt1o::::res://art/Boxing Ring/vr_boxing_ring_0.png<>uid://7kktllmxja8t::::res://art/Boxing Ring/vr_boxing_ring_1.png<>uid://bdrcj0daktonb::::res://art/Boxing Ring/vr_boxing_ring_2.png<>uid://brmnbis40tl27::::res://art/Boxing Ring/vr_boxing_ring_3.png<>uid://bihq08xl4fh2b::::res://art/Boxing Ring/vr_boxing_ring_4.png<>uid://dy714xmfj5l1v::::res://art/Boxing Ring/vr_boxing_ring_5.png<>uid://cykc6witv2x54::::res://art/Boxing Ring/vr_boxing_ring_6.png<>uid://bene5wx2cl5di::::res://art/Boxing Ring/vr_boxing_ring_7.png<>uid://72rcg5c51or::::res://art/Boxing Ring/vr_boxing_ring_8.png<>uid://bragpgvd2btte::::res://art/Boxing Ring/vr_boxing_ring_9.png<>uid://jyw541vp8d7p::::res://art/Boxing Ring/vr_boxing_ring_10.png<>uid://7hqws1a4vcg5::::res://art/Boxing Ring/vr_boxing_ring_11.png<>uid://baef257ytdqoh::::res://art/Boxing Ring/vr_boxing_ring_12.png<>uid://bb7lf5m70fh17::::res://art/Boxing Ring/vr_boxing_ring_13.png<>uid://d0puuypg3rwoj::::res://art/Boxing Ring/vr_boxing_ring_14.png<>uid://qda4da2u71mp::::res://art/Boxing Ring/vr_boxing_ring_15.png<>uid://deu852b2igjwq::::res://art/Boxing Ring/vr_boxing_ring_16.png<>uid://1rxqb6eknuml::::res://art/Boxing Ring/vr_boxing_ring_17.png<>uid://dma451tu7n8jf::::res://art/Boxing Ring/vr_boxing_ring_18.png<>uid://bgwsvs2eapts::::res://art/Boxing Ring/vr_boxing_ring_19.png<>uid://b1y5p4qq0pw0e::::res://art/Boxing Ring/vr_boxing_ring_20.png<>uid://cnq866oet1vbx::::res://art/Boxing Ring/vr_boxing_ring_21.png<>uid://clkainr23u3fu::::res://art/Boxing Ring/vr_boxing_ring_22.png<>uid://dna2d16tiglil::::res://art/Boxing Ring/vr_boxing_ring_23.png<>uid://topnsu7utt7h::::res://art/Boxing Ring/vr_boxing_ring_24.png<>uid://buoc5rq25o664::::res://art/Boxing Ring/vr_boxing_ring_25.png<>uid://i80vdb8fdo4d::::res://art/Boxing Ring/vr_boxing_ring_26.png
@@ -226,7 +226,7 @@ walking.tres::Animation/Animation::7300836565890736630::1755778376::0::1::::<><>
 ::res://art/Mixamo/Fighter 7A/::1755783834
 FIGHTER_7A.fbx::PackedScene/PackedScene::6845918603245034902::1755777770::1755777812::1::::<><><>0<>0<>6540f59ab16edc64c315ebe1ce637cc6<>res://.godot/imported/FIGHTER_7A.fbx-b74bb8faed88bb28cb9aa9480e030421.scn::uid://cktwjuai8pnfo::::res://art/Mixamo/Fighter 7A/FIGHTER_7A_0.png
 FIGHTER_7A_0.png::CompressedTexture2D/CompressedTexture2D::5515305877954858100::1755777812::1755777815::1::::<><><>0<>0<>9d550929f2d516f498e2b657cfa1bc43<>res://.godot/imported/FIGHTER_7A_0.png-236d432b3757208a119b7cc823363526.s3tc.ctex::
-::res://art/Mixamo/Fighter 7A/fighting/::1755783895
+::res://art/Mixamo/Fighter 7A/fighting/::1755818655
 Back Flip To Uppercut.fbx::PackedScene/PackedScene::2880768889135721177::1755783112::1755783820::1::::<><><>0<>0<>1e759241340adb9d3a0b79da379652d2<>res://.godot/imported/Back Flip To Uppercut.fbx-f6f970234a75b221cf33d7ca5514c214.scn::uid://dcdun8tcfu8mk::::res://art/Mixamo/Fighter 7A/fighting/Back Flip To Uppercut_0.png
 Back Flip To Uppercut_0.png::CompressedTexture2D/CompressedTexture2D::7307072189513856022::1755783820::1755783821::1::::<><><>0<>0<>137ba123bb400d13dd8c41a4cf4f7905<>res://.godot/imported/Back Flip To Uppercut_0.png-6ad2845730a676beffb3ebb5e73cfc0f.s3tc.ctex::
 Hook.fbx::PackedScene/PackedScene::3205639759453206082::1755782919::1755783820::1::::<><><>0<>0<>e86cc5b3a608911a27d0867c71ba9744<>res://.godot/imported/Hook.fbx-d1b204d07f4800f93a081ba002991b65.scn::uid://b3c3p3kacmxwf::::res://art/Mixamo/Fighter 7A/fighting/Hook_0.png
@@ -245,20 +245,26 @@ Long Step Forward.fbx::PackedScene/PackedScene::4525949096512045111::1755782804:
 Long Step Forward_0.png::CompressedTexture2D/CompressedTexture2D::7577847967231036444::1755783818::1755783821::1::::<><><>0<>0<>ec6189c96e9b9e485a16dd0e19571723<>res://.godot/imported/Long Step Forward_0.png-8d3b91a8f7a73f89cc4047e7d4abe2a4.s3tc.ctex::
 Punch Combo.fbx::PackedScene/PackedScene::7455418070228057100::1755783035::1755783818::1::::<><><>0<>0<>ba4c08ecc47ef0bf573d73e1e59d855e<>res://.godot/imported/Punch Combo.fbx-e2b985069fd6cdae60f5803e7c6bdae3.scn::uid://cj3krocu1scef::::res://art/Mixamo/Fighter 7A/fighting/Punch Combo_0.png
 Punch Combo_0.png::CompressedTexture2D/CompressedTexture2D::5462981805026889157::1755783817::1755783821::1::::<><><>0<>0<>0bc82c77ff1098846de49a9cc10dee5d<>res://.godot/imported/Punch Combo_0.png-b21c93af7379d2584d2ea305ea1d4274.s3tc.ctex::
+Short Step Backward.fbx::PackedScene/PackedScene::6101833789027135041::1755818536::1755818654::1::::<><><>0<>0<>747dc7edf687c586444ab45e6fd1b41c<>res://.godot/imported/Short Step Backward.fbx-e23cd790dad7f250cb3a7f032ce83767.scn::uid://dxpr268rjt47s::::res://art/Mixamo/Fighter 7A/fighting/Short Step Backward_0.png
+Short Step Backward_0.png::CompressedTexture2D/CompressedTexture2D::8805653206365017550::1755818653::1755818655::1::::<><><>0<>0<>916d00184da709f38e140217476c9db1<>res://.godot/imported/Short Step Backward_0.png-2a88a84bab8c1ce721b3b4f36812c38b.s3tc.ctex::
+Short Step Forward.fbx::PackedScene/PackedScene::6881040723794016704::1755818502::1755818654::1::::<><><>0<>0<>5f4277772b82182f32fb0283db93cdbe<>res://.godot/imported/Short Step Forward.fbx-3498a942df2ecfd299292110dba0cffb.scn::uid://is2dcspi7u5f::::res://art/Mixamo/Fighter 7A/fighting/Short Step Forward_0.png
+Short Step Forward_0.png::CompressedTexture2D/CompressedTexture2D::600314398410427953::1755818654::1755818655::1::::<><><>0<>0<>04441f64bc123bdbc5a99f9987700285<>res://.godot/imported/Short Step Forward_0.png-d06d491473cd531dd0f436eb25a0cc7d.s3tc.ctex::
 Step Backward.fbx::PackedScene/PackedScene::5718116611371212275::1755781947::1755783817::1::::<><><>0<>0<>a2a85cbbac57e2d0fc654a8a9dd7ff29<>res://.godot/imported/Step Backward.fbx-4c49b859ef2219da33b4b179a191633d.scn::uid://cfx52wyov7p2h::::res://art/Mixamo/Fighter 7A/fighting/Step Backward_0.png
 Step Backward_0.png::CompressedTexture2D/CompressedTexture2D::5173137193392609129::1755783817::1755783821::1::::<><><>0<>0<>a35c80648d02049d53a719928399cd7b<>res://.godot/imported/Step Backward_0.png-2ae0a20e55a16754db0e3759a92173fe.s3tc.ctex::
 Uppercut Jab.fbx::PackedScene/PackedScene::5038692153744549640::1755782478::1755783817::1::::<><><>0<>0<>7aec6559b32b865ef9bd9e082e7a1fe8<>res://.godot/imported/Uppercut Jab.fbx-dc71b77657f144b4a1e9d84b392df069.scn::uid://dmx4xnu481wf1::::res://art/Mixamo/Fighter 7A/fighting/Uppercut Jab_0.png
 Uppercut Jab_0.png::CompressedTexture2D/CompressedTexture2D::8050811444191520796::1755783817::1755783821::1::::<><><>0<>0<>14c3819fbcb601b169178fd2f9c0677c<>res://.godot/imported/Uppercut Jab_0.png-9810f326f10e0e61b6d500fae61f9856.s3tc.ctex::
-::res://art/Mixamo/Fighter 7A/fighting/extracted/::1755784825
+::res://art/Mixamo/Fighter 7A/fighting/extracted/::1755818744
 Back Flip To Uppercut.tres::Animation/Animation::3425652899957871492::1755783895::0::1::::<><><>0<>0<><>::
 Hook.tres::Animation/Animation::2334221582370552471::1755783895::0::1::::<><><>0<>0<><>::
-Idle.tres::Animation/Animation::1224905381885954903::1755783895::0::1::::<><><>0<>0<><>::
+Idle.tres::Animation/Animation::1224905381885954903::1755817939::0::1::::<><><>0<>0<><>::
 Jab Cross.tres::Animation/Animation::8054273665302827479::1755783895::0::1::::<><><>0<>0<><>::
 Lead Jab.tres::Animation/Animation::1458265807508057178::1755783895::0::1::::<><><>0<>0<><>::
 Long Left Side Step.tres::Animation/Animation::9002742659242067430::1755784825::0::1::::<><><>0<>0<><>::
 Long Right Side Step.tres::Animation/Animation::8287419751659587873::1755784825::0::1::::<><><>0<>0<><>::
 Long Step Forward.tres::Animation/Animation::5072478376360120521::1755784825::0::1::::<><><>0<>0<><>::
 Punch Combo.tres::Animation/Animation::3085717230582488865::1755783895::0::1::::<><><>0<>0<><>::
+Short Step Backward.tres::Animation/Animation::2815945393588423354::1755818744::0::1::::<><><>0<>0<><>::
+Short Step Forward.tres::Animation/Animation::6527812346524222810::1755818744::0::1::::<><><>0<>0<><>::
 Step Backward.tres::Animation/Animation::3422487195609494113::1755784825::0::1::::<><><>0<>0<><>::
 Uppercut Jab.tres::Animation/Animation::2937566652383208765::1755783895::0::1::::<><><>0<>0<><>::
 ::res://art/Mixamo/Fighter 7A/moving/::1755785524
@@ -268,7 +274,6 @@ left strafe walking.fbx::PackedScene/PackedScene::6002062662986468414::175577777
 left strafe.fbx::PackedScene/PackedScene::1623338491753707396::1755777770::1755783816::1::::<><><>0<>0<>95f39f8c6fdbd548db079e283a33d447<>res://.godot/imported/left strafe.fbx-30ec1852c0276bb23b7d7db988f3d940.scn::
 left turn 90.fbx::PackedScene/PackedScene::3663686966351252224::1755777770::1755783816::1::::<><><>0<>0<>5075a535b1d0ef5bf49f2d357e9276b9<>res://.godot/imported/left turn 90.fbx-50a03001e7de78ccf91441a241571dd8.scn::
 left turn.fbx::PackedScene/PackedScene::1483392732418723273::1755777770::1755783816::1::::<><><>0<>0<>1b6ed5e02f67c6fafc5c3853fff854a4<>res://.godot/imported/left turn.fbx-03a39fa16f84ba5aa9ff1037309ce613.scn::
-Walking Backwards_0.png::CompressedTexture2D::27169166224264151::1755785523::1755785524::1::::<><><>0<>0<>e8968a13723a3dae6a09ae7df1c9090f<>res://.godot/imported/Walking Backwards_0.png-a2e9dd7d0e78a0b601fe00c468448b90.s3tc.ctex::
 right strafe walking.fbx::PackedScene/PackedScene::8831226228802980554::1755777770::1755783816::1::::<><><>0<>0<>6baae71f27d8762292148728ea6ffe61<>res://.godot/imported/right strafe walking.fbx-fac76da055df011a7cf526aabd5648ec.scn::
 right strafe.fbx::PackedScene/PackedScene::5866452129173288823::1755777770::1755783815::1::::<><><>0<>0<>75d50bf06c789594fd4d5437d811477f<>res://.godot/imported/right strafe.fbx-36e219c4c43b8082edce01fcca2edcc5.scn::
 right turn 90.fbx::PackedScene/PackedScene::8908676392173722870::1755777770::1755783815::1::::<><><>0<>0<>78b8bfa3bd82ab5113fac5cd9b3a8aff<>res://.godot/imported/right turn 90.fbx-5a3e84b3655f08ffafdfb010dbd554cb.scn::
@@ -276,22 +281,23 @@ right turn.fbx::PackedScene/PackedScene::7816122503492413616::1755777770::175578
 Running Backward.fbx::PackedScene/PackedScene::8502194607218900110::1755785060::1755785165::1::::<><><>0<>0<>cdee1846b036fc6295e467d859fc4e8a<>res://.godot/imported/Running Backward.fbx-c43906bcadfc6b7e6447a1189fe267b5.scn::uid://cxqy0sfx8vwju::::res://art/Mixamo/Fighter 7A/moving/Running Backward_0.png
 Running Backward_0.png::CompressedTexture2D/CompressedTexture2D::6421717622034210550::1755785165::1755785166::1::::<><><>0<>0<>4fcc705d02f19df09b029f3ac4437f73<>res://.godot/imported/Running Backward_0.png-2573729632ad47a18dc7a8d69b28879c.s3tc.ctex::
 running.fbx::PackedScene/PackedScene::7430337293400040890::1755777770::1755783815::1::::<><><>0<>0<>89f85d7fc26ebce1fc0bf2dbb6b938d3<>res://.godot/imported/running.fbx-eab4f88ce78cb7122c9dd9fc58035852.scn::
-Walking Backwards.fbx::PackedScene::1375290816547737694::1755785432::1755785523::1::::<><><>0<>0<>e9c2e0a64a31b0fe0d8cd7dc78c20d4d<>res://.godot/imported/Walking Backwards.fbx-baaf642a6490bdbdad5c9993f790e20f.scn::uid://nfqb4jrv6nj::::res://art/Mixamo/Fighter 7A/moving/Walking Backwards_0.png
+Walking Backwards.fbx::PackedScene/PackedScene::1375290816547737694::1755785432::1755785523::1::::<><><>0<>0<>e9c2e0a64a31b0fe0d8cd7dc78c20d4d<>res://.godot/imported/Walking Backwards.fbx-baaf642a6490bdbdad5c9993f790e20f.scn::uid://nfqb4jrv6nj::::res://art/Mixamo/Fighter 7A/moving/Walking Backwards_0.png
+Walking Backwards_0.png::CompressedTexture2D/CompressedTexture2D::27169166224264151::1755785523::1755785524::1::::<><><>0<>0<>e8968a13723a3dae6a09ae7df1c9090f<>res://.godot/imported/Walking Backwards_0.png-a2e9dd7d0e78a0b601fe00c468448b90.s3tc.ctex::
 walking.fbx::PackedScene/PackedScene::2218044768000587551::1755777770::1755783815::1::::<><><>0<>0<>8857d6136ebe1ebc1a2c2244be1bfb87<>res://.godot/imported/walking.fbx-532e63a002c849716f0786729c98b0b6.scn::
-::res://art/Mixamo/Fighter 7A/moving/extracted/::1755785410
+::res://art/Mixamo/Fighter 7A/moving/extracted/::1755785564
 idle.tres::Animation/Animation::5335605516442860978::1755784780::0::1::::<><><>0<>0<><>::
 jump.tres::Animation/Animation::8484668892679680150::1755777946::0::1::::<><><>0<>0<><>::
 left strafe walking.tres::Animation/Animation::2027289065998649068::1755784780::0::1::::<><><>0<>0<><>::
 left strafe.tres::Animation/Animation::1985984539491130059::1755784780::0::1::::<><><>0<>0<><>::
 left turn 90.tres::Animation/Animation::3381660696175052962::1755778120::0::1::::<><><>0<>0<><>::
 left turn.tres::Animation/Animation::4387078780468266774::1755778120::0::1::::<><><>0<>0<><>::
-Walking Backwards.tres::Animation::3678128913847127775::1755785535::0::1::::<><><>0<>0<><>::
 right strafe walking.tres::Animation/Animation::3051934320138221189::1755784780::0::1::::<><><>0<>0<><>::
 right strafe.tres::Animation/Animation::6455248098161461897::1755784780::0::1::::<><><>0<>0<><>::
 right turn 90.tres::Animation/Animation::4965219242694256363::1755778120::0::1::::<><><>0<>0<><>::
 right turn.tres::Animation/Animation::694932817478063399::1755778120::0::1::::<><><>0<>0<><>::
-Running Backward.tres::Animation::6522890200921551246::1755785410::0::1::::<><><>0<>0<><>::
+Running Backward.tres::Animation/Animation::6522890200921551246::1755785410::0::1::::<><><>0<>0<><>::
 running.tres::Animation/Animation::5303655228675486920::1755784780::0::1::::<><><>0<>0<><>::
+Walking Backwards.tres::Animation/Animation::3678128913847127775::1755785564::0::1::::<><><>0<>0<><>::
 walking.tres::Animation/Animation::7627957530990010711::1755784780::0::1::::<><><>0<>0<><>::
 ::res://art/PACKAGE_BOXING_VOXEL/::1755697084
 ::res://art/PACKAGE_BOXING_VOXEL/CAMERA MAN/::1755697071
@@ -2330,55 +2336,25 @@ TIMEKEEPER.png::CompressedTexture2D/CompressedTexture2D::2325068476104846426::15
 ::res://cameras/::1755701610
 free_fly_camera.gd::GDScript/GDScript::6232828077079508078::1755701610::0::1::::<>Node3D<><>0<>0<><>::
 free_fly_camera.tscn::PackedScene/PackedScene::2711693056264507134::1755701533::0::1::::<><><>0<>0<><>::uid://cu2h1dtxl3cfm::::res://cameras/free_fly_camera.gd
-::res://characters/::1755752060
+::res://characters/::1755820560
 action_state_binding.gd::GDScript/GDScript::6254850621152302492::1755740616::0::1::::ActionStateBinding<>Resource<><>0<>0<><>::
 ai_controller.gd::GDScript/GDScript::6258211832692692654::1755735504::0::1::::<>Node<><>0<>0<><>::
 character_animator.gd::GDScript/GDScript::1943002795971938700::1755743099::0::1::::CharacterAnimator<>Node<><>0<>0<><>::
 player_controller.gd::GDScript/GDScript::369792325662654413::1755735019::0::1::::<>Node<><>0<>0<><>::
 stats.gd::GDScript/GDScript::5711996242028021636::1755735638::0::1::::Stats<>Node<><>0<>0<><>::
-::res://characters/Animations/::1755785454
-Animation_Library_Base.res::AnimationLibrary/AnimationLibrary::7030386775446068294::1755751562::0::1::::<><><>0<>0<><>::uid://dopcyh1fpto6y::::res://characters/Animations/idle.tres<>uid://dy1yimxky8unu::::res://characters/Animations/running.tres<>uid://6isqcn8l75le::::res://characters/Animations/walking.tres<>uid://bcxi1kkaeidma::::res://characters/Animations/left_strafe_walking.tres<>uid://dbpvtewnx4yel::::res://characters/Animations/right_strafe_walking.tres<>uid://cobrh3xkrcal6::::res://characters/Animations/running_backwards.tres<>uid://cxtrjl6khypbe::::res://characters/Animations/walking_backwards.tres<>uid://b3i4w1e2xjjql::::res://characters/Animations/fighting_idle.tres<>uid://c8akbqk3tgehk::::res://characters/Animations/fighting_step_backward.tres<>uid://bt1qukt5jtv8q::::res://characters/Animations/fighting_walking.tres<>uid://wy42hcpx4qgi::::res://characters/Animations/fighting_walking_left.tres<>uid://dgwk17je5wu4c::::res://characters/Animations/fighting_walking_right.tres<>uid://76e60eehw0y7::::res://characters/Animations/fighting_walking_medium_stride.tres<>uid://cvmog0agy35dp::::res://characters/Animations/fighting_walking_small_stride.tres<>uid://cownwf2d3b0vp::::res://characters/Animations/jab_cross.tres<>uid://c37og7gcssx74::::res://characters/Animations/hook.tres<>uid://bw7b1vl3763sg::::res://characters/Animations/backflip_to_uppercut.tres<>uid://x0xau2g6tyfk::::res://characters/Animations/lead_jab.tres<>uid://d3j0jp8ucbddl::::res://characters/Animations/punch_combo.tres<>uid://hhdgkyrt7hpj::::res://characters/Animations/right_block.tres<>uid://bas5bxkxyi4ee::::res://characters/Animations/uppercut.tres<>uid://dgolqj7btepxk::::res://characters/Animations/uppercut_jab.tres<>uid://bjeyd6nqee2mh::::res://characters/Animations/left_block.tres
-Animation_Node_State_Machine_Base.res::AnimationNodeStateMachine::5823331002459621143::1755785410::0::1::::<><><>0<>0<><>::
-backflip_to_uppercut.tres::Animation/Animation::3996743600793427730::1755750129::0::1::::<><><>0<>0<><>::
-fighting_idle.tres::Animation/Animation::4370024780890799463::1755757924::0::1::::<><><>0<>0<><>::
-fighting_step_backward.tres::Animation/Animation::7089683020282309736::1755778181::0::1::::<><><>0<>0<><>::
-fighting_walking.tres::Animation/Animation::3774690278144279150::1755747078::0::1::::<><><>0<>0<><>::
-fighting_walking_left.tres::Animation/Animation::1595509006826292172::1755747078::0::1::::<><><>0<>0<><>::
-fighting_walking_medium_stride.tres::Animation/Animation::2310338253829968724::1755747616::0::1::::<><><>0<>0<><>::
-fighting_walking_right.tres::Animation/Animation::7626466718939169404::1755747078::0::1::::<><><>0<>0<><>::
-fighting_walking_small_stride.tres::Animation/Animation::6272441682885332877::1755747616::0::1::::<><><>0<>0<><>::
-hook.tres::Animation/Animation::6805051520174872745::1755749373::0::1::::<><><>0<>0<><>::
-idle.tres::Animation/Animation::8173036229438255638::1755755356::0::1::::<><><>0<>0<><>::
-jab_cross.tres::Animation/Animation::5801730401780104869::1755748347::0::1::::<><><>0<>0<><>::
-lead_jab.tres::Animation/Animation::1667350430851403676::1755750103::0::1::::<><><>0<>0<><>::
-left_block.tres::Animation/Animation::3027842001698554283::1755750903::0::1::::<><><>0<>0<><>::
-left_strafe.tres::Animation/Animation::5237727837961299462::1755744024::0::1::::<><><>0<>0<><>::
-left_strafe_walking.tres::Animation/Animation::2574811766583408932::1755744294::0::1::::<><><>0<>0<><>::
-left_turn_90.tres::Animation/Animation::1077601682422399772::1755749519::0::1::::<><><>0<>0<><>::
-mixamo_animation_list.txt::TextFile::-1::1755785454::0::1::::<><><>0<>0<><>::
-punch_combo.tres::Animation/Animation::9144663909435275493::1755750103::0::1::::<><><>0<>0<><>::
-right_block.tres::Animation/Animation::505965978594240243::1755750103::0::1::::<><><>0<>0<><>::
-right_strafe.tres::Animation/Animation::7200338966083532872::1755744023::0::1::::<><><>0<>0<><>::
-right_strafe_walking.tres::Animation/Animation::7261725792662182635::1755744335::0::1::::<><><>0<>0<><>::
-right_turn_90.tres::Animation/Animation::6655827453391170172::1755744023::0::1::::<><><>0<>0<><>::
-running.tres::Animation/Animation::8898940280473719078::1755743743::0::1::::<><><>0<>0<><>::
-running_backwards.tres::Animation/Animation::5758595752168535989::1755746309::0::1::::<><><>0<>0<><>::
-uppercut.tres::Animation/Animation::2425404003405608224::1755750103::0::1::::<><><>0<>0<><>::
-uppercut_jab.tres::Animation/Animation::7609993383302137540::1755750103::0::1::::<><><>0<>0<><>::
-walking.tres::Animation/Animation::2193490780028275970::1755743743::0::1::::<><><>0<>0<><>::
-walking_backwards.tres::Animation/Animation::6427456835520714386::1755746310::0::1::::<><><>0<>0<><>::
+::res://characters/Animations/::1755820482
+Animation_Mixamo_List.txt::TextFile::-1::1755820348::0::1::::<><><>0<>0<><>::
+Animation_Node_State_Machine_Base.res::AnimationNodeStateMachine::5823331002459621143::1755820482::0::1::::<><><>0<>0<><>::
 ::res://characters/Base/::1755759423
 base_character.gd::GDScript/GDScript::1443381144725712739::1755740277::0::1::::BaseCharacter<>CharacterBody3D<><>0<>0<><>::
 base_character.tscn::PackedScene/PackedScene::5972828412453066085::1755759423::0::1::::<><><>0<>0<><>::uid://utgjnyop5hmp::::res://characters/Base/base_character.gd<>uid://2xg8b3kkqhxc::::res://characters/character_animator.gd<>uid://cnm60jtnrmltc::::res://characters/stats.gd
-::res://characters/Models/::1755785454
+::res://characters/Joel/::1755820533
+Rex.tscn::PackedScene::4495672121784214757::1755820533::0::1::::<><><>0<>0<><>::uid://crdju1xafvwgj::::res://characters/Base/base_character.tscn<>uid://nq28cnf50oec::::res://characters/Models/Fighter 7A.tscn
+::res://characters/Models/::1755820523
 Fighter 6A.tscn::PackedScene/PackedScene::3688991918165848717::1755784625::0::1::::<><><>0<>0<><>::uid://ponbdhtftfq::::res://art/Mixamo/Fighter 6A/FIGHTER_6A_0.png<>uid://rdm0gyu15dbr::::res://art/Mixamo/Fighter 6A/moving/extracted/idle.tres<>uid://cwb2vwykipobq::::res://art/Mixamo/Fighter 6A/moving/extracted/jump.tres<>uid://cry8i3gn6pme8::::res://art/Mixamo/Fighter 6A/moving/extracted/left strafe walking.tres<>uid://bldyjv7fgwiff::::res://art/Mixamo/Fighter 6A/moving/extracted/left strafe.tres<>uid://dlgilnmmrfw3x::::res://art/Mixamo/Fighter 6A/moving/extracted/left turn 90.tres<>uid://b1pg47ufljkqd::::res://art/Mixamo/Fighter 6A/moving/extracted/left turn.tres<>uid://bnfmbdyoqnhxg::::res://art/Mixamo/Fighter 6A/moving/extracted/right strafe walking.tres<>uid://44vsu58u1bmg::::res://art/Mixamo/Fighter 6A/moving/extracted/right strafe.tres<>uid://l3c7feij6a7x::::res://art/Mixamo/Fighter 6A/moving/extracted/right turn 90.tres<>uid://dmvda6sb108no::::res://art/Mixamo/Fighter 6A/moving/extracted/right turn.tres<>uid://5wrpf6aybj8l::::res://art/Mixamo/Fighter 6A/moving/extracted/running.tres<>uid://dcatygty243fe::::res://art/Mixamo/Fighter 6A/moving/extracted/walking.tres
-Fighter 7A.tscn::PackedScene::947183426760357322::1755785454::0::1::::<><><>0<>0<><>::uid://cktwjuai8pnfo::::res://art/Mixamo/Fighter 7A/FIGHTER_7A_0.png<>uid://ciauv4w21sgw5::::res://art/Mixamo/Fighter 7A/moving/extracted/idle.tres<>uid://ds5bi0etr1jyc::::res://art/Mixamo/Fighter 7A/moving/extracted/jump.tres<>uid://35bfi4mnxxyy::::res://art/Mixamo/Fighter 7A/moving/extracted/left strafe walking.tres<>uid://3ka400h5jybb::::res://art/Mixamo/Fighter 7A/moving/extracted/left strafe.tres<>uid://bogdps8qjk2tq::::res://art/Mixamo/Fighter 7A/moving/extracted/left turn 90.tres<>uid://b3rest205n1d7::::res://art/Mixamo/Fighter 7A/moving/extracted/left turn.tres<>uid://bjqm6axm3mgh6::::res://art/Mixamo/Fighter 7A/moving/extracted/right strafe walking.tres<>uid://cx778077x1x4t::::res://art/Mixamo/Fighter 7A/moving/extracted/right strafe.tres<>uid://cc0go2o40mech::::res://art/Mixamo/Fighter 7A/moving/extracted/right turn 90.tres<>uid://j5vpa6kkqwuh::::res://art/Mixamo/Fighter 7A/moving/extracted/right turn.tres<>uid://chteorkxpdl25::::res://art/Mixamo/Fighter 7A/moving/extracted/running.tres<>uid://dgxbl1cg783xr::::res://art/Mixamo/Fighter 7A/moving/extracted/walking.tres<>uid://bo2oadg2gif4w::::res://art/Mixamo/Fighter 7A/fighting/extracted/Back Flip To Uppercut.tres<>uid://8iyj2omgm6cx::::res://art/Mixamo/Fighter 7A/fighting/extracted/Hook.tres<>uid://rpmaowlcgldv::::res://art/Mixamo/Fighter 7A/fighting/extracted/Idle.tres<>uid://dm0syfmobhoep::::res://art/Mixamo/Fighter 7A/fighting/extracted/Jab Cross.tres<>uid://u1nopcd8ylli::::res://art/Mixamo/Fighter 7A/fighting/extracted/Lead Jab.tres<>uid://d1i84d4ir822m::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Left Side Step.tres<>uid://dqcque6yvlci8::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Right Side Step.tres<>uid://ceje8ij5je52l::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Step Forward.tres<>uid://bj70kuvhyymej::::res://art/Mixamo/Fighter 7A/fighting/extracted/Punch Combo.tres<>uid://bo044m42jq4ft::::res://art/Mixamo/Fighter 7A/fighting/extracted/Step Backward.tres<>uid://bh38j8m5yk4yj::::res://art/Mixamo/Fighter 7A/fighting/extracted/Uppercut Jab.tres<>uid://co74n75r2ge1t::::res://characters/Animations/Animation_Node_State_Machine_Base.res<>uid://cy60bwgj6t1s1::::res://art/Mixamo/Fighter 7A/moving/extracted/Running Backward.tres
-fighter_1a.tscn::PackedScene/PackedScene::5027503378768197466::1755759423::0::1::::<><><>0<>0<><>::uid://dfcqr8mjvbu8u::::res://art/PACKAGE_BOXING_VOXEL/FIGHTERS/FIGHTER_1/RIG/T_POSE/FIGHTER_1A_0.png<>uid://c7ftpcfhjpg1s::::res://characters/Animations/Animation_Library_Base.res<>uid://co74n75r2ge1t::::res://characters/Animations/Animation_Node_State_Machine_Base.res
-fighter_2a.tscn::PackedScene/PackedScene::5280328631268077778::1755777966::0::1::::<><><>0<>0<><>::
-::res://characters/MrT/::1755759423
-MrT.tscn::PackedScene/PackedScene::2389400960026134669::1755759423::0::1::::<><><>0<>0<><>::uid://crdju1xafvwgj::::res://characters/Base/base_character.tscn<>uid://cdvmimrsgmb2a::::res://characters/Models/fighter_1a.tscn
-::res://characters/Rex/::1755759423
-Rex.tscn::PackedScene/PackedScene::4495672121784214757::1755759423::0::1::::<><><>0<>0<><>::uid://crdju1xafvwgj::::res://characters/Base/base_character.tscn<>uid://chh3igx4ahwc5::::res://characters/Models/fighter_2a.tscn
+Fighter 7A.tscn::PackedScene::947183426760357322::1755820404::0::1::::<><><>0<>0<><>::uid://cktwjuai8pnfo::::res://art/Mixamo/Fighter 7A/FIGHTER_7A_0.png<>uid://ciauv4w21sgw5::::res://art/Mixamo/Fighter 7A/moving/extracted/idle.tres<>uid://ds5bi0etr1jyc::::res://art/Mixamo/Fighter 7A/moving/extracted/jump.tres<>uid://35bfi4mnxxyy::::res://art/Mixamo/Fighter 7A/moving/extracted/left strafe walking.tres<>uid://3ka400h5jybb::::res://art/Mixamo/Fighter 7A/moving/extracted/left strafe.tres<>uid://bogdps8qjk2tq::::res://art/Mixamo/Fighter 7A/moving/extracted/left turn 90.tres<>uid://b3rest205n1d7::::res://art/Mixamo/Fighter 7A/moving/extracted/left turn.tres<>uid://bjqm6axm3mgh6::::res://art/Mixamo/Fighter 7A/moving/extracted/right strafe walking.tres<>uid://cx778077x1x4t::::res://art/Mixamo/Fighter 7A/moving/extracted/right strafe.tres<>uid://cc0go2o40mech::::res://art/Mixamo/Fighter 7A/moving/extracted/right turn 90.tres<>uid://j5vpa6kkqwuh::::res://art/Mixamo/Fighter 7A/moving/extracted/right turn.tres<>uid://chteorkxpdl25::::res://art/Mixamo/Fighter 7A/moving/extracted/running.tres<>uid://dgxbl1cg783xr::::res://art/Mixamo/Fighter 7A/moving/extracted/walking.tres<>uid://bo2oadg2gif4w::::res://art/Mixamo/Fighter 7A/fighting/extracted/Back Flip To Uppercut.tres<>uid://8iyj2omgm6cx::::res://art/Mixamo/Fighter 7A/fighting/extracted/Hook.tres<>uid://rpmaowlcgldv::::res://art/Mixamo/Fighter 7A/fighting/extracted/Idle.tres<>uid://dm0syfmobhoep::::res://art/Mixamo/Fighter 7A/fighting/extracted/Jab Cross.tres<>uid://u1nopcd8ylli::::res://art/Mixamo/Fighter 7A/fighting/extracted/Lead Jab.tres<>uid://d1i84d4ir822m::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Left Side Step.tres<>uid://dqcque6yvlci8::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Right Side Step.tres<>uid://ceje8ij5je52l::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Step Forward.tres<>uid://bj70kuvhyymej::::res://art/Mixamo/Fighter 7A/fighting/extracted/Punch Combo.tres<>uid://bo044m42jq4ft::::res://art/Mixamo/Fighter 7A/fighting/extracted/Step Backward.tres<>uid://bh38j8m5yk4yj::::res://art/Mixamo/Fighter 7A/fighting/extracted/Uppercut Jab.tres<>uid://co74n75r2ge1t::::res://characters/Animations/Animation_Node_State_Machine_Base.res<>uid://cy60bwgj6t1s1::::res://art/Mixamo/Fighter 7A/moving/extracted/Running Backward.tres<>uid://bsnyimgdc1c5l::::res://art/Mixamo/Fighter 7A/moving/extracted/Walking Backwards.tres<>uid://bgechd4db0pta::::res://art/Mixamo/Fighter 7A/fighting/extracted/Short Step Backward.tres<>uid://c0aed6wn0uuyk::::res://art/Mixamo/Fighter 7A/fighting/extracted/Short Step Forward.tres
+::res://characters/MrT/::1755820516
+MrT.tscn::PackedScene::2389400960026134669::1755820516::0::1::::<><><>0<>0<><>::uid://crdju1xafvwgj::::res://characters/Base/base_character.tscn
 ::res://engine/::1755677651
 client_settings.gd::GDScript/GDScript::6902020860098693752::1755677651::0::1::::ClientSettings<>Resource<><>0<>0<><>::
 console.gd::GDScript/GDScript::6507615310568998620::1755677651::0::1::::<>CanvasLayer<><>0<>0<><>::
@@ -2424,7 +2400,7 @@ scoring_hud.tscn::PackedScene/PackedScene::8613713649143387978::1755677651::0::1
 ::res://maps/Base/::1755677651
 base_map.gd::GDScript/GDScript::6572948216008186182::1755677651::0::1::::BaseMap<>Node3D<><>0<>0<><>::
 base_map.tscn::PackedScene/PackedScene::1476449512587606325::1755677651::0::1::::<><><>0<>0<><>::uid://c0v8q5ke6k71s::::res://maps/Base/base_map.gd
-::res://maps/Ring One/::1755759420
-ring_one.tscn::PackedScene/PackedScene::6759121642420134611::1755759420::0::1::::<><><>0<>0<><>::uid://vbg54mu3e1or::::res://maps/Base/base_map.tscn<>uid://bmx02p3rmxt1o::::res://art/Boxing Ring/vr_boxing_ring_0.png<>uid://7kktllmxja8t::::res://art/Boxing Ring/vr_boxing_ring_1.png<>uid://bdrcj0daktonb::::res://art/Boxing Ring/vr_boxing_ring_2.png<>uid://brmnbis40tl27::::res://art/Boxing Ring/vr_boxing_ring_3.png<>uid://bihq08xl4fh2b::::res://art/Boxing Ring/vr_boxing_ring_4.png<>uid://dy714xmfj5l1v::::res://art/Boxing Ring/vr_boxing_ring_5.png<>uid://cykc6witv2x54::::res://art/Boxing Ring/vr_boxing_ring_6.png<>uid://bene5wx2cl5di::::res://art/Boxing Ring/vr_boxing_ring_7.png<>uid://72rcg5c51or::::res://art/Boxing Ring/vr_boxing_ring_8.png<>uid://bragpgvd2btte::::res://art/Boxing Ring/vr_boxing_ring_9.png<>uid://jyw541vp8d7p::::res://art/Boxing Ring/vr_boxing_ring_10.png<>uid://7hqws1a4vcg5::::res://art/Boxing Ring/vr_boxing_ring_11.png<>uid://baef257ytdqoh::::res://art/Boxing Ring/vr_boxing_ring_12.png<>uid://bb7lf5m70fh17::::res://art/Boxing Ring/vr_boxing_ring_13.png<>uid://d0puuypg3rwoj::::res://art/Boxing Ring/vr_boxing_ring_14.png<>uid://qda4da2u71mp::::res://art/Boxing Ring/vr_boxing_ring_15.png<>uid://deu852b2igjwq::::res://art/Boxing Ring/vr_boxing_ring_16.png<>uid://1rxqb6eknuml::::res://art/Boxing Ring/vr_boxing_ring_17.png<>uid://dma451tu7n8jf::::res://art/Boxing Ring/vr_boxing_ring_18.png<>uid://bgwsvs2eapts::::res://art/Boxing Ring/vr_boxing_ring_19.png<>uid://b1y5p4qq0pw0e::::res://art/Boxing Ring/vr_boxing_ring_20.png<>uid://cnq866oet1vbx::::res://art/Boxing Ring/vr_boxing_ring_21.png<>uid://clkainr23u3fu::::res://art/Boxing Ring/vr_boxing_ring_22.png<>uid://dna2d16tiglil::::res://art/Boxing Ring/vr_boxing_ring_23.png<>uid://topnsu7utt7h::::res://art/Boxing Ring/vr_boxing_ring_24.png<>uid://buoc5rq25o664::::res://art/Boxing Ring/vr_boxing_ring_25.png<>uid://i80vdb8fdo4d::::res://art/Boxing Ring/vr_boxing_ring_26.png<>uid://bevtgn38ao4wo::::res://cameras/free_fly_camera.tscn<>uid://babpc46w0o75r::::res://characters/MrT/MrT.tscn<>uid://b5b0ce36ypxm0::::res://characters/Rex/Rex.tscn
-::res://themes/::1755778122
-main.tres::Theme/Theme::2594013782168571702::1755778122::0::1::::<><><>0<>0<><>::
+::res://maps/Ring One/::1755820560
+ring_one.tscn::PackedScene::6759121642420134611::1755820560::0::1::::<><><>0<>0<><>::uid://vbg54mu3e1or::::res://maps/Base/base_map.tscn<>uid://bmx02p3rmxt1o::::res://art/Boxing Ring/vr_boxing_ring_0.png<>uid://7kktllmxja8t::::res://art/Boxing Ring/vr_boxing_ring_1.png<>uid://bdrcj0daktonb::::res://art/Boxing Ring/vr_boxing_ring_2.png<>uid://brmnbis40tl27::::res://art/Boxing Ring/vr_boxing_ring_3.png<>uid://bihq08xl4fh2b::::res://art/Boxing Ring/vr_boxing_ring_4.png<>uid://dy714xmfj5l1v::::res://art/Boxing Ring/vr_boxing_ring_5.png<>uid://cykc6witv2x54::::res://art/Boxing Ring/vr_boxing_ring_6.png<>uid://bene5wx2cl5di::::res://art/Boxing Ring/vr_boxing_ring_7.png<>uid://72rcg5c51or::::res://art/Boxing Ring/vr_boxing_ring_8.png<>uid://bragpgvd2btte::::res://art/Boxing Ring/vr_boxing_ring_9.png<>uid://jyw541vp8d7p::::res://art/Boxing Ring/vr_boxing_ring_10.png<>uid://7hqws1a4vcg5::::res://art/Boxing Ring/vr_boxing_ring_11.png<>uid://baef257ytdqoh::::res://art/Boxing Ring/vr_boxing_ring_12.png<>uid://bb7lf5m70fh17::::res://art/Boxing Ring/vr_boxing_ring_13.png<>uid://d0puuypg3rwoj::::res://art/Boxing Ring/vr_boxing_ring_14.png<>uid://qda4da2u71mp::::res://art/Boxing Ring/vr_boxing_ring_15.png<>uid://deu852b2igjwq::::res://art/Boxing Ring/vr_boxing_ring_16.png<>uid://1rxqb6eknuml::::res://art/Boxing Ring/vr_boxing_ring_17.png<>uid://dma451tu7n8jf::::res://art/Boxing Ring/vr_boxing_ring_18.png<>uid://bgwsvs2eapts::::res://art/Boxing Ring/vr_boxing_ring_19.png<>uid://b1y5p4qq0pw0e::::res://art/Boxing Ring/vr_boxing_ring_20.png<>uid://cnq866oet1vbx::::res://art/Boxing Ring/vr_boxing_ring_21.png<>uid://clkainr23u3fu::::res://art/Boxing Ring/vr_boxing_ring_22.png<>uid://dna2d16tiglil::::res://art/Boxing Ring/vr_boxing_ring_23.png<>uid://topnsu7utt7h::::res://art/Boxing Ring/vr_boxing_ring_24.png<>uid://buoc5rq25o664::::res://art/Boxing Ring/vr_boxing_ring_25.png<>uid://i80vdb8fdo4d::::res://art/Boxing Ring/vr_boxing_ring_26.png<>uid://bevtgn38ao4wo::::res://cameras/free_fly_camera.tscn<>uid://b5b0ce36ypxm0::::res://characters/Joel/Rex.tscn
+::res://themes/::1755819070
+main.tres::Theme::2594013782168571702::1755819070::0::1::::<><><>0<>0<><>::
