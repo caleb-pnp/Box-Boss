@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AttackSpec" load_steps=2 format=3 uid="uid://w31bhakuja8u"]
+
+[ext_resource type="Script" uid="uid://by7hw7yjeft1c" path="res://resources/attack_spec.gd" id="1_ni7e4"]
+
+[resource]
+script = ExtResource("1_ni7e4")
+id = &"LeadJab"
+category = &"light"
+display_name = "Lead Jab"
+enter_distance = 1.2
+launch_min_distance = 0.0
+swing_time_sec = 1.0
+cooldown_sec = 1.0
+move_lock_sec = 0.8
+request_param_a = &"parameters/Fighting/LeadJabOneShot_A/request"
+request_param_b = &"parameters/Fighting/LeadJabOneShot_B/request"
+metadata/_custom_type_script = "uid://by7hw7yjeft1c"

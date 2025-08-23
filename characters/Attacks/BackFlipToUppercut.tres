@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AttackSpec" load_steps=2 format=3 uid="uid://cfdhh7f7abbk3"]
+
+[ext_resource type="Script" uid="uid://by7hw7yjeft1c" path="res://resources/attack_spec.gd" id="1_8b0tq"]
+
+[resource]
+script = ExtResource("1_8b0tq")
+id = &"BackFlipToUppercut"
+category = &"special"
+display_name = "Back Flip To Uppercut"
+enter_distance = 1.5
+launch_min_distance = 0.0
+swing_time_sec = 4.0
+cooldown_sec = 4.0
+move_lock_sec = 0.8
+request_param_a = &"parameters/Fighting/BackFlipToUppercutOneShot_A/request"
+request_param_b = &"parameters/Fighting/BackFlipToUppercutOneShot_B/request"
+metadata/_custom_type_script = "uid://by7hw7yjeft1c"

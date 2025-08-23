@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AttackSpec" load_steps=2 format=3 uid="uid://c0asotocoke3r"]
+
+[ext_resource type="Script" uid="uid://by7hw7yjeft1c" path="res://resources/attack_spec.gd" id="1_q33b6"]
+
+[resource]
+script = ExtResource("1_q33b6")
+id = &"Hook"
+category = &"heavy"
+display_name = "Hook"
+enter_distance = 1.8
+launch_min_distance = 1.8
+swing_time_sec = 3.0
+cooldown_sec = 3.0
+move_lock_sec = 0.8
+request_param_a = &"parameters/Fighting/HookOneShot_A/request"
+request_param_b = &"parameters/Fighting/HookOneShot_B/request"
+metadata/_custom_type_script = "uid://by7hw7yjeft1c"

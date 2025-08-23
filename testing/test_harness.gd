@@ -12,13 +12,15 @@ Mouse (via FreeFlyTestingCamera signals):
 - Right Click: Selected character FIGHT the other character (Shift+Right Click = fight the clicked point instead).
 - Middle Click: Teleport selected character to clicked point (debug).
 
-Keyboard:
-- 1 / 2: Select Character A / B.
+Keyboard (handled via _unhandled_input, no InputMap needed):
+- 1 / 2 (or Numpad 1 / 2): Select Character A / B.
 - P: Toggle agent autopilot on selected (if property exists).
 - C: Clear selected character target (back to moving stance).
 - F: Toggle fighting stance on selected (does not change target).
 - R: Make both characters target each other and enter fight stance.
-- J/K/L: Trigger light/medium/heavy attack on selected.
+- J/K/L/I: Trigger light/medium/heavy/special attack (category-based via AttackSet) on selected.
+- U: Fire the currently equipped LIGHT attack directly on the Animator (bypasses BaseCharacter gates) to isolate Animator/AnimationTree issues.
+- V: Validate selected character's AttackSet and AttackLibrary (IDs and OneShot param paths vs AnimationTree).
 - H: Make selected take a small hit.
 - O: Knock out selected (via stats.take_damage if available, else force KO).
 """
@@ -51,58 +53,73 @@ func _ready() -> void:
 		free_cam.right_click_ground.connect(_on_cam_right_click)
 		free_cam.middle_click_ground.connect(_on_cam_middle_click)
 
-	_ensure_input_actions()
-	print("TestHarness ready. Selected = A. Use keys 1/2 to switch. Click ground to drive movement/fight.")
+	print("TestHarness ready. Selected = A. 1/2 to switch. Click ground to move/fight. Hotkeys: P/C/F/R, J/K/L/I, U (animator direct), V (validate), H, O")
 
 func _unhandled_input(event: InputEvent) -> void:
 	# Keyboard-only; mouse is handled by FreeFlyTestingCamera
-	if event.is_action_pressed("th_select_a"):
-		_selected = Selected.A
-		print("Selected: A")
-	elif event.is_action_pressed("th_select_b"):
-		_selected = Selected.B
-		print("Selected: B")
-	elif event.is_action_pressed("th_toggle_autopilot"):
-		var c := _selected_char()
-		if c and _has_prop(c, "use_agent_autopilot"):
-			var new_val := not bool(c.get("use_agent_autopilot"))
-			c.set("use_agent_autopilot", new_val)
-			print("Autopilot (selected): ", new_val)
-		else:
-			print("Selected character has no 'use_agent_autopilot' property.")
-	elif event.is_action_pressed("th_clear_target"):
-		_bc_clear_target(_selected_char())
-	elif event.is_action_pressed("th_toggle_fight_stance"):
-		var c2 := _selected_char()
-		if c2 and c2.animator:
-			if c2.animator.is_in_fight_stance():
-				c2.animator.end_fight_stance()
-				print("Stance: moving")
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+
+	match key.physical_keycode:
+		KEY_1, KEY_KP_1:
+			_selected = Selected.A
+			print("Selected: A")
+		KEY_2, KEY_KP_2:
+			_selected = Selected.B
+			print("Selected: B")
+		KEY_P:
+			var c := _selected_char()
+			if c and _has_prop(c, "use_agent_autopilot"):
+				var new_val := not bool(c.get("use_agent_autopilot"))
+				c.set("use_agent_autopilot", new_val)
+				print("Autopilot (selected): ", new_val)
 			else:
-				c2.animator.start_fight_stance()
-				print("Stance: fighting")
-	elif event.is_action_pressed("th_fight_each_other"):
-		if char_a and char_b:
-			_bc_set_fight_target(char_a, char_b)
-			_bc_set_fight_target(char_b, char_a)
-			print("Both characters set to fight each other.")
-	elif event.is_action_pressed("th_attack_light"):
-		_trigger_attack(_selected_char(), 0.15)
-	elif event.is_action_pressed("th_attack_medium"):
-		_trigger_attack(_selected_char(), 0.5)
-	elif event.is_action_pressed("th_attack_heavy"):
-		_trigger_attack(_selected_char(), 0.9)
-	elif event.is_action_pressed("th_hit_small"):
-		var c3 := _selected_char()
-		if c3:
-			c3.take_hit(10)
-	elif event.is_action_pressed("th_force_ko"):
-		var c4 := _selected_char()
-		if c4:
-			if c4.stats and c4.stats.has_method("take_damage"):
-				c4.stats.take_damage(99999)
-			else:
-				c4._on_died()
+				print("Selected character has no 'use_agent_autopilot' property.")
+		KEY_C:
+			_bc_clear_target(_selected_char())
+		KEY_F:
+			var c2 := _selected_char()
+			if c2 and c2.animator:
+				if c2.animator.is_in_fight_stance():
+					c2.animator.end_fight_stance()
+					print("Stance: moving")
+				else:
+					c2.animator.start_fight_stance()
+					print("Stance: fighting")
+		KEY_R:
+			if char_a and char_b:
+				_bc_set_fight_target(char_a, char_b)
+				_bc_set_fight_target(char_b, char_a)
+				print("Both characters set to fight each other.")
+		# Category-based attacks (uses BaseCharacter.attack_set + attack_library)
+		KEY_J:
+			_trigger_attack_category(_selected_char(), &"light")
+		KEY_K:
+			_trigger_attack_category(_selected_char(), &"medium")
+		KEY_L:
+			_trigger_attack_category(_selected_char(), &"heavy")
+		KEY_I:
+			_trigger_attack_category(_selected_char(), &"special")
+		# Direct animator fire for the equipped LIGHT id, bypassing BaseCharacter gates
+		KEY_U:
+			_animator_direct_light(_selected_char())
+		# Validate library/set/params for selected
+		KEY_V:
+			_validate_selected()
+		KEY_H:
+			var c3 := _selected_char()
+			if c3:
+				c3.take_hit(10)
+		KEY_O:
+			var c4 := _selected_char()
+			if c4:
+				if c4.stats and c4.stats.has_method("take_damage"):
+					c4.stats.take_damage(99999)
+				else:
+					c4._on_died()
+		_:
+			pass
 
 # ------------------
 # Camera signal handlers
@@ -133,11 +150,49 @@ func _selected_char() -> BaseCharacter:
 func _other_char() -> BaseCharacter:
 	return char_b if _selected == Selected.A else char_a
 
-func _trigger_attack(c: BaseCharacter, strength: float) -> void:
+# New: trigger by category via AttackSet (preferred)
+func _trigger_attack_category(c: BaseCharacter, cat: StringName) -> void:
 	if not c:
 		return
-	c.intents["attack_strength"] = strength
-	c.intents["attack"] = true
+	if c.has_method("request_attack_category"):
+		c.request_attack_category(cat)
+	else:
+		# Fallback: write intents directly
+		c.intents["attack_category"] = cat
+		c.intents["attack_id"] = StringName("")
+		c.intents["attack"] = true
+	print("Attack request (category): ", String(cat), " for ", c.name)
+
+# Optional: trigger an explicit move by ID, bypassing AttackSet
+func _trigger_attack_id(c: BaseCharacter, id: StringName) -> void:
+	if not c:
+		return
+	if c.has_method("request_attack_id"):
+		c.request_attack_id(id)
+	else:
+		# Fallback: write intents directly
+		c.intents["attack_id"] = id
+		c.intents["attack_category"] = StringName("")
+		c.intents["attack"] = true
+	print("Attack request (id): ", String(id), " for ", c.name)
+
+# Direct animator test: fire the currently equipped LIGHT id immediately
+func _animator_direct_light(c: BaseCharacter) -> void:
+	if not c or not c.animator:
+		print("Animator direct test: No character or animator.")
+		return
+	var id := StringName("")
+	if c.attack_set:
+		id = c.attack_set.get_id_for_category(&"light")
+	if String(id) == "":
+		print("Animator direct test: No light_id in attack_set.")
+		return
+	print("Animator direct test: play_attack_id(", String(id), ") on ", c.name)
+	# Ensure fight stance for the animator
+	if not c.animator.is_in_fight_stance():
+		c.animator.start_fight_stance()
+	# Try to play immediately (async)
+	c.animator.play_attack_id(id)
 
 func _bc_set_move_target(c: BaseCharacter, t: Variant) -> void:
 	if not c:
@@ -172,31 +227,63 @@ func _bc_clear_target(c: BaseCharacter) -> void:
 			c.animator.end_fight_stance()
 	print("Cleared target for ", c.name)
 
-# Ensure we have default input actions without needing to edit Project Settings
-func _ensure_input_actions() -> void:
-	_add_action_if_missing("th_select_a", [KEY_1])
-	_add_action_if_missing("th_select_b", [KEY_2])
-	_add_action_if_missing("th_toggle_autopilot", [KEY_P])
-	_add_action_if_missing("th_clear_target", [KEY_C])
-	_add_action_if_missing("th_toggle_fight_stance", [KEY_F])
-	_add_action_if_missing("th_fight_each_other", [KEY_R])
-	_add_action_if_missing("th_attack_light", [KEY_J])
-	_add_action_if_missing("th_attack_medium", [KEY_K])
-	_add_action_if_missing("th_attack_heavy", [KEY_L])
-	_add_action_if_missing("th_hit_small", [KEY_H])
-	_add_action_if_missing("th_force_ko", [KEY_O])
-
-func _add_action_if_missing(name: String, keys: Array) -> void:
-	if InputMap.has_action(name):
-		return
-	InputMap.add_action(name)
-	for sc in keys:
-		var ev := InputEventKey.new()
-		ev.keycode = sc
-		InputMap.action_add_event(name, ev)
-
 func _has_prop(obj: Object, prop_name: String) -> bool:
 	for p in obj.get_property_list():
 		if p.has("name") and String(p["name"]) == prop_name:
+			return true
+	return false
+
+# ------------------
+# Validation helpers
+# ------------------
+func _validate_selected() -> void:
+	var c := _selected_char()
+	if not c:
+		print("[Validate] No selected character.")
+		return
+	print("[Validate] Selected: ", c.name)
+	if not c.attack_library:
+		print("[Validate] attack_library NOT set on BaseCharacter")
+	else:
+		print("[Validate] attack_library OK (", c.attack_library.attacks.size(), " specs )")
+	if not c.attack_set:
+		print("[Validate] attack_set NOT set on BaseCharacter")
+	else:
+		print("[Validate] attack_set equipped: light=", String(c.attack_set.light_id), " medium=", String(c.attack_set.medium_id), " heavy=", String(c.attack_set.heavy_id), " special=", String(c.attack_set.special_id))
+
+	# Check mapping for the four categories
+	var cats := [StringName("light"), StringName("medium"), StringName("heavy"), StringName("special")]
+	for cat in cats:
+		var id := (c.attack_set.get_id_for_category(cat) if c.attack_set else StringName(""))
+		if String(id) == "":
+			print("  - ", String(cat), ": NO ID configured")
+			continue
+		var spec := (c.attack_library.get_spec(id) if c.attack_library else null)
+		if spec == null:
+			print("  - ", String(cat), ": id=", String(id), " NOT FOUND in library")
+			continue
+		print("  - ", String(cat), ": id=", String(id), " enter=", spec.enter_distance, " swing=", spec.swing_time_sec, " lock=", spec.move_lock_sec, " cd=", spec.cooldown_sec)
+		# Validate animator param paths if we can reach the tree
+		var anim := c.animator
+		if anim and _animator_has_param(anim, String(spec.request_param_a)):
+			print("      request A OK: ", String(spec.request_param_a))
+		else:
+			print("      request A MISSING: ", String(spec.request_param_a))
+		if spec.request_param_b != StringName(""):
+			if anim and _animator_has_param(anim, String(spec.request_param_b)):
+				print("      request B OK: ", String(spec.request_param_b))
+			else:
+				print("      request B MISSING: ", String(spec.request_param_b))
+
+func _animator_has_param(anim: CharacterAnimator, path: String) -> bool:
+	if anim == null or path == "" or anim._tree == null:
+		return false
+	# The animator caches param names; use that if available
+	if anim._param_names and anim._param_names.has(path):
+		return true
+	# Otherwise, scan the tree properties
+	var props := anim._tree.get_property_list()
+	for p in props:
+		if p is Dictionary and p.has("name") and String(p["name"]) == path:
 			return true
 	return false

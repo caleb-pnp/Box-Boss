@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AttackSet" load_steps=2 format=3 uid="uid://7xbp54o61x5f"]
+
+[ext_resource type="Script" uid="uid://cup0hv8fp6yfx" path="res://resources/attack_set.gd" id="1_i2s26"]
+
+[resource]
+script = ExtResource("1_i2s26")
+light_id = &"LeadJab"
+medium_id = &"JabCross"
+heavy_id = &"Hook"
+special_id = &"PunchCombo"
+metadata/_custom_type_script = "uid://cup0hv8fp6yfx"

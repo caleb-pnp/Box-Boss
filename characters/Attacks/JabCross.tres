@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AttackSpec" load_steps=2 format=3 uid="uid://dabdlbfqfrbpv"]
+
+[ext_resource type="Script" uid="uid://by7hw7yjeft1c" path="res://resources/attack_spec.gd" id="1_1fpob"]
+
+[resource]
+script = ExtResource("1_1fpob")
+id = &"JabCross"
+category = &"medium"
+display_name = "Jab Cross"
+enter_distance = 1.6
+launch_min_distance = 1.6
+swing_time_sec = 2.0
+cooldown_sec = 2.0
+move_lock_sec = 0.8
+request_param_a = &"parameters/Fighting/JabCrossOneShot_A/request"
+request_param_b = &"parameters/Fighting/JabCrossOneShot_B/request"
+metadata/_custom_type_script = "uid://by7hw7yjeft1c"

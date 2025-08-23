@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AttackSpec" load_steps=2 format=3 uid="uid://80wd2wgn7sxm"]
+
+[ext_resource type="Script" uid="uid://by7hw7yjeft1c" path="res://resources/attack_spec.gd" id="1_4rtbq"]
+
+[resource]
+script = ExtResource("1_4rtbq")
+id = &"PunchCombo"
+category = &"special"
+display_name = "Punch Combo"
+enter_distance = 1.5
+launch_min_distance = 0.0
+swing_time_sec = 4.0
+cooldown_sec = 4.0
+move_lock_sec = 0.8
+request_param_a = &"parameters/Fighting/PunchComboOneShot_A/request"
+request_param_b = &"parameters/Fighting/PunchComboOneShot_B/request"
+metadata/_custom_type_script = "uid://by7hw7yjeft1c"
