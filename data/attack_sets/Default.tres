@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="AttackSetData" load_steps=2 format=3 uid="uid://cshyjn6utm1wo"]
+
+[ext_resource type="Script" uid="uid://cuduivpqla41w" path="res://resources/attack_set_data.gd" id="1_4v3b1"]
+
+[resource]
+script = ExtResource("1_4v3b1")
+description = "The Default Attack Set"
+light_id = &"LeadJab"
+medium_id = &"JabCross"
+heavy_id = &"Hook"
+special_id = &"PunchCombo"
+id = &"default"
+display_name = "Default"
+metadata/_custom_type_script = "uid://cuduivpqla41w"

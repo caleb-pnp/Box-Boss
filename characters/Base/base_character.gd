@@ -18,14 +18,20 @@ signal knocked_out
 @export_category("Combat (Data-Driven)")
 @export var keep_eyes_on_target: bool = true
 @export var approach_speed_scale: float = 0.8
-@export var attack_library: AttackLibrary = preload("res://characters/Attacks/AttackLibrary.tres")
-@export var attack_set: AttackSet = preload("res://characters/Attacks/DefaultAttackSet.tres")
-@export var attack_debounce_after_fight_enter: float = 0.15
-@export var launch_band_epsilon: float = 0.1   # tolerance to avoid oscillation when distances are tight
 
-# Input buffers to make spamming feel responsive
-@export var attack_press_retry_buffer_sec: float = 0.25  # while held, auto-retry within this window
-@export var attack_queue_buffer_sec: float = 0.25        # window to buffer a follow-up during SWING
+# Avoid preload to prevent parse-time dependency chains
+@export var attack_library: AttackLibrary
+@export_file("*.tres") var attack_library_path: String = "res://data/AttackLibrary.tres"
+
+@export var attack_set_data: AttackSetData
+@export_file("*.tres") var attack_set_data_path: String = "res://data/attack_sets/Default.tres"
+
+@export var attack_debounce_after_fight_enter: float = 0.15
+@export var launch_band_epsilon: float = 0.1
+
+# Input buffers
+@export var attack_press_retry_buffer_sec: float = 0.25
+@export var attack_queue_buffer_sec: float = 0.25
 
 @export_category("Scene References")
 @export var navigation_agent_path: NodePath
@@ -47,7 +53,7 @@ var _debug_accum: float = 0.0
 var anim: AnimationPlayer
 var agent: NavigationAgent3D
 var stats: Node
-var animator: CharacterAnimator
+var animator  # relax type if CharacterAnimator isn’t available at parse time
 
 # Target can be a Node3D or a Vector3
 var _target_node: Node3D
@@ -57,7 +63,7 @@ var _has_target: bool = false
 enum TargetMode { NONE, MOVE, FIGHT }
 var _target_mode: int = TargetMode.NONE
 
-# Intents: attack by category or id
+# Intents
 var intents := {
 	"move_local": Vector2.ZERO,
 	"run": false,
@@ -77,7 +83,7 @@ var _last_attack_time_by_id := {}
 enum AttackPhase { NONE, APPROACH, REPOSITION, SWING }
 var _attack_phase: int = AttackPhase.NONE
 var _attack_phase_until: float = 0.0
-var _attack_spec_current: AttackSpec
+var _attack_spec_current  # intentionally untyped to avoid parse dependency
 var _attack_id_current: StringName = &""
 
 # Debounce and movement lock
@@ -96,6 +102,20 @@ var _last_move_local: Vector2 = Vector2.ZERO
 var _stuck_frames: int = 0
 
 func _ready() -> void:
+	# Lazy-load libraries if not assigned via Inspector
+	if attack_library == null and attack_library_path != "":
+		var r := load(attack_library_path)
+		if r is AttackLibrary:
+			attack_library = r
+		elif debug_enabled:
+			push_warning("BaseCharacter: Failed to load AttackLibrary at " + attack_library_path)
+	if attack_set_data == null and attack_set_data_path != "":
+		var r2 := load(attack_set_data_path)
+		if r2 is AttackSetData:
+			attack_set_data = r2
+		elif debug_enabled:
+			push_warning("BaseCharacter: Failed to load AttackSetData at " + attack_set_data_path)
+
 	var model := $Model if has_node("Model") else null
 	if model:
 		anim = (model.find_child("AnimationPlayer") as AnimationPlayer)
@@ -104,7 +124,7 @@ func _ready() -> void:
 
 	agent = (get_node_or_null(navigation_agent_path) as NavigationAgent3D) if navigation_agent_path != NodePath("") else ($NavigationAgent3D as NavigationAgent3D)
 	stats = get_node_or_null(stats_node_path) if stats_node_path != NodePath("") else $Stats
-	animator = (get_node_or_null(animator_path) as CharacterAnimator) if animator_path != NodePath("") else ($CharacterAnimator as CharacterAnimator)
+	animator = (get_node_or_null(animator_path)) if animator_path != NodePath("") else ($CharacterAnimator if has_node("CharacterAnimator") else null)
 
 	if stats:
 		if stats.has_signal("died"): stats.connect("died", Callable(self, "_on_died"))
@@ -113,6 +133,12 @@ func _ready() -> void:
 	if agent:
 		agent.path_desired_distance = 0.5
 		agent.target_desired_distance = 0.75
+
+# ----------------------------
+# Optional setters
+# ----------------------------
+func set_attack_set_data(data: AttackSetData) -> void:
+	attack_set_data = data
 
 # ----------------------------
 # Public helpers for controllers
@@ -137,11 +163,13 @@ func set_target(t: Variant) -> void:
 
 func set_move_target(t: Variant) -> void:
 	_set_target_internal(t, TargetMode.MOVE)
-	if animator: animator.end_fight_stance()
+	if animator and animator.has_method("end_fight_stance"):
+		animator.end_fight_stance()
 
 func set_fight_target(t: Variant) -> void:
 	_set_target_internal(t, TargetMode.FIGHT)
-	if animator: animator.start_fight_stance()
+	if animator and animator.has_method("start_fight_stance"):
+		animator.start_fight_stance()
 	_fight_entered_at = _now()
 	intents["attack"] = false
 	_attack_intent_prev = false
@@ -159,7 +187,8 @@ func clear_target() -> void:
 	_attack_wish_until = 0.0
 	_clear_queue()
 	if agent: agent.target_position = global_position
-	if animator: animator.end_fight_stance()
+	if animator and animator.has_method("end_fight_stance"):
+		animator.end_fight_stance()
 
 func _set_target_internal(t: Variant, mode: int) -> void:
 	_target_mode = mode
@@ -237,7 +266,7 @@ func _physics_process(delta: float) -> void:
 	_tick_attack_phase()
 
 	# Anim
-	if animator:
+	if animator and animator.has_method("update_locomotion"):
 		animator.update_locomotion(intents["move_local"], measured_h_speed)
 
 # ----------------------------
@@ -250,7 +279,7 @@ func _update_autopilot_intents() -> void:
 	var now: float = _now()
 	# Movement lock
 	if now < _move_locked_until:
-		if animator and not animator.is_in_fight_stance():
+		if animator and animator.has_method("is_in_fight_stance") and not animator.is_in_fight_stance():
 			animator.start_fight_stance()
 		intents["move_local"] = Vector2.ZERO
 		intents["run"] = false
@@ -259,21 +288,21 @@ func _update_autopilot_intents() -> void:
 
 	match _attack_phase:
 		AttackPhase.APPROACH:
-			if animator and not animator.is_in_fight_stance():
+			if animator and animator.has_method("is_in_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			_set_autopilot_move_towards(get_target_position())
 			intents["run"] = false
 			intents["retreat"] = false
 			return
 		AttackPhase.REPOSITION:
-			if animator and not animator.is_in_fight_stance():
+			if animator and animator.has_method("is_in_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			_set_autopilot_move_away_from(get_target_position())
 			intents["run"] = false
 			intents["retreat"] = true
 			return
 		AttackPhase.SWING:
-			if animator and not animator.is_in_fight_stance():
+			if animator and animator.has_method("is_in_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			intents["move_local"] = Vector2.ZERO
 			intents["run"] = false
@@ -338,7 +367,7 @@ func _set_autopilot_move_away_from(world_target: Vector3) -> void:
 	to_target.y = 0.0
 	var dir_world: Vector3 = Vector3.ZERO
 	if to_target.length() > 0.001:
-		dir_world = -to_target.normalized() # away from target
+		dir_world = -to_target.normalized()
 
 	var right: Vector3 = global_transform.basis.x
 	var forward: Vector3 = -global_transform.basis.z
@@ -347,7 +376,6 @@ func _set_autopilot_move_away_from(world_target: Vector3) -> void:
 	var move_local: Vector2 = Vector2(x, y)
 	if move_local.length() > 0.001:
 		move_local = move_local.normalized()
-	# Ensure a small backpedal even if almost aligned
 	if move_local.y > -0.2:
 		move_local.y = -0.2
 	intents["move_local"] = move_local
@@ -404,7 +432,6 @@ func _apply_horizontal_velocity(desired_dir_world: Vector3) -> void:
 	elif bool(intents["run"]):
 		speed = run_speed
 
-	# Slow down while closing or creating space
 	if _attack_phase == AttackPhase.APPROACH or _attack_phase == AttackPhase.REPOSITION:
 		speed *= clampf(approach_speed_scale, 0.05, 1.0)
 
@@ -413,73 +440,60 @@ func _apply_horizontal_velocity(desired_dir_world: Vector3) -> void:
 	velocity.z = horizontal_vel.z
 
 # ----------------------------
-# Combat (ID/category-driven) with epsilon-tolerant "launch band"
+# Combat
 # ----------------------------
 func _handle_attack_intent() -> void:
 	var now: float = _now()
 
-	# Check current press and buffered "wish"
 	var pressed: bool = bool(intents["attack"])
 	var rising: bool = pressed and not _attack_intent_prev
 	var wish_active: bool = now <= _attack_wish_until
 
-	# Update edge detector and clear one-shot flag
 	_attack_intent_prev = pressed
 	intents["attack"] = false
 
-	# On rising edge, extend the wish window to auto-retry briefly
 	if rising:
 		_attack_wish_until = now + attack_press_retry_buffer_sec
 		wish_active = true
 
-	# If we're currently swinging, allow queuing the next move while within buffer
 	if _attack_phase == AttackPhase.SWING and wish_active:
 		_queue_next_from_intents()
 		return
 
-	# If there's no active wish and no rising edge, do nothing
 	if not wish_active and not rising:
 		return
 
-	# Debounce after entering stance
 	if now - _fight_entered_at < attack_debounce_after_fight_enter:
 		return
 
-	# Already in an attack flow?
 	if _attack_phase != AttackPhase.NONE:
 		return
 
-	# Need a library
 	if not attack_library:
 		if debug_enabled: push_warning("BaseCharacter: attack_library not assigned.")
 		return
 
-	# Resolve ID from intents
 	var id: StringName = intents["attack_id"]
 	if String(id) == "":
 		var cat: StringName = intents["attack_category"]
-		if String(cat) != "" and attack_set:
-			id = attack_set.get_id_for_category(cat)
+		if String(cat) != "" and attack_set_data:
+			id = attack_set_data.get_id_for_category(cat)
 	if String(id) == "":
-		if debug_enabled: push_warning("BaseCharacter: no attack_id and no attack_set/category provided.")
+		if debug_enabled: push_warning("BaseCharacter: no attack_id and no attack_set_data/category provided.")
 		return
 
-	var spec: AttackSpec = attack_library.get_spec(id)
+	var spec = attack_library.get_spec(id)
 	if spec == null:
 		if debug_enabled: push_warning("BaseCharacter: unknown attack id=" + String(id))
 		return
 
-	# Per-id cooldown gate
 	var last_time: float = float(_last_attack_time_by_id.get(id, -1000.0))
 	if now - last_time < max(0.0, spec.cooldown_sec):
-		# Keep wish active; it'll retrigger when cooldown ends (within buffer window)
 		return
 
-	# Must have target
 	if not _has_target:
 		return
 
-	# Decide phase based on distance band with tolerance
 	var d: float = distance_to_target()
 	var lower: float = float(max(0.0, spec.launch_min_distance))
 	var upper: float = spec.enter_distance
@@ -490,40 +504,36 @@ func _handle_attack_intent() -> void:
 
 	if lower > 0.0:
 		if d < reposition_thresh:
-			# too close -> back up first
-			if animator and not animator.is_in_fight_stance():
+			if animator and animator.has_method("start_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			_attack_phase = AttackPhase.REPOSITION
 			_attack_spec_current = spec
 			_attack_id_current = id
 			if debug_enabled:
-				print_debug("[BC] REPOSITION id=", String(id), " d=", d, " < ", reposition_thresh, " (min=", lower, " eps=", eps, ")")
+				print("[BC] REPOSITION id=", String(id), " d=", d, " < ", reposition_thresh, " (min=", lower, " eps=", eps, ")")
 			return
 		elif d > approach_thresh:
-			# too far -> approach
-			if animator and not animator.is_in_fight_stance():
+			if animator and animator.has_method("start_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			_attack_phase = AttackPhase.APPROACH
 			_attack_spec_current = spec
 			_attack_id_current = id
 			if debug_enabled:
-				print_debug("[BC] APPROACH id=", String(id), " d=", d, " > ", approach_thresh, " (enter=", upper, " eps=", eps, ")")
+				print("[BC] APPROACH id=", String(id), " d=", d, " > ", approach_thresh, " (enter=", upper, " eps=", eps, ")")
 			return
 		else:
-			# within tolerant band -> swing
 			_start_swing(spec, id, now)
 			_attack_wish_until = 0.0
 			return
 	else:
-		# No lower bound: original behavior, with approach hysteresis
 		if d > approach_thresh:
-			if animator and not animator.is_in_fight_stance():
+			if animator and animator.has_method("start_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			_attack_phase = AttackPhase.APPROACH
 			_attack_spec_current = spec
 			_attack_id_current = id
 			if debug_enabled:
-				print_debug("[BC] APPROACH id=", String(id), " d=", d, " > ", approach_thresh)
+				print("[BC] APPROACH id=", String(id), " d=", d, " > ", approach_thresh)
 		else:
 			_start_swing(spec, id, now)
 			_attack_wish_until = 0.0
@@ -544,7 +554,7 @@ func _tick_attack_phase() -> void:
 				if d < reposition_thresh and lower > 0.0:
 					_attack_phase = AttackPhase.REPOSITION
 					if debug_enabled:
-						print_debug("[BC] APPROACH->REPOSITION d=", d, " < ", reposition_thresh)
+						print("[BC] APPROACH->REPOSITION d=", d, " < ", reposition_thresh)
 				elif d <= swing_upper:
 					_start_swing(_attack_spec_current, _attack_id_current, now)
 					_attack_wish_until = 0.0
@@ -559,7 +569,7 @@ func _tick_attack_phase() -> void:
 				if d > approach_thresh:
 					_attack_phase = AttackPhase.APPROACH
 					if debug_enabled:
-						print_debug("[BC] REPOSITION->APPROACH d=", d, " > ", approach_thresh)
+						print("[BC] REPOSITION->APPROACH d=", d, " > ", approach_thresh)
 				elif d >= swing_lower:
 					_start_swing(_attack_spec_current, _attack_id_current, now)
 					_attack_wish_until = 0.0
@@ -568,7 +578,6 @@ func _tick_attack_phase() -> void:
 				_attack_phase = AttackPhase.NONE
 				_attack_spec_current = null
 				_attack_id_current = &""
-				# Pop queued attack if still valid
 				if now <= _queued_until and (String(_queued_attack_id) != "" or String(_queued_attack_cat) != ""):
 					if String(_queued_attack_id) != "":
 						intents["attack_id"] = _queued_attack_id
@@ -590,27 +599,26 @@ func _queue_next_from_intents() -> void:
 	_queued_attack_id = id
 	_queued_attack_cat = cat
 	_queued_until = _now() + attack_queue_buffer_sec
-	# Clear one-shot intent flag so it won’t continuously spam
 	intents["attack"] = false
 	if debug_enabled:
-		print_debug("[BC] Queued next attack: id=", String(id), " cat=", String(cat))
+		print("[BC] Queued next attack: id=", String(id), " cat=", String(cat))
 
 func _clear_queue() -> void:
 	_queued_attack_id = &""
 	_queued_attack_cat = &""
 	_queued_until = 0.0
 
-func _start_swing(spec: AttackSpec, id: StringName, now: float) -> void:
+func _start_swing(spec, id: StringName, now: float) -> void:
 	_last_attack_time_by_id[id] = now
 	state = State.ATTACKING
 	emit_signal("attacked_id", id)
 
-	if animator:
-		if not animator.is_in_fight_stance():
-			animator.start_fight_stance()
+	if animator and animator.has_method("play_attack_id"):
+		if not (animator.has_method("is_in_fight_stance") and animator.is_in_fight_stance()):
+			if animator.has_method("start_fight_stance"):
+				animator.start_fight_stance()
 		animator.play_attack_id(id)
 
-	# Lock movement and set swing window
 	_move_locked_until = now + max(0.0, spec.move_lock_sec)
 	_attack_phase = AttackPhase.SWING
 	_attack_phase_until = now + max(0.0, spec.swing_time_sec)
@@ -623,7 +631,8 @@ func take_hit(amount: int) -> void:
 	if stats and stats.has_method("take_damage"):
 		stats.take_damage(amount)
 	emit_signal("took_hit", amount)
-	if animator: animator.play_hit(amount)
+	if animator and animator.has_method("play_hit"):
+		animator.play_hit(amount)
 	state = State.STAGGERED
 	_attack_phase = AttackPhase.NONE
 	_attack_phase_until = 0.0
@@ -646,7 +655,8 @@ func _on_died() -> void:
 	_attack_id_current = &""
 	_clear_queue()
 	_attack_wish_until = 0.0
-	if animator: animator.play_ko()
+	if animator and animator.has_method("play_ko"):
+		animator.play_ko()
 
 func _on_animation_finished(_name: StringName) -> void:
 	if state in [State.ATTACKING, State.STAGGERED]:
@@ -664,5 +674,4 @@ func _nav_closest_on_map(world_point: Vector3) -> Vector3:
 	return NavigationServer3D.map_get_closest_point(map_rid, world_point)
 
 func _now() -> float:
-	# Monotonic, high-resolution time in seconds
 	return float(Time.get_ticks_msec()) / 1000.0

@@ -239,24 +239,12 @@ func execute_command(command: String, args: Array = []):
 			NetworkManager.start_discovery()
 		# Host a Game
 		"host":
-			# update args
-			if int(args[0]) > 0:
-				settings.host_port = int(args[0])
-			if int(args[1]) > 0:
-				settings.host_max_players = clampi(args[1], 1, 32)
-
 			# Manually Host a game
 			initiate_equipment_connection()
 			NetworkManager.host_game(settings.host_port, settings.host_max_players)
 
 		# Join a Game (Requires initial Network Connection First)
 		"join":
-			# update args
-			if str(args[0]) != "":
-				settings.join_ip = str(args[0])
-			if int(args[1]) > 0:
-				settings.join_port = int(args[1])
-
 			# Try Join Game
 			initiate_equipment_connection()
 			NetworkManager.join_game(settings.join_ip, settings.join_port)

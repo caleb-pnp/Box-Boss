@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BoxerLibrary" load_steps=4 format=3 uid="uid://bpgv27cf8l80d"]
+
+[ext_resource type="Resource" uid="uid://ffjrp08qv4ar" path="res://data/boxers/Joel.tres" id="1_jyt0l"]
+[ext_resource type="Script" uid="uid://e8t751p5n5dt" path="res://resources/boxer_library.gd" id="1_ml7f7"]
+[ext_resource type="Resource" uid="uid://jm1rtfleartc" path="res://data/boxers/MrT.tres" id="2_ppxe2"]
+
+[resource]
+script = ExtResource("1_ml7f7")
+boxers = Array[Resource]([ExtResource("1_jyt0l"), ExtResource("2_ppxe2")])
+metadata/_custom_type_script = "uid://e8t751p5n5dt"

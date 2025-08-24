@@ -37,7 +37,7 @@ class_name CharacterAnimator
 @export var move2d_timescale_active: float = 1.5
 
 @export_category("Attacks (Data-Driven)")
-@export var attack_library: AttackLibrary = preload("res://characters/Attacks/AttackLibrary.tres")
+@export var attack_library: AttackLibrary = preload("res://data/AttackLibrary.tres")
 
 @export_category("Attacks: Restart Behavior")
 @export var attack_smooth_restart: bool = true

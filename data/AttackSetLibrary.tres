@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="AttackSetLibrary" load_steps=3 format=3 uid="uid://cuog3ycrnwiq8"]
+
+[ext_resource type="Script" uid="uid://bq8v07mhlitsl" path="res://resources/attack_set_library.gd" id="1_f0emt"]
+[ext_resource type="Resource" uid="uid://cshyjn6utm1wo" path="res://data/attack_sets/Default.tres" id="2_jrb64"]
+
+[resource]
+script = ExtResource("1_f0emt")
+sets = Array[Resource]([ExtResource("2_jrb64")])
+metadata/_custom_type_script = "uid://bq8v07mhlitsl"

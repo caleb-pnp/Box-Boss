@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="BoxerData" load_steps=3 format=3 uid="uid://jm1rtfleartc"]
+
+[ext_resource type="Script" uid="uid://c8h10by6gd43o" path="res://resources/boxer_data.gd" id="1_mprn6"]
+[ext_resource type="PackedScene" uid="uid://babpc46w0o75r" path="res://characters/MrT/MrT.tscn" id="1_ulc8i"]
+
+[resource]
+script = ExtResource("1_mprn6")
+id = &"mr_t"
+display_name = "Mr.T"
+scene = ExtResource("1_ulc8i")
+total_health = 100
+total_stamina = 100
+speed = 1.0
+power = 1.0
+defense = 1.0
+metadata/_custom_type_script = "uid://c8h10by6gd43o"

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="AttackLibrary" load_steps=9 format=3 uid="uid://bhwvuo2xqrqpn"]
+
+[ext_resource type="Script" uid="uid://by7hw7yjeft1c" path="res://resources/attack_spec.gd" id="1_6fy3n"]
+[ext_resource type="Resource" uid="uid://w31bhakuja8u" path="res://data/attacks/LeadJab.tres" id="2_2f38m"]
+[ext_resource type="Script" uid="uid://dlktj6fbf0nm5" path="res://resources/attack_library.gd" id="2_q5tl8"]
+[ext_resource type="Resource" uid="uid://dabdlbfqfrbpv" path="res://data/attacks/JabCross.tres" id="3_gfg2o"]
+[ext_resource type="Resource" uid="uid://c0asotocoke3r" path="res://data/attacks/Hook.tres" id="4_d631w"]
+[ext_resource type="Resource" uid="uid://80wd2wgn7sxm" path="res://data/attacks/PunchCombo.tres" id="5_7q55p"]
+[ext_resource type="Resource" uid="uid://dc5pu6r5vw5d7" path="res://data/attacks/UppercutJab.tres" id="6_bl6mw"]
+[ext_resource type="Resource" uid="uid://cfdhh7f7abbk3" path="res://data/attacks/BackFlipToUppercut.tres" id="7_euue1"]
+
+[resource]
+script = ExtResource("2_q5tl8")
+attacks = Array[ExtResource("1_6fy3n")]([ExtResource("2_2f38m"), ExtResource("3_gfg2o"), ExtResource("4_d631w"), ExtResource("5_7q55p"), ExtResource("6_bl6mw"), ExtResource("7_euue1")])
+metadata/_custom_type_script = "uid://dlktj6fbf0nm5"

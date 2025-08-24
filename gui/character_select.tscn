@@ -1,0 +1,64 @@
+[gd_scene load_steps=3 format=3 uid="uid://ck8ulsuhr6rrw"]
+
+[ext_resource type="Script" uid="uid://c7qnmu8ltdeie" path="res://ui/prefight_view.gd" id="1_s2wcu"]
+[ext_resource type="Script" uid="uid://bitn8ke5we6m0" path="res://ui/prefight_character_grid.gd" id="2_nk3v5"]
+
+[node name="CharacterSelect" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_s2wcu")
+phase_label_path = NodePath("MarginContainer/VBoxContainer/HBoxContainer_Title/PhaseLabel")
+timer_label_path = NodePath("MarginContainer/VBoxContainer/HBoxContainer_Title/TimerLabel")
+mode_label_path = NodePath("MarginContainer/VBoxContainer/HBoxContainer_Title/ModeLabel")
+grid_path = NodePath("MarginContainer/VBoxContainer/Grid")
+previews_bar_path = NodePath("MarginContainer/VBoxContainer/HBoxContainer")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="HBoxContainer_Title" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="PhaseLabel" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer_Title"]
+layout_mode = 2
+text = "Phase"
+
+[node name="TimerLabel" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer_Title"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Timer"
+horizontal_alignment = 1
+
+[node name="ModeLabel" type="Label" parent="MarginContainer/VBoxContainer/HBoxContainer_Title"]
+layout_mode = 2
+size_flags_horizontal = 8
+text = "Mode"
+horizontal_alignment = 2
+
+[node name="Grid" type="GridContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 6
+script = ExtResource("2_nk3v5")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 8

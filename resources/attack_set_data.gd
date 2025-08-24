@@ -1,7 +1,9 @@
-extends Resource
-class_name AttackSet
+extends SelectableData
+class_name AttackSetData
 
-# A loadout that maps category -> chosen move id from AttackLibrary.
+@export var description: String = ""
+
+# One move per category
 @export_category("Equipped Moves")
 @export var light_id: StringName = &""
 @export var medium_id: StringName = &""
