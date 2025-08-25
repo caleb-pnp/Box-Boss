@@ -9,47 +9,173 @@ class_name VersusModeController
 @export var fallback_spawn_center: Vector3 = Vector3(0, 5, 0)
 @export var fallback_spawn_radius: float = 2.5
 
-var _players_param: Array[Dictionary] = []   # [{ source_id, color, character_id, attack_set_id }, ...]
+# If your model's visual forward isn't -Z, add a yaw offset here (degrees).
+@export var spawn_yaw_offset_degrees: float = 0.0
+
+# Target pairing controls
+@export var auto_pair_targets_on_ready := false
+@export var auto_pair_delay_sec := 0.0
+
+# HUD integration
+@export_group("HUD")
+@export var fight_hud_scene: PackedScene = preload("res://gui/fight_hud.tscn")
+@export var use_countdown: bool = true                        # Show countdown before pairing targets
+@export_range(1, 10, 1) var countdown_seconds: int = 5        # 5,4,3,2,1,FIGHT
+
+var _players_param: Array[Dictionary] = []
 var _map_id: StringName = &""
 var _map_instance: Node3D = null
 var _spawned: Array[BaseCharacter] = []
 
+var _hud: Node = null     # FightHUD instance (CanvasLayer). We call by method-name to avoid hard type deps.
+
 func _init() -> void:
-	# Versus gameplay needs the map to be ready before setup
 	requires_map_ready = true
 
 func on_enter(params: Dictionary) -> void:
-	# Read the selections compiled by PreFightController
 	_players_param = params.get("players", []) as Array[Dictionary]
 	_map_id = params.get("map_id", StringName(""))
-
 	print("[VersusMode] on_enter: players=", str(_players_param.size()), " map_id=", String(_map_id))
 	if String(_map_id) == "":
 		push_warning("[VersusMode] No map_id provided in params. Ensure Game.begin_local_controller received a map ref.")
 
-	# Do NOT load maps here; Game/MapManager owns that and the overlay
-
 func on_exit() -> void:
 	print("[VersusMode] on_exit: cleaning up ", str(_spawned.size()), " spawned actors.")
-	# Clean up only your own spawned gameplay nodes. Game owns the map lifecycle.
 	for c in _spawned:
 		if is_instance_valid(c):
 			c.queue_free()
 	_spawned.clear()
 	_map_instance = null
 
+	# Clean up HUD if we created it
+	if _hud and is_instance_valid(_hud):
+		print("[VersusMode][HUD] Freeing HUD instance")
+		_hud.queue_free()
+	_hud = null
+
 func on_map_ready(map_instance: Node3D) -> void:
-	# Called by Game once the map is in the scene and ready.
 	_map_instance = map_instance
 	print("[VersusMode] on_map_ready: map_instance=", str(_map_instance))
 	if not _map_instance:
 		push_error("[VersusMode] on_map_ready called with null map instance.")
 		return
 
+	print("[VersusMode] Spawning players...")
 	_spawn_players_from_boxer_data()
-	_pair_targets()
 	_setup_cameras()
 
+	# HUD + Countdown flow (preferred if a FightHUD scene is provided)
+	var did_countdown := false
+	if fight_hud_scene:
+		print("[VersusMode][HUD] fight_hud_scene is assigned, ensuring HUD...")
+		var hud := _ensure_hud()
+		if hud:
+			print("[VersusMode][HUD] HUD instance ready: ", hud.name, " (", hud.get_class(), ")")
+			# Provide spawned players to HUD (for names/health bars)
+			if hud.has_method("bind_players"):
+				print("[VersusMode][HUD] Calling bind_players() with ", str(_spawned.size()), " players")
+				hud.bind_players(_spawned)
+			else:
+				print("[VersusMode][HUD][WARN] HUD missing bind_players()")
+			# Optional countdown gating pairing
+			if use_countdown:
+				if hud.has_method("show_countdown"):
+					print("[VersusMode][HUD] Starting countdown for ", str(countdown_seconds), " seconds...")
+					did_countdown = true
+					await hud.show_countdown(countdown_seconds)
+					print("[VersusMode][HUD] Countdown finished")
+				else:
+					print("[VersusMode][HUD][WARN] HUD missing show_countdown(), skipping countdown")
+			else:
+				print("[VersusMode][HUD] use_countdown=false, skipping countdown")
+		else:
+			print("[VersusMode][HUD][ERROR] _ensure_hud() returned null")
+	else:
+		print("[VersusMode][HUD] No fight_hud_scene assigned, skipping HUD")
+
+	# Pair targets either after countdown or using legacy auto-pair flags
+	if did_countdown:
+		print("[VersusMode] Pairing targets after countdown...")
+		_pair_targets()
+		_enable_auto_face_target(true)
+	else:
+		if auto_pair_targets_on_ready:
+			if auto_pair_delay_sec > 0.0:
+				print("[VersusMode] Auto pair delay: ", str(auto_pair_delay_sec), "s")
+				await get_tree().create_timer(auto_pair_delay_sec).timeout
+			print("[VersusMode] Auto pairing due to flags...")
+			_pair_targets()
+
+# Public entry if you want to trigger countdown + start from outside (e.g., after a custom intro)
+func start_round() -> void:
+	print("[VersusMode] start_round() invoked")
+	if fight_hud_scene and _hud and is_instance_valid(_hud) and use_countdown and _hud.has_method("show_countdown"):
+		print("[VersusMode][HUD] Starting countdown from start_round(): ", str(countdown_seconds))
+		await _hud.show_countdown(countdown_seconds)
+		print("[VersusMode][HUD] Countdown finished (start_round)")
+	print("[VersusMode] Pairing targets (start_round)")
+	_pair_targets()
+	_enable_auto_face_target(true)
+
+# -------------------------------------------------------
+# HUD helpers
+# -------------------------------------------------------
+func _ensure_hud() -> Node:
+	if _hud and is_instance_valid(_hud):
+		print("[VersusMode][HUD] Reusing existing HUD")
+		return _hud
+	if not fight_hud_scene:
+		print("[VersusMode][HUD][ERROR] fight_hud_scene not set")
+		return null
+	_hud = fight_hud_scene.instantiate()
+	if _hud == null:
+		print("[VersusMode][HUD][ERROR] Instantiation failed")
+		return null
+	var parent: Node = _map_instance if _map_instance else self
+	parent.add_child(_hud)
+	print("[VersusMode][HUD] Added HUD to parent: ", parent.name)
+	return _hud
+
+# Replace your _enable_auto_face_target with this
+func _enable_auto_face_target(enabled: bool) -> void:
+	for c in _spawned:
+		if c == null:
+			continue
+		if c.has_method("set_auto_face_target_enabled"):
+			c.set_auto_face_target_enabled(enabled)
+			print("[VersusMode] auto_face_target via method for ", c.name, " = ", str(enabled))
+		elif _has_property(c, &"auto_face_target"):
+			c.set("auto_face_target", enabled)
+			print("[VersusMode] auto_face_target via property for ", c.name, " = ", str(enabled))
+		else:
+			print("[VersusMode][WARN] ", c.name, " has no auto-face API (method or property). Skipping.")
+
+# Helper: check if an object exposes a property by name
+func _has_property(obj: Object, prop: StringName) -> bool:
+	var plist := obj.get_property_list()
+	for p in plist:
+		# p is a Dictionary with keys like "name", "type", ...
+		if p.has("name") and StringName(p["name"]) == prop:
+			return true
+	return false
+
+# Optional: add more debug to pairing so you can see assignments clearly
+func _pair_targets() -> void:
+	if _spawned.is_empty():
+		print("[VersusMode] _pair_targets(): no actors to pair")
+		return
+	if _spawned.size() == 2:
+		_spawned[0].set_fight_target(_spawned[1])
+		_spawned[1].set_fight_target(_spawned[0])
+		print("[VersusMode] Paired 2 players: ",
+			_spawned[0].name, " <-> ", _spawned[1].name)
+		return
+	for i in _spawned.size():
+		var me := _spawned[i]
+		var other := _spawned[(i + 1) % _spawned.size()]
+		me.set_fight_target(other)
+		print("[VersusMode] Pair: ", me.name, " -> ", other.name)
+	print("[VersusMode] Paired ", str(_spawned.size()), " players in a ring.")
 # -------------------------------------------------------
 # Spawning and setup
 # -------------------------------------------------------
@@ -59,7 +185,6 @@ func _spawn_players_from_boxer_data() -> void:
 	if not _map_instance:
 		push_warning("[VersusMode] No map instance; cannot spawn players.")
 		return
-
 	if not boxer_library:
 		push_warning("[VersusMode] boxer_library not assigned; cannot resolve boxer scenes.")
 		return
@@ -81,11 +206,8 @@ func _spawn_players_from_boxer_data() -> void:
 			continue
 
 		var boxer := _lookup_boxer_data(char_id)
-		if boxer == null:
-			push_warning("[VersusMode] No BoxerData for id=" + String(char_id))
-			continue
-		if boxer.scene == null:
-			push_warning("[VersusMode] BoxerData has no scene for id=" + String(char_id))
+		if boxer == null or boxer.scene == null:
+			push_warning("[VersusMode] Invalid BoxerData or scene for id=" + String(char_id))
 			continue
 
 		var boxer_instance := boxer.scene.instantiate()
@@ -93,39 +215,38 @@ func _spawn_players_from_boxer_data() -> void:
 			push_warning("[VersusMode] Failed to instance boxer scene for " + String(char_id))
 			continue
 
-		# Try to find the BaseCharacter node: root or a CharacterBody3D within
+		# Find the BaseCharacter node (prefer the actual actor so we don't fight a rotated parent)
 		var actor: BaseCharacter = null
 		if boxer_instance is BaseCharacter:
 			actor = boxer_instance as BaseCharacter
 		elif boxer_instance is CharacterBody3D:
 			actor = boxer_instance as BaseCharacter
 		else:
-			actor = boxer_instance.get_node_or_null(".") as BaseCharacter
-			if actor == null:
-				actor = boxer_instance.get_tree().get_first_node_in_group("base_character") as BaseCharacter
+			actor = boxer_instance.get_tree().get_first_node_in_group("base_character") as BaseCharacter
 			if actor == null:
 				for n in boxer_instance.get_children():
 					if n is CharacterBody3D:
 						actor = n as BaseCharacter
 						break
 
-		# Parent the instance into the map
 		_map_instance.add_child(boxer_instance)
 
-		# Position and face direction
-		var xform := _get_spawn_transform(i, spawns, _players_param.size())
-		if boxer_instance is Node3D:
-			(boxer_instance as Node3D).global_transform = xform
-		elif actor:
-			actor.global_transform = xform
+		# Position first, then orient using look_at (Y flattened). Ignore marker rotation entirely.
+		var pose := _get_spawn_pose(i, spawns, _players_param.size())
+		if actor and actor is Node3D:
+			_apply_spawn_pose(actor as Node3D, pose.origin, pose.facing)
+		elif boxer_instance is Node3D:
+			_apply_spawn_pose(boxer_instance as Node3D, pose.origin, pose.facing)
+		else:
+			push_warning("[VersusMode] Spawned node is not Node3D; cannot apply spawn pose.")
 
-		# Configure actor (attack set, library, cosmetics) if found
+		# Configure actor
 		if actor:
 			_apply_attack_selection(actor, p)
 			_apply_player_color(boxer_instance, p.get("color", Color.WHITE))
 			actor.name = "Player_" + str(src_id)
 			_spawned.append(actor)
-			print("[VersusMode] Spawned OK: ", actor.name, " at ", str(xform.origin))
+			print("[VersusMode] Spawned OK: ", actor.name, " at ", str(pose.origin))
 		else:
 			push_warning("[VersusMode] Could not find BaseCharacter in boxer scene for " + String(char_id))
 
@@ -135,12 +256,10 @@ func _spawn_players_from_boxer_data() -> void:
 		print("[VersusMode] Total spawned actors: ", str(_spawned.size()))
 
 func _apply_attack_selection(actor: BaseCharacter, player_params: Dictionary) -> void:
-	# AttackLibrary default (if actor didn't already get one from scene)
 	if attack_library_default and actor.attack_library == null:
 		actor.attack_library = attack_library_default
 		print("[VersusMode] Applied default AttackLibrary to ", actor.name)
 
-	# Set the chosen AttackSetData by id, if available
 	var set_id: StringName = player_params.get("attack_set_id", StringName(""))
 	if String(set_id) == "":
 		return
@@ -159,13 +278,11 @@ func _apply_attack_selection(actor: BaseCharacter, player_params: Dictionary) ->
 		push_warning("[VersusMode] AttackSet not found: " + String(set_id))
 
 func _apply_player_color(root: Node, color: Color) -> void:
-	# Optional cosmetic: find a MeshInstance3D named "TeamColor" or with a material override and tint it.
 	if not root:
 		return
 	var mesh := (root as Node).find_child("TeamColor", true, false)
 	if mesh and mesh is MeshInstance3D:
 		var mi := mesh as MeshInstance3D
-		# Try material override first
 		if mi.material_override:
 			var mat := mi.material_override.duplicate() as StandardMaterial3D
 			if mat:
@@ -180,36 +297,16 @@ func _apply_player_color(root: Node, color: Color) -> void:
 				mi.set_surface_override_material(0, dup)
 				print("[VersusMode] Tinted TeamColor via surface override.")
 
-# Pair players for targeting
-func _pair_targets() -> void:
-	if _spawned.is_empty():
-		return
-	if _spawned.size() == 2:
-		_spawned[0].set_fight_target(_spawned[1])
-		_spawned[1].set_fight_target(_spawned[0])
-		print("[VersusMode] Paired 2 players against each other.")
-		return
-	for i in _spawned.size():
-		var me := _spawned[i]
-		var other := _spawned[(i + 1) % _spawned.size()]
-		me.set_fight_target(other)
-	print("[VersusMode] Paired ", str(_spawned.size()), " players in a ring.")
-
 func _setup_cameras() -> void:
-	# If there's already an active camera, we're good.
 	var vp := get_viewport()
 	if vp and vp.get_camera_3d():
 		print("[VersusMode] Active camera already present: ", vp.get_camera_3d().name)
 		return
-
-	# Search within the current map instance for any Camera3D and make it current.
 	var map_cam := _find_camera_in_map()
 	if map_cam:
 		map_cam.current = true
 		print("[VersusMode] Activated camera found in map: ", map_cam.name)
 		return
-
-	# Fallback: ask Game to ensure one exists/spawn a temporary one (belt-and-braces).
 	if game and game.has_method("ensure_free_camera"):
 		print("[VersusMode] No camera found; requesting Game.ensure_free_camera()")
 		game.ensure_free_camera()
@@ -231,18 +328,12 @@ func _find_camera_in_map() -> Camera3D:
 # -------------------------------------------------------
 func _collect_spawn_points(map_root: Node3D) -> Array[Marker3D]:
 	var out: Array[Marker3D] = []
-
-	# Preferred: nodes with SpawnPoint script (auto in "spawn" group)
 	for n in map_root.get_tree().get_nodes_in_group("spawn"):
 		if n is Marker3D:
 			out.append(n as Marker3D)
-
-	# If none found, accept any Marker3D named like "Spawn" underneath
 	if out.is_empty():
 		for n in map_root.get_children():
 			_collect_marker3d_rec(n, out)
-
-	# Sort by index if they have a property "index", else by name
 	out.sort_custom(func(a: Marker3D, b: Marker3D) -> bool:
 		var ai = a.get("index") if a.has_method("get") else null
 		var bi = b.get("index") if b.has_method("get") else null
@@ -250,7 +341,6 @@ func _collect_spawn_points(map_root: Node3D) -> Array[Marker3D]:
 			return int(ai) < int(bi)
 		return String(a.name) < String(b.name)
 	)
-
 	if out.is_empty():
 		print("[VersusMode] No spawn markers found; will use fallback center.")
 	else:
@@ -263,40 +353,47 @@ func _collect_marker3d_rec(n: Node, into: Array[Marker3D]) -> void:
 	for c in n.get_children():
 		_collect_marker3d_rec(c, into)
 
-func _get_spawn_transform(i: int, spawns: Array[Marker3D], total_players: int) -> Transform3D:
-	# Use explicit spawn marker if available
+# Position and facing, ignoring marker rotation entirely
+func _get_spawn_pose(i: int, spawns: Array[Marker3D], total_players: int) -> Dictionary:
+	var origin := Vector3.ZERO
+	var facing := -Vector3.FORWARD
+
 	if i < spawns.size():
 		var m := spawns[i]
-		var origin := m.global_transform.origin
-		# Face toward arena center (0,0,0) as a sane default when using explicit markers
-		var target := Vector3.ZERO
-		var dir := (target - origin)
-		if dir.length() < 0.001:
-			dir = -Vector3.FORWARD
-		else:
-			dir = dir.normalized()
-		var basis := Basis.looking_at(dir, Vector3.UP)
-		return Transform3D(basis, origin)
-
-	# Fallback: place players on a circle around a configurable center (default 0,10,0)
-	var center := fallback_spawn_center
-	var radius := fallback_spawn_radius
-	if total_players == 2:
-		# Two players opposite each other, facing toward center
-		var angle := 0.0 if i == 0 else PI
-		var offset := Vector3(radius * cos(angle), 0.0, radius * sin(angle))
-		var pos := center + offset
-		var facing := (center - pos).normalized()
-		var basis2 := Basis.looking_at(facing, Vector3.UP)
-		return Transform3D(basis2, pos)
+		origin = m.global_transform.origin
+		# Face toward world center from the marker position (flattened)
+		facing = Vector3(-origin.x, 0.0, -origin.z)
 	else:
-		# N players around a circle
-		var ang = TAU * float(i) / max(1.0, float(total_players))
-		var offset2 := Vector3(radius * cos(ang), 0.0, radius * sin(ang))
-		var p := center + offset2
-		var f := (center - p).normalized()
-		var b := Basis.looking_at(f, Vector3.UP)
-		return Transform3D(b, p)
+		var center := fallback_spawn_center
+		var radius := fallback_spawn_radius
+		if total_players == 2:
+			var angle := 0.0 if i == 0 else PI
+			var offset := Vector3(radius * cos(angle), 0.0, radius * sin(angle))
+			origin = center + offset
+			facing = Vector3(center.x - origin.x, 0.0, center.z - origin.z)
+		else:
+			var ang = TAU * float(i) / max(1.0, float(total_players))
+			var offset2 := Vector3(radius * cos(ang), 0.0, radius * sin(ang))
+			origin = center + offset2
+			facing = Vector3(center.x - origin.x, 0.0, center.z - origin.z)
+
+	if facing.length_squared() < 0.000001:
+		facing = -Vector3.FORWARD
+
+	return { "origin": origin, "facing": facing }
+
+# Apply spawn pose: set position, then look_at with Y flattened to avoid pitch
+func _apply_spawn_pose(target_node: Node3D, origin: Vector3, facing: Vector3) -> void:
+	target_node.global_position = origin
+	var flat_dir := facing
+	flat_dir.y = 0.0
+	if flat_dir.length_squared() < 0.000001:
+		flat_dir = -Vector3.FORWARD
+	else:
+		flat_dir = flat_dir.normalized()
+	target_node.look_at(origin + flat_dir, Vector3.UP)
+	if absf(spawn_yaw_offset_degrees) > 0.001:
+		target_node.rotate_y(deg_to_rad(spawn_yaw_offset_degrees))
 
 # -------------------------------------------------------
 # Lookups

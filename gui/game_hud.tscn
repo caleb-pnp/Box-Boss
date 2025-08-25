@@ -1,6 +1,17 @@
-[gd_scene load_steps=2 format=3 uid="uid://0slv21l3mmx2"]
+[gd_scene load_steps=2 format=3 uid="uid://b3dnj7aj2id8j"]
 
-[ext_resource type="Script" uid="uid://n8mffvk44sd7" path="res://gui/game_hud.gd" id="1_7tqas"]
+[sub_resource type="GDScript" id="GDScript_imxgr"]
+script/source = "extends Control
+
+# countdown layer variables
+@onready var countdown_layer = $CountdownLayer
+@onready var countdown_number = $CountdownLayer/Control/VBoxContainer/CountdownNumber
+
+# view variables
+@onready var game_view = $GameView
+@onready var finished_view = $FinishedView
+@onready var spectating_view = $SpectatingView
+"
 
 [node name="GameHud" type="Control"]
 layout_mode = 3
@@ -9,7 +20,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_7tqas")
+script = SubResource("GDScript_imxgr")
 
 [node name="GameView" type="Control" parent="."]
 layout_mode = 1

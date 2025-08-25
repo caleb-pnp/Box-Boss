@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://sqgu8qqnt5ft"]
+
+[ext_resource type="Script" uid="uid://cu7af6qf715bi" path="res://cameras/ring_camera.gd" id="1_3d2io"]
+
+[node name="RingCamera" type="Node3D"]
+script = ExtResource("1_3d2io")
+
+[node name="Camera3D" type="Camera3D" parent="."]

@@ -1,7 +1,20 @@
-[gd_scene load_steps=3 format=3 uid="uid://duysut0txis6u"]
+[gd_scene load_steps=3 format=3 uid="uid://cobys7pa44ap4"]
 
 [ext_resource type="Theme" uid="uid://bc7ta7mukaaxi" path="res://themes/main.tres" id="1_qpgca"]
-[ext_resource type="Script" uid="uid://c1a13wau8l28v" path="res://gui/scoring_hud.gd" id="2_rb2jr"]
+
+[sub_resource type="GDScript" id="GDScript_46fi0"]
+script/source = "extends Control
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	pass
+"
 
 [node name="ScoringHud" type="Control"]
 layout_mode = 3
@@ -11,7 +24,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("1_qpgca")
-script = ExtResource("2_rb2jr")
+script = SubResource("GDScript_46fi0")
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 layout_mode = 1

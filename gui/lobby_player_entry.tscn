@@ -1,6 +1,24 @@
-[gd_scene load_steps=2 format=3 uid="uid://5qy887alrn6x"]
+[gd_scene load_steps=2 format=3 uid="uid://xxc4lxficavn"]
 
-[ext_resource type="Script" uid="uid://cmxvjpuwkolcx" path="res://gui/lobby_player_entry.gd" id="1_5q0e7"]
+[sub_resource type="GDScript" id="GDScript_6ctxs"]
+script/source = "extends HBoxContainer
+
+@export var player_name: String
+@export var is_ready: bool
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	$PlayerName.text = player_name
+	if is_ready:
+		$PlayerStatus.text = \"READY\"
+	else:
+		$PlayerStatus.text = \"LOADING...\"
+"
 
 [node name="LobbyPlayerEntry" type="HBoxContainer"]
 anchors_preset = 10
@@ -8,7 +26,7 @@ anchor_right = 1.0
 offset_bottom = 23.0
 grow_horizontal = 2
 size_flags_vertical = 0
-script = ExtResource("1_5q0e7")
+script = SubResource("GDScript_6ctxs")
 
 [node name="PlayerName" type="Label" parent="."]
 layout_mode = 2

@@ -2,7 +2,7 @@ extends GridContainer
 class_name PrefightCharacterGrid
 
 @export var grid_columns: int = 4
-@export var tile_scene: PackedScene = preload("res://ui/character_tile.tscn")
+@export var tile_scene: PackedScene = preload("res://gui/character_tile.tscn")
 
 var _tiles: Array[CharacterTile] = []
 var _index_by_id: Dictionary = {}              # String (id) -> tile index
