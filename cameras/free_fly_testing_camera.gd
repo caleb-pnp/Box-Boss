@@ -2,7 +2,6 @@ extends Node3D
 class_name FreeFlyTestingCamera
 """
 Free-fly camera with click-to-ground raycasts + optional world-space aim marker.
-
 Children:
 - Camera3D at $Camera3D
 
@@ -49,17 +48,35 @@ func _ready() -> void:
 	_pitch = camera_node.rotation_degrees.x
 	_resolve_indicator()
 	enable_camera()
+	print("[FreeFlyCam] ready: capturing mouse, press Esc to toggle.")
 
 func enable_camera() -> void:
 	camera_node.make_current()
 	_active = true
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	print("[FreeFlyCam] enabled (captured).")
 
 func disable_camera() -> void:
 	_active = false
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_velocity = Vector3.ZERO
+	print("[FreeFlyCam] disabled (visible cursor).")
 
+# Handle motion BEFORE UI can consume it
+func _input(event: InputEvent) -> void:
+	if not _active:
+		return
+
+	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
+		_yaw -= event.relative.x * mouse_sensitivity
+		_pitch -= event.relative.y * mouse_sensitivity
+		_pitch = clamp(_pitch, -90.0, 90.0)
+		self.rotation_degrees.y = _yaw
+		camera_node.rotation_degrees.x = _pitch
+		# Debug small sample
+		# print("[FreeFlyCam] motion: rel=", event.relative, " yaw=", _yaw, " pitch=", _pitch)
+
+# Keep clicks in unhandled so UI can block them when appropriate
 func _unhandled_input(event: InputEvent) -> void:
 	# Toggle capture with Esc
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
@@ -74,25 +91,22 @@ func _unhandled_input(event: InputEvent) -> void:
 			enable_camera()
 		return
 
-	if event is InputEventMouseMotion and Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
-		_yaw -= event.relative.x * mouse_sensitivity
-		_pitch -= event.relative.y * mouse_sensitivity
-		_pitch = clamp(_pitch, -90.0, 90.0)
-		self.rotation_degrees.y = _yaw
-		camera_node.rotation_degrees.x = _pitch
-
 	if event is InputEventMouseButton and event.pressed:
 		var hit: Dictionary = _raycast_mouse()
 		if hit.is_empty():
+			# print("[FreeFlyCam] click: no ground hit")
 			return
 		var pt: Vector3 = hit["position"]
 		match event.button_index:
 			MOUSE_BUTTON_LEFT:
 				left_click_ground.emit(pt)
+				# print("[FreeFlyCam] LMB at ", pt)
 			MOUSE_BUTTON_RIGHT:
 				right_click_ground.emit(pt, Input.is_key_pressed(KEY_SHIFT))
+				# print("[FreeFlyCam] RMB at ", pt, " shift=", Input.is_key_pressed(KEY_SHIFT))
 			MOUSE_BUTTON_MIDDLE:
 				middle_click_ground.emit(pt)
+				# print("[FreeFlyCam] MMB at ", pt)
 
 func _physics_process(delta: float) -> void:
 	if not _active:
@@ -116,18 +130,19 @@ func _physics_process(delta: float) -> void:
 			aim_indicator.clear_target()
 		else:
 			var pos: Vector3 = hit["position"]
-			var nrm: Vector3 = hit["normal"] if hit.has("normal") else Vector3.UP
+			var nrm: Vector3 = hit.get("normal", Vector3.UP)
 			aim_indicator.set_target(pos, nrm)
 
 func get_mouse_ground_point() -> Vector3:
 	var hit: Dictionary = _raycast_mouse()
-	return hit["position"] if not hit.is_empty() else Vector3.INF
+	return hit.get("position", Vector3.INF)
 
 func _raycast_mouse() -> Dictionary:
 	var vp := get_viewport()
 	if not vp:
 		return {}
 	var mouse: Vector2 = vp.get_mouse_position()
+	# In captured mode, mouse position typically stays near center; we treat that as screen center ray.
 	var from: Vector3 = camera_node.project_ray_origin(mouse)
 	var to: Vector3 = from + camera_node.project_ray_normal(mouse) * ray_length
 	var space: PhysicsDirectSpaceState3D = vp.world_3d.direct_space_state

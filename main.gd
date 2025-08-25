@@ -16,12 +16,12 @@ enum NetworkRole { ROLE_NONE, ROLE_SERVER, ROLE_CLIENT }
 var game_network_role := NetworkRole.ROLE_NONE
 
 # Scene management
-@onready var scene_container: Node = $SceneContainer
+@onready var scene_container: Node3D = $SceneContainer # the active scene
+@onready var net_root: Node3D = $NetRoot # multiplayer spawner monitors this node
+@onready var loading_screen_node: Node = $GUILayer/LoadingScreen # permanent loading screen instance
+
 var current_scene_instance: Node = null
 var is_loading: bool = false
-
-# Permanent loading screen instance in scene: Main/GUILayer/LoadingScreen
-@onready var loading_screen_node: Node = $GUILayer/LoadingScreen
 
 # Main menu and game scene paths
 @export var main_menu_screen: PackedScene = preload("res://menu.tscn")
@@ -348,4 +348,71 @@ func clear_ui() -> void:
 	if not host:
 		return
 	for child in host.get_children():
+		child.queue_free()
+
+# -------------------------
+# Networked spawn helpers (NetRoot)
+# -------------------------
+# Get or create the NetRoot (permanent parent for networked entities)
+func get_net_root() -> Node3D:
+	var n: Node3D = null
+	if is_instance_valid(net_root):
+		n = net_root
+	else:
+		n = get_node_or_null("NetRoot") as Node3D
+	if n == null:
+		n = Node3D.new()
+		n.name = "NetRoot"
+		add_child(n)
+	net_root = n
+	return n
+
+# Try to locate a MultiplayerSpawner under NetRoot.
+# - Returns the first child that is a MultiplayerSpawner.
+# - Falls back to a node named "Spawner" if types can’t be checked.
+func get_net_spawner() -> Node:
+	var root := get_net_root()
+	# Preferred: find by type
+	for child in root.get_children():
+		# Avoid strict typing to keep this flexible if MultiplayerSpawner isn’t compiled here
+		if child.get_class() == "MultiplayerSpawner":
+			return child
+	# Fallback by common names
+	var by_name := root.get_node_or_null("Spawner")
+	if by_name:
+		return by_name
+	var by_alt := root.get_node_or_null("MultiplayerSpawner")
+	return by_alt
+
+# Spawn a networked scene under NetRoot directly (basic pattern).
+# Note: for late joiners and deterministic spawning, prefer using a MultiplayerSpawner.
+func spawn_networked_scene(scene: PackedScene, parent: Node = null) -> Node:
+	if scene == null:
+		push_error("[Main] spawn_networked_scene: scene is null.")
+		return null
+	var node := scene.instantiate()
+	var p := parent if parent != null else get_net_root()
+	p.add_child(node)
+	return node
+
+# Preferred: spawn via MultiplayerSpawner so late joiners reconstruct the same objects.
+# The exact API of your spawner may differ; this calls a generic "spawn" method if present.
+func spawn_networked_with_spawner(scene_id: StringName, data:Variant = null) -> Node:
+	var spawner := get_net_spawner()
+	if spawner == null:
+		push_error("[Main] No MultiplayerSpawner found under NetRoot. Cannot spawn networked with spawner.")
+		return null
+	if not spawner.has_method("spawn"):
+		push_error("[Main] MultiplayerSpawner has no 'spawn' method; wire up your spawn callback.")
+		return null
+	# Typically call from the server/authority
+	return spawner.call("spawn", scene_id, data)
+
+# Optional: clear all networked entities (keeps the spawner node if present)
+func clear_net_root(keep_spawner: bool = true) -> void:
+	var root := get_net_root()
+	for child in root.get_children():
+		var is_spawner := child.get_class() == "MultiplayerSpawner" or child.name == "Spawner" or child.name == "MultiplayerSpawner"
+		if keep_spawner and is_spawner:
+			continue
 		child.queue_free()

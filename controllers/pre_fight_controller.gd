@@ -20,6 +20,9 @@ var _time_left: float = 0.0
 var _router: PunchInputRouter
 var _view: PrefightView
 
+# Prevent new players from joining after character select
+var _roster_locked: bool = false
+
 const PLAYER_COLORS: Array[Color] = [
 	Color(0.95, 0.25, 0.25),
 	Color(0.25, 0.6, 0.95),
@@ -67,6 +70,7 @@ func on_enter(_params: Dictionary) -> void:
 	print("[PreFight] on_enter: resetting state. char=", char_select_sec, " set=", set_select_sec, " mode=", mode_select_sec, " map=", map_select_sec, " summary=", summary_sec)
 	_phase = Phase.CHARACTER
 	_time_left = char_select_sec
+	_roster_locked = false
 	_players_by_source.clear()
 	_players.clear()
 	_mode_choice_by_source.clear()
@@ -142,7 +146,8 @@ func tick(delta: float) -> void:
 	# Time for a phase transition
 	match _phase:
 		Phase.CHARACTER:
-			print("[PreFight] Phase CHARACTER complete. Advancing to ATTACK_SET.")
+			print("[PreFight] Phase CHARACTER complete. Locking roster and advancing to ATTACK_SET.")
+			_roster_locked = true
 			_phase = Phase.ATTACK_SET
 			_time_left = set_select_sec
 			if _view:
@@ -194,8 +199,9 @@ func on_punch(_source_id: int, _force: float) -> void:
 func _on_punched(source_id: int, _force: float) -> void:
 	match _phase:
 		Phase.CHARACTER:
-			var sel := _ensure_player(source_id)
-			if _boxer_ids.is_empty(): return
+			var sel := _ensure_player(source_id, true)
+			if sel == null or _boxer_ids.is_empty():
+				return
 			var idx: int = (_boxer_ids.find(sel.character_id) if String(sel.character_id) != "" else -1)
 			idx = (idx + 1) % _boxer_ids.size()
 			sel.character_id = _boxer_ids[idx]
@@ -204,7 +210,8 @@ func _on_punched(source_id: int, _force: float) -> void:
 				_view.ensure_player(source_id, sel.color)
 				_view.set_player_character(source_id, String(sel.character_id))
 		Phase.ATTACK_SET:
-			if not _players_by_source.has(source_id) or _attack_set_ids.is_empty(): return
+			if not _players_by_source.has(source_id) or _attack_set_ids.is_empty():
+				return
 			var sel2: PlayerSel = _players_by_source[source_id]
 			var idx2: int = (_attack_set_ids.find(sel2.attack_set_id) if String(sel2.attack_set_id) != "" else -1)
 			idx2 = (idx2 + 1) % _attack_set_ids.size()
@@ -214,6 +221,10 @@ func _on_punched(source_id: int, _force: float) -> void:
 				_view.ensure_player(source_id, sel2.color)
 				_view.set_player_set(source_id, String(sel2.attack_set_id))
 		Phase.MODE:
+			# Ignore new/unregistered players once roster is locked
+			if not _players_by_source.has(source_id):
+				print("[PreFight] Ignoring punch from unknown source ", source_id, " (roster locked).")
+				return
 			if not mode_library:
 				push_warning("[PreFight] ModeLibrary not assigned; cannot pick modes.")
 				return
@@ -228,11 +239,16 @@ func _on_punched(source_id: int, _force: float) -> void:
 			_mode_choice_by_source[source_id] = new_mode
 			print("[PreFight] P", source_id, " cycling mode ->", String(new_mode))
 			if _view:
-				_view.ensure_player(source_id, _ensure_player(source_id).color)
+				var existing := _players_by_source[source_id] as PlayerSel
+				_view.ensure_player(source_id, existing.color)
 				if _view.has_method("set_player_mode"):
 					_view.set_player_mode(source_id, String(new_mode))
 				_view.set_mode("Choosing (latest): " + String(new_mode))
 		Phase.MAP:
+			# Ignore new/unregistered players once roster is locked
+			if not _players_by_source.has(source_id):
+				print("[PreFight] Ignoring punch from unknown source ", source_id, " (roster locked).")
+				return
 			if not map_library:
 				push_warning("[PreFight] MapLibrary not assigned; cannot pick maps.")
 				return
@@ -248,17 +264,24 @@ func _on_punched(source_id: int, _force: float) -> void:
 			_map_choice_by_source[source_id] = new_map
 			print("[PreFight] P", source_id, " cycling map ->", String(new_map))
 			if _view:
-				_view.ensure_player(source_id, _ensure_player(source_id).color)
+				var existing2 := _players_by_source[source_id] as PlayerSel
+				_view.ensure_player(source_id, existing2.color)
 				if _view.has_method("set_player_map"):
 					_view.set_player_map(source_id, String(new_map))
 				if _view.has_method("set_map"):
 					_view.set_map(String(new_map))
 		_:
-			pass
+			# Ignore punches in SUMMARY/DONE or unexpected phases
+			return
 
-func _ensure_player(source_id: int) -> PlayerSel:
+# Returns existing player or creates a new one if allowed (only during CHARACTER phase).
+# When roster is locked or create_if_missing=false, returns null for unknown sources.
+func _ensure_player(source_id: int, create_if_missing: bool = true) -> PlayerSel:
 	if _players_by_source.has(source_id):
 		return _players_by_source[source_id]
+	if _roster_locked or not create_if_missing:
+		print("[PreFight] Roster locked (or creation disabled). Ignoring new player src=", source_id)
+		return null
 	var color: Color = PLAYER_COLORS[_players.size() % PLAYER_COLORS.size()]
 	var sel := PlayerSel.new(source_id, color)
 	_players_by_source[source_id] = sel

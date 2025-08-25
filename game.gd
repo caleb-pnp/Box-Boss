@@ -130,7 +130,6 @@ func _join_game_as_host() -> void:
 func _on_map_manager_loading_progress(progress: float) -> void:
 	if Main.instance:
 		Main.instance.update_loading(progress)
-	print("[GAME] Map loading progress: ", str(round(progress * 100.0)), "%")
 
 # Map finished loading (PackedScene is ready to instantiate)
 func _on_map_manager_map_loaded(packed_scene: PackedScene) -> void:
@@ -201,11 +200,9 @@ func clear_old_map() -> void:
 # ---------------------------------------------
 # Host-only controller orchestration
 # ---------------------------------------------
-# Normalize IDs to lowercase before comparing
 func begin_local_controller(controller_ref: String, map_path_or_id: String, params: Dictionary) -> void:
 	var norm_ref := String(controller_ref).strip_edges().to_lower()
 	var norm_map_ref := String(map_path_or_id).strip_edges()
-	# Only lowercase if it's an ID, not a path
 	if norm_map_ref != "" and not _is_scene_path(norm_map_ref):
 		norm_map_ref = norm_map_ref.to_lower()
 
@@ -226,7 +223,6 @@ func begin_local_controller(controller_ref: String, map_path_or_id: String, para
 
 	_start_map_if_needed(norm_map_ref)
 
-# Start controller from a PackedScene (e.g., ModeData.controller_scene_path)
 func begin_local_controller_scene(scene: PackedScene, map_path_or_id: String, params: Dictionary) -> void:
 	var norm_map_ref := String(map_path_or_id).strip_edges()
 	if norm_map_ref != "" and not _is_scene_path(norm_map_ref):
@@ -247,7 +243,6 @@ func begin_local_controller_scene(scene: PackedScene, map_path_or_id: String, pa
 
 	_start_map_if_needed(norm_map_ref)
 
-# Start controller from a Script (e.g., ModeData.controller_script_path)
 func begin_local_controller_script(script: Script, map_path_or_id: String, params: Dictionary) -> void:
 	var norm_map_ref := String(map_path_or_id).strip_edges()
 	if norm_map_ref != "" and not _is_scene_path(norm_map_ref):
@@ -400,6 +395,42 @@ func _destroy_current_controller() -> void:
 		_current_controller.queue_free()
 		print("[GAME] Destroyed previous controller.")
 		_current_controller = null
+
+# ---------------------------------------------
+# Spawning helpers (local vs. networked)
+# ---------------------------------------------
+# Spawn a local-only node or scene under the current level container (cleaned with the map).
+func spawn_local(thing, parent: Node = null) -> Node:
+	var p := parent if parent != null else level_container
+	var node: Node = null
+	if thing is PackedScene:
+		node = thing.instantiate()
+	elif thing is Node:
+		node = thing
+	else:
+		push_error("[Game] spawn_local: unsupported type (needs Node or PackedScene).")
+		return null
+	p.add_child(node)
+	return node
+
+# Unified spawn: route to NetRoot for multiplayer, or LevelContainer for local.
+func spawn(thing, multiplayer: bool = false, parent: Node = null) -> Node:
+	if multiplayer:
+		if thing is PackedScene:
+			return Main.instance.spawn_networked_scene(thing, parent)
+		elif thing is Node:
+			var p := parent if parent != null else Main.instance.get_net_root()
+			p.add_child(thing)
+			return thing
+		else:
+			push_error("[Game] spawn (multiplayer): unsupported type; use a PackedScene or Node.")
+		return null
+	else:
+		return spawn_local(thing, parent)
+
+# Preferred networked spawning via MultiplayerSpawner by scene id/key.
+func spawn_networked_by_id(scene_id: StringName, data:Variant = null) -> Node:
+	return Main.instance.spawn_networked_with_spawner(scene_id, data)
 
 # External input pass-through (optional route from hardware to game to controller)
 func on_punch(source_id: int, force: float) -> void:

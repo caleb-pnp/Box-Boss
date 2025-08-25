@@ -8,7 +8,9 @@
 script = ExtResource("1_ig7tw")
 
 [node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
-spawn_path = NodePath("../SceneContainer")
+spawn_path = NodePath("../NetRoot")
+
+[node name="NetRoot" type="Node3D" parent="."]
 
 [node name="SceneContainer" type="Node3D" parent="."]
 
@@ -27,6 +29,7 @@ layout_mode = 3
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
+mouse_filter = 2
 
 [node name="ConnectedDeviceReconnectTimer" type="Timer" parent="."]
 wait_time = 5.0
