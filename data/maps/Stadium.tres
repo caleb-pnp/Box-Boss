@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MapData" load_steps=2 format=3 uid="uid://cgcc4f4fh4d81"]
+
+[ext_resource type="Script" uid="uid://be4lw1u4e135v" path="res://resources/map_data.gd" id="1_yaaog"]
+
+[resource]
+script = ExtResource("1_yaaog")
+description = "Everyone is welcome to The Stadium. A place where a fighters journey begins!
+"
+scene_path = "uid://c3kf0mkb7np12"
+spawn_group_name = &"spawn"
+id = &"stadium"
+display_name = "The Stadium"
+metadata/_custom_type_script = "uid://be4lw1u4e135v"

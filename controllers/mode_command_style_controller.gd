@@ -4,7 +4,6 @@ class_name ModeCommandStyleController
 @export var light_threshold: float = 5.0
 @export var heavy_threshold: float = 12.0
 
-var _map: Node3D
 var _queue_by_source: Dictionary = {} # source_id -> Array[StringName]
 
 func on_enter(params: Dictionary) -> void:

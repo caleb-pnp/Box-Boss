@@ -1,7 +1,9 @@
-MarginContainer
-GridContainer
 Label
 HBoxContainer
+Control
+CanvasLayer
+MarginContainer
+GridContainer
 VBoxContainer
 ItemList
 Camera3D
@@ -10,6 +12,3 @@ NavigationRegion3D
 AnimationTree
 SpotLight3D
 WorldEnvironment
-Node3D
-NavigationAgent3D
-DirectionalLight3D

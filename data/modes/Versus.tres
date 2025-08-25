@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ModeData" load_steps=3 format=3 uid="uid://c3vae0ui3r8ds"]
+
+[ext_resource type="Script" uid="uid://b1l5u33ek3y18" path="res://resources/mode_data.gd" id="1_dw58e"]
+[ext_resource type="Texture2D" uid="uid://cjxk6887kk5ql" path="res://art/Icons/boxing_versus.png" id="1_hxf1t"]
+
+[resource]
+script = ExtResource("1_dw58e")
+description = "A live versus mode"
+controller_key = &"versus"
+controller_scene_path = ""
+controller_script_path = "uid://dj5l2umgwkx2c"
+default_params = {}
+id = &"versus"
+display_name = "Versus"
+icon = ExtResource("1_hxf1t")
+metadata/_custom_type_script = "uid://b1l5u33ek3y18"

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="MapLibrary" load_steps=3 format=3 uid="uid://nmrw7tc523cb"]
+
+[ext_resource type="Script" uid="uid://qgjsx8l3g0v2" path="res://resources/map_library.gd" id="1_xew0m"]
+[ext_resource type="Resource" uid="uid://cgcc4f4fh4d81" path="res://data/maps/Stadium.tres" id="1_y6d1x"]
+
+[resource]
+script = ExtResource("1_xew0m")
+maps = Array[Resource]([ExtResource("1_y6d1x")])
+metadata/_custom_type_script = "uid://qgjsx8l3g0v2"

@@ -7,7 +7,6 @@ class_name ModeStrongestWinsController
 var _turn_index: int = 0
 var _time_left: float = 0.0
 var _peaks_by_turn_and_source: Dictionary = {} # key: "turn:source" -> float
-var _map: Node3D
 
 func on_enter(params: Dictionary) -> void:
 	turns_total = int(params.get("turns_total", turns_total))

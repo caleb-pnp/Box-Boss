@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://ibla2eyibdxa"]
+[gd_scene load_steps=4 format=3 uid="uid://ibla2eyibdxa"]
 
 [ext_resource type="Script" uid="uid://cvf8c3y6pyfh" path="res://main.gd" id="1_ig7tw"]
 [ext_resource type="PackedScene" uid="uid://b43o513sr0ur0" path="res://engine/console.tscn" id="2_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://b44wof1indwa4" path="res://engine/loading_screen.tscn" id="3_h2yge"]
 
 [node name="Main" type="Node3D"]
 script = ExtResource("1_ig7tw")
@@ -16,6 +17,16 @@ spawn_path = NodePath("../SceneContainer")
 [node name="AlertLayer" type="CanvasLayer" parent="."]
 
 [node name="AcceptDialog" type="AcceptDialog" parent="AlertLayer"]
+
+[node name="GUILayer" type="CanvasLayer" parent="."]
+
+[node name="LoadingScreen" parent="GUILayer" instance=ExtResource("3_h2yge")]
+
+[node name="UIContainer" type="Control" parent="GUILayer"]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
 
 [node name="ConnectedDeviceReconnectTimer" type="Timer" parent="."]
 wait_time = 5.0

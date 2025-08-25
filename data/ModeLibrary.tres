@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="ModeLibrary" load_steps=5 format=3 uid="uid://d4isa2mehr2u7"]
+
+[ext_resource type="Script" uid="uid://dxos64ak6tq85" path="res://resources/mode_library.gd" id="1_8arfk"]
+[ext_resource type="Resource" uid="uid://meu8jau6hkvu" path="res://data/modes/AttackDefence.tres" id="1_jkfeb"]
+[ext_resource type="Resource" uid="uid://ftks3ripd6ln" path="res://data/modes/Strongest.tres" id="2_g02ei"]
+[ext_resource type="Resource" uid="uid://c3vae0ui3r8ds" path="res://data/modes/Versus.tres" id="3_g02ei"]
+
+[resource]
+script = ExtResource("1_8arfk")
+modes = Array[Resource]([ExtResource("1_jkfeb"), ExtResource("2_g02ei"), ExtResource("3_g02ei")])
+metadata/_custom_type_script = "uid://dxos64ak6tq85"

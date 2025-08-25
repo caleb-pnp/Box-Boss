@@ -8,7 +8,6 @@ class_name ModeLiveWindowsController
 var _time_left: float = 0.0
 var _window_time: float = 0.0
 var _in_window: bool = false
-var _map: Node3D
 var _hits: Array[Dictionary] = [] # [{t:float, src:int, force:float}]
 
 func on_enter(params: Dictionary) -> void:

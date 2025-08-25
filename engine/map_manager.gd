@@ -1,103 +1,140 @@
-# Map Manager SINGLETON
 extends Node
+class_name MapLoader
 
-# A signal to announce when a map's PackedScene is ready.
 signal map_loaded(packed_scene: PackedScene)
-signal map_loaded_and_added_to_scene() # invoked back when added
-# A new signal to update a loading bar in your UI (sends a value from 0.0 to 1.0)
+signal map_loaded_and_added_to_scene()
 signal loading_progress(progress: float)
 
-# --- NEW: Member variables for tracking the background load ---
+@export var map_library: MapLibrary = preload("res://data/MapLibrary.tres")
+@export var exclude_ids_from_menu: Array[StringName] = [ &"podium" ]
+
 var _is_loading: bool = false
-var _current_loading_path: String
+var _current_loading_path: String = ""
+var _current_map_id: StringName = &""
+var _current_map_path: String = ""
+var _current_map_instance: Node3D = null
 
-# Dictionary mapping an ID to its preloaded MapInfo resource.
-const MAPS = {
-	# To add a new map, create its .tres config file and preload it here.
-}
-
-# This function now starts the background loading process.
-func load_map(map_id: StringName) -> void:
-	# Guard against starting a new load while one is in progress.
-	if _is_loading:
-		print("MAP MANAGER: Already loading a map.")
-		return
-
-	if not MAPS.has(map_id):
-		print("MAP MANAGER: Map ID not found: ", map_id)
-		return
-
-	_is_loading = true
-	var map_config = get_map_config(map_id)
-	_current_loading_path = map_config.scene_path
-
-	# Start loading the resource on a background thread. This returns immediately.
-	ResourceLoader.load_threaded_request(_current_loading_path)
-	print("MAP MANAGER: Started background load for: ", _current_loading_path)
-
-
-# The _process function checks the status of the load every frame.
-func _process(delta: float):
-	# Do nothing if we aren't currently loading a map.
+func _process(_delta: float) -> void:
 	if not _is_loading:
 		return
 
-	# This array will be populated by the function below.
-	var progress_array = []
-	# Check the status AND get the progress at the same time.
-	var status = ResourceLoader.load_threaded_get_status(_current_loading_path, progress_array)
-
+	var progress_array: Array[float] = []
+	var status := ResourceLoader.load_threaded_get_status(_current_loading_path, progress_array)
 	match status:
 		ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-			# Safety check to make sure the array is not empty.
 			if not progress_array.is_empty():
-				# The progress value (0.0 to 1.0) is the first element of the array.
-				var progress: float = progress_array[0]
+				var progress: float = clampf(progress_array[0], 0.0, 1.0)
 				loading_progress.emit(progress)
-
 		ResourceLoader.THREAD_LOAD_LOADED:
-			# The resource is now loaded!
-			var packed_scene = ResourceLoader.load_threaded_get(_current_loading_path)
-
-			print("MAP MANAGER: Background load finished.")
+			var packed_scene := ResourceLoader.load_threaded_get(_current_loading_path) as PackedScene
+			_is_loading = false
+			set_process(false) # stop polling
+			loading_progress.emit(1.0)
 			map_loaded.emit(packed_scene)
-
-			# Reset for the next load.
-			_is_loading = false
-			_current_loading_path = ""
-
 		ResourceLoader.THREAD_LOAD_FAILED:
-			print("MAP MANAGER: Background load failed!")
+			push_error("MapManager: Background load failed for: " + _current_loading_path)
 			_is_loading = false
+			set_process(false) # stop polling
 			_current_loading_path = ""
+			_current_map_id = &""
+			_current_map_path = ""
 
-# --- Your existing helper functions remain the same ---
+func load_map(map_id: StringName) -> void:
+	if _is_loading:
+		print("MapManager: Already loading a map.")
+		return
+	if map_library == null:
+		push_error("MapManager: map_library is not assigned.")
+		return
 
-# Returns the fully loaded MapInfo object for a given ID.
-func get_map_config(map_id: StringName) -> MapInfo:
-	if not MAPS.has(map_id):
-		push_error("Map ID '%s' not found in MapDatabase." % map_id)
+	var data: MapData = map_library.get_map(map_id)
+	if data == null:
+		push_error("MapManager: Map id not found in library: " + String(map_id))
+		return
+	if String(data.scene_path) == "":
+		push_error("MapManager: MapData has empty scene_path for id: " + String(map_id))
+		return
+
+	_current_map_id = map_id
+	_current_map_path = String(data.scene_path)
+	_start_threaded_load(_current_map_path)
+
+func load_map_by_path(scene_path: String) -> void:
+	if _is_loading:
+		print("MapManager: Already loading a map.")
+		return
+	if String(scene_path) == "":
+		push_error("MapManager: Empty scene_path.")
+		return
+
+	_current_map_id = &""
+	_current_map_path = scene_path
+	_start_threaded_load(scene_path)
+
+func load_map_ref(ref: String) -> void:
+	if _is_scene_path(ref):
+		load_map_by_path(ref)
+	else:
+		load_map(StringName(ref))
+
+func get_map_config(map_id: StringName) -> MapData:
+	if map_library == null:
+		push_error("MapManager: map_library is not assigned.")
 		return null
-	return MAPS[map_id]
+	return map_library.get_map(map_id)
 
-# Helper to get all available map IDs for a UI menu.
 func get_available_map_ids() -> Array[StringName]:
-	# Create an empty array that is explicitly typed.
-	var map_ids: Array[StringName] = []
-
-	# Loop through the generic keys and append them to the typed array.
-	for key in MAPS.keys():
-		# keys to ignore
-		if key == &"podium":
+	var out: Array[StringName] = []
+	if map_library == null:
+		return out
+	for id in map_library.ids():
+		if exclude_ids_from_menu.has(id):
 			continue
+		out.append(id)
+	return out
 
-		map_ids.append(key)
+func get_current_map() -> Node3D:
+	if _current_map_instance and is_instance_valid(_current_map_instance):
+		return _current_map_instance
+	var by_group := get_tree().get_first_node_in_group("map") as Node3D
+	if by_group:
+		_current_map_instance = by_group
+	return _current_map_instance
 
-	return map_ids
-
-func get_current_map():
-	var map = get_tree().get_first_node_in_group("map")
-	return map
-
-func map_added_to_scene():
+func map_added_to_scene(map_instance: Node3D = null) -> void:
+	if map_instance and is_instance_valid(map_instance):
+		_current_map_instance = map_instance
+		if not map_instance.is_in_group("map"):
+			map_instance.add_to_group("map")
+	else:
+		var found := get_tree().get_first_node_in_group("map") as Node3D
+		if found:
+			_current_map_instance = found
 	map_loaded_and_added_to_scene.emit()
+
+func is_loading() -> bool:
+	return _is_loading
+
+func current_map_id() -> StringName:
+	return _current_map_id
+
+func current_map_path() -> String:
+	return _current_map_path
+
+func _start_threaded_load(scene_path: String) -> void:
+	_is_loading = true
+	_current_loading_path = scene_path
+	_current_map_instance = null
+
+	var err := ResourceLoader.load_threaded_request(scene_path)
+	if err != OK:
+		push_error("MapManager: Failed to start threaded load for: " + scene_path)
+		_is_loading = false
+		_current_loading_path = ""
+		return
+
+	# Ensure _process runs to poll status and emit signals
+	set_process(true)
+
+func _is_scene_path(s: String) -> bool:
+	return s.begins_with("res://") or s.begins_with("user://")

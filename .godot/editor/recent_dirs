@@ -1,5 +1,9 @@
-res://data/attack_sets
+res://controllers
+res://maps/Stadium
+res://data/maps
 res://data
+res://data/modes
+res://data/attack_sets
 res://data/boxers
 res://input
 C:/Users/caleb/Documents/GoDot/Projects/Box-Boss/docs
@@ -13,8 +17,6 @@ C:/Users/caleb/Documents/GoDot/Projects/Box-Boss/addons/fbx_anim_extractor
 res://art/Mixamo/Fighter 2A
 res://characters/Base
 res://characters/MrT
-res://maps/Ring One
 res://maps/Base
 res://
 res://engine
-res://engine/services

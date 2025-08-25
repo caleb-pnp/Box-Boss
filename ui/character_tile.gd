@@ -9,25 +9,27 @@ var _character_id: StringName = &""
 	get:
 		return _character_id
 
-@export var display_name: String = "":
+var _display_name: String = ""
+@export var display_name: String:
 	set(value):
-		display_name = value
+		_display_name = value
 		_update_label()
+	get:
+		return _display_name
 
 var _icon: Texture2D
 @export var icon: Texture2D:
 	set(value):
 		_icon = value
-		if _icon_rect:
-			_icon_rect.texture = _icon
+		_apply_icon()
 	get:
 		return _icon
 
 var _occupants: Dictionary = {} # source_id -> Color
 
-@onready var _icon_rect: TextureRect = get_node_or_null("VBox/Icon")
-@onready var _name_label: Label = get_node_or_null("VBox/Name")
-@onready var _badges: HBoxContainer = get_node_or_null("VBox/Badges")
+@onready var _icon_rect: TextureRect = %Icon
+@onready var _name_label: Label = %Name
+@onready var _badges: HBoxContainer = %Badges
 
 func _ready() -> void:
 	var style := StyleBoxFlat.new()
@@ -35,6 +37,9 @@ func _ready() -> void:
 	style.set_border_width_all(2)
 	style.border_color = Color(0.35, 0.35, 0.35)
 	add_theme_stylebox_override("panel", style)
+
+	# Make sure any icon set before entering the tree is applied now.
+	_apply_icon()
 	_update_badges()
 	_update_label()
 
@@ -55,10 +60,15 @@ func clear_all_occupants() -> void:
 	_occupants.clear()
 	_update_badges()
 
+func _apply_icon() -> void:
+	# Apply the stored icon to the TextureRect if available.
+	if _icon_rect and _icon:
+		_icon_rect.texture = _icon
+
 func _update_label() -> void:
 	if _name_label == null:
 		return
-	_name_label.text = (display_name if display_name != "" else String(_character_id))
+	_name_label.text = (_display_name if _display_name != "" else String(_character_id))
 
 func _update_badges() -> void:
 	if _badges == null:
