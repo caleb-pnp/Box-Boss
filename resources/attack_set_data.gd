@@ -3,27 +3,28 @@ class_name AttackSetData
 
 @export var description: String = ""
 
-# One move per category
-@export_category("Equipped Moves")
-@export var light_id: StringName = &""
-@export var medium_id: StringName = &""
-@export var heavy_id: StringName = &""
-@export var special_id: StringName = &""
+@export_category("Equipped Moves (Arrays)")
+@export var light_attack_ids: Array[StringName] = []
+@export var medium_attack_ids: Array[StringName] = []
+@export var heavy_attack_ids: Array[StringName] = []
+@export var special_attack_ids: Array[StringName] = []
 
-func get_id_for_category(cat: StringName) -> StringName:
-	var c := String(cat).to_lower()
-	match c:
-		"light": return light_id
-		"medium": return medium_id
-		"heavy": return heavy_id
-		"special": return special_id
-		_: return StringName("")
+# Only moves listed here are allowed to trigger via combo logic.
+@export var combo_attack_ids: Array[StringName] = []
 
-func set_id_for_category(cat: StringName, id: StringName) -> void:
-	var c := String(cat).to_lower()
-	match c:
-		"light": light_id = id
-		"medium": medium_id = id
-		"heavy": heavy_id = id
-		"special": special_id = id
-		_: pass
+# All non-combo (basic) ids available in this set, de-duplicated.
+func get_basic_ids() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for arr in [light_attack_ids, medium_attack_ids, heavy_attack_ids, special_attack_ids]:
+		for id in arr:
+			if String(id) != "" and not out.has(id):
+				out.append(id)
+	return out
+
+# Only the ids eligible to trigger via combo logic.
+func get_combo_ids() -> Array[StringName]:
+	var out: Array[StringName] = []
+	for id in combo_attack_ids:
+		if String(id) != "" and not out.has(id):
+			out.append(id)
+	return out

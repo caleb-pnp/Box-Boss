@@ -177,6 +177,22 @@ var _debug_accum: float = 0.0
 @export var step_back_mag: float = 0.25
 @export var step_in_mag: float = 0.25
 
+@export_category("Combos / Attack Window")
+@export var attack_window_sec: float = 5.0
+@export var consume_window_on_combo: bool = true
+@export var consume_window_on_basic: bool = true
+@export var combo_finalize_gap_sec: float = 1.0   # inactivity gap before finalize
+
+var _window_start: float = -1e9
+var _punch_window: Array = []            # of { t: float, force: float, src: int }
+var _combo_finalize_at: float = -1e9     # next time we should finalize due to inactivity
+var _window_dirty: bool = false          # new punches since last finalize
+var _last_punch_force: float = 0.0
+
+# Optional local debug helper (if you don't already have one)
+func _dbg(msg: String) -> void:
+	if debug_enabled: print(msg)
+
 var anim: AnimationPlayer
 var agent: NavigationAgent3D
 var stats: Node
@@ -269,7 +285,8 @@ var _distance_above_high_since: float = -1.0
 # Per-intent magnitude for step motions
 var _intent_mag_y: float = 0.0
 
-
+var _last_combo_debug: String = ""
+var _last_force_select_debug: String = ""
 
 
 func _ready() -> void:
@@ -510,6 +527,10 @@ func _physics_process(delta: float) -> void:
 	# Track approach/target angular speed for next tick decisions
 	_track_target_motion()
 
+	# Finalize any pending window if its gap elapsed
+	_finalize_attack_window_if_due()
+
+
 	# Anim
 	if animator and animator.has_method("update_locomotion"):
 		var v: Vector3 = Vector3(velocity.x, 0.0, velocity.z)
@@ -523,6 +544,125 @@ func _physics_process(delta: float) -> void:
 		anim_move_local.x = clamp(anim_move_local.x, -1.0, 1.0)
 		anim_move_local.y = clamp(anim_move_local.y, -1.0, 1.0)
 		animator.update_locomotion(anim_move_local, measured_h_speed)
+
+func _Finalize_consume_window(clear_all: bool) -> void:
+	if clear_all:
+		_punch_window.clear()
+	_window_start = _now()
+
+# Call this each frame (you likely already call _finalize_attack_window_if_due from _physics_process)
+func _finalize_attack_window_if_due() -> void:
+	if not _window_dirty: return
+	if _punch_window.is_empty(): return
+	var now := _now()
+	if now < _combo_finalize_at: return
+	_force_finalize_current_window(now, _last_punch_force, "gap")
+
+# Core finalizer: evaluates combos first, then basic force selection, then nothing.
+# eval_time is used for sliding-window combo checks; basic_force is the force for single-move selection.
+func _force_finalize_current_window(eval_time: float, basic_force: float, reason: String = "gap") -> void:
+	_dbg("[Finalize] reason=" + reason + " window_size=" + str(_punch_window.size()))
+
+	# 1) Combos take priority
+	var combo_id := _try_eval_combos_from_set(eval_time)
+	if String(combo_id) != "":
+		_dbg("[Finalize] COMBO -> " + String(combo_id))
+		_attack_cat_pending = &""
+		_punch_force_pending = basic_force
+		request_attack_id(combo_id)
+		_consume_window(consume_window_on_combo)
+		return
+
+	# 2) Basic force-based selection
+	var pick_id := _select_attack_by_force_from_set(basic_force)
+	if String(pick_id) != "":
+		_dbg("[Finalize] BASIC -> " + String(pick_id) + " (force=" + str(basic_force) + ")")
+		_attack_cat_pending = &""
+		_punch_force_pending = basic_force
+		request_attack_id(pick_id)
+		_consume_window(consume_window_on_basic)
+		return
+
+	# 3) Nothing matched
+	_dbg("[Finalize] no combo and no basic match; no attack")
+	_consume_window(consume_window_on_basic)
+
+# Consume/clear the current window; after consuming there is no active window until next punch
+func _consume_window(clear_all: bool) -> void:
+	_window_dirty = false
+	_combo_finalize_at = -1e9
+	if clear_all:
+		_punch_window.clear()
+	# Mark "no active window" so next punch starts a fresh one
+	_window_start = -1e9
+
+# SLIDING WINDOW combo evaluation (uses eval_time instead of now)
+# Keep your debug strings (_last_combo_debug) if you already added them.
+func _try_eval_combos_from_set(eval_time: float) -> StringName:
+	_last_combo_debug = ""
+	if attack_set_data == null or attack_library == null: return StringName("")
+	if not attack_set_data.has_method("get_combo_ids"): return StringName("")
+	var ids: Array[StringName] = attack_set_data.get_combo_ids()
+	if ids.is_empty():
+		_last_combo_debug = "[Combo] no combo ids in set"
+		return StringName("")
+
+	var best_id: StringName = &""
+	var best_pri := -1
+	var best_req := -1
+	var best_force := -1.0
+
+	var lines: Array[String] = []
+	lines.append("[Combo] evaluating " + str(ids.size()) + " candidates; window_len=" + str(_punch_window.size()))
+
+	for id in ids:
+		var spec = attack_library.get_spec(id)
+		if spec == null or not spec.has_method("get"):
+			lines.append("  - " + String(id) + " skip (no spec)")
+			continue
+
+		var req := int(spec.get("combo_required_count"))
+		var each_min := float(spec.get("combo_each_min_force"))
+		var win_override := float(spec.get("combo_window_sec"))
+		var priority := int(spec.get("combo_priority"))
+		if req <= 0:
+			lines.append("  - " + String(id) + " skip (no combo trigger)")
+			continue
+
+		var use_window := (win_override if win_override > 0.0 else attack_window_sec)
+
+		var considered := 0
+		var count := 0
+		for e in _punch_window:
+			var age := eval_time - float(e["t"])
+			if age <= use_window and age >= 0.0:
+				considered += 1
+				if float(e["force"]) >= each_min:
+					count += 1
+
+		var match := (count >= req)
+		lines.append("  - " + String(id) + " req=" + str(req) + " each_min=" + str(each_min) + " win=" + str(use_window) + "s considered=" + str(considered) + " count=" + str(count) + " match=" + str(match) + " pri=" + str(priority))
+
+		if match:
+			var better := false
+			if priority > best_pri: better = true
+			elif priority == best_pri and req > best_req: better = true
+			elif priority == best_pri and req == best_req and each_min > best_force: better = true
+			if better:
+				best_id = id
+				best_pri = priority
+				best_req = req
+				best_force = each_min
+
+	if String(best_id) != "":
+		lines.append("[Combo] picked=" + String(best_id) + " pri=" + str(best_pri) + " req=" + str(best_req) + " each_min=" + str(best_force))
+	else:
+		lines.append("[Combo] none matched")
+
+	_last_combo_debug = "\n".join(lines)
+	if debug_enabled and _last_combo_debug != "":
+		print(_last_combo_debug)
+	return best_id
 
 # ----------------------------
 # Auto-targeting helpers
@@ -1173,31 +1313,151 @@ func _connect_punch_input() -> void:
 		if debug_enabled:
 			push_warning("[BC] PunchInput autoload not found at /root/PunchInput")
 
-# Print exactly what we receive from PunchInput and what we do with it.
+# UPDATED: buffer punch, but cut-and-finalize if this punch would exceed attack_window_sec
 func _on_punched(source_id: int, force: float) -> void:
-	if debug_enabled:
-		print("[PunchInput] incoming src=", str(source_id), " force=", str(force), " round_active=", str(round_active))
+	_dbg("[Punch] src=" + str(source_id) + " force=" + str(force))
 
-	if not round_active:
-		if debug_enabled: print("[PunchInput] ignored: round inactive")
-		return
-	if input_source_id == 0 and not accept_any_source_if_zero:
-		if debug_enabled: print("[PunchInput] ignored: input_source_id==0 and accept_any_source_if_zero==false")
-		return
-	if input_source_id != 0 and source_id != input_source_id:
-		if debug_enabled: print("[PunchInput] ignored: source mismatch (have=", str(input_source_id), ")")
-		return
-	if state == State.KO:
-		if debug_enabled: print("[PunchInput] ignored: KO")
-		return
+	if not round_active: return
+	if input_source_id == 0 and not accept_any_source_if_zero: return
+	if input_source_id != 0 and source_id != input_source_id: return
+	if state == State.KO: return
 
-	var cat: StringName = _category_from_force(force)
-	if debug_enabled:
-		print("[PunchInput] mapped force=", str(force), " -> category=", String(cat))
+	var now := _now()
 
-	_attack_cat_pending = cat
-	_punch_force_pending = force
-	request_attack_category(cat)
+	# If there is an active window and it's too old, finalize it immediately
+	if not _punch_window.is_empty():
+		var span := now - _window_start
+		if span > attack_window_sec:
+			# Force-finalize the previous window using the last punch in that window
+			var last_force := float(_punch_window.back().get("force", 0.0))
+			_dbg("[Window] span " + str(span) + "s > " + str(attack_window_sec) + "s; force-finalize previous window")
+			_force_finalize_current_window(now, last_force, "max_window")
+
+			# Start a fresh window anchored at this punch
+			_punch_window.clear()
+			_window_start = now
+			_dbg("[Window] new window start at " + str(_window_start))
+
+	# If no active window, start one now
+	if _punch_window.is_empty():
+		_window_start = now
+		_dbg("[Window] start at " + str(_window_start))
+
+	# Record this punch into the (possibly new) window
+	_punch_window.append({ "t": now, "force": force, "src": source_id })
+	_last_punch_force = force
+
+	# Schedule finalize after inactivity gap
+	_combo_finalize_at = now + max(0.0, combo_finalize_gap_sec)
+	_window_dirty = true
+	_dbg("[Window] size=" + str(_punch_window.size()) + " finalize_at=" + str(_combo_finalize_at))
+
+
+# Force-first selection across all "basic" ids in the set.
+# Rule:
+# - If one or more ranges contain the force: prefer narrower width; if equal width, prefer smaller distance to center; if still equal, random.
+# - Else: pick closest rounded down (range with max <= force and minimal (force - max)); tie -> narrower; else random.
+# - If none below, return "" (no move).
+# Replace your force-based selector with this version that shows scoring and ties
+func _select_attack_by_force_from_set(force: float) -> StringName:
+	_last_force_select_debug = ""
+	if attack_set_data == null or attack_library == null: return StringName("")
+	if not attack_set_data.has_method("get_basic_ids"): return StringName("")
+	var candidates: Array[StringName] = attack_set_data.get_basic_ids()
+	if candidates.is_empty():
+		_last_force_select_debug = "[ForcePick] no basic candidate ids in set"
+		return StringName("")
+
+	var lines: Array[String] = []
+	lines.append("[ForcePick] force=" + str(force) + " candidates=" + str(candidates.size()))
+
+	var in_range: Array = []
+	for id in candidates:
+		var spec = attack_library.get_spec(id)
+		if spec == null or not spec.has_method("get"):
+			lines.append("  - " + String(id) + " skip (no spec)")
+			continue
+		var vm = spec.get("force_min")
+		var vx = spec.get("force_max")
+		if typeof(vm) == TYPE_NIL or typeof(vx) == TYPE_NIL:
+			lines.append("  - " + String(id) + " skip (no force_min/max)")
+			continue
+		var fmin := float(vm)
+		var fmax := float(vx)
+		if fmax < fmin:
+			var tmp = fmin; fmin = fmax; fmax = tmp
+
+		if force >= fmin and force <= fmax:
+			var width = max(0.0001, fmax - fmin)
+			var center := 0.5 * (fmin + fmax)
+			var center_dist := absf(force - center)
+			var weight := 1.0
+			var vw = spec.get("selection_weight")
+			if typeof(vw) != TYPE_NIL:
+				weight = max(0.01, float(vw))
+			in_range.append({
+				"id": id,
+				"fmin": fmin,
+				"fmax": fmax,
+				"width": width,
+				"center": center,
+				"center_dist": center_dist,
+				"weight": weight
+			})
+			lines.append("  - " + String(id) + " IN  [" + str(fmin) + ", " + str(fmax) + "] width=" + str(width) + " center=" + str(center) + " dist=" + str(center_dist) + " w=" + str(weight))
+		else:
+			lines.append("  - " + String(id) + " OUT [" + str(fmin) + ", " + str(fmax) + "]")
+
+	if in_range.size() > 0:
+		in_range.sort_custom(func(a, b):
+			if a["width"] < b["width"]: return true
+			if a["width"] > b["width"]: return false
+			if a["center_dist"] < b["center_dist"]: return true
+			if a["center_dist"] > b["center_dist"]: return false
+			if a["weight"] > b["weight"]: return true
+			if a["weight"] < b["weight"]: return false
+			return _rng.randf() < 0.5
+		)
+		var chosen = in_range[0]
+		lines.append("[ForcePick] chose IN " + String(chosen["id"]) + " width=" + str(chosen["width"]) + " dist=" + str(chosen["center_dist"]) + " w=" + str(chosen["weight"]))
+		_last_force_select_debug = "\n".join(lines)
+		return chosen["id"]
+
+	# No inside hits: closest rounded-down (fmax <= force)
+	var below: Array = []
+	for id2 in candidates:
+		var spec2 = attack_library.get_spec(id2)
+		if spec2 == null or not spec2.has_method("get"): continue
+		var vm2 = spec2.get("force_min")
+		var vx2 = spec2.get("force_max")
+		if typeof(vm2) == TYPE_NIL or typeof(vx2) == TYPE_NIL: continue
+		var fmin2 := float(vm2)
+		var fmax2 := float(vx2)
+		if fmax2 < fmin2:
+			var tmp2 = fmin2; fmin2 = fmax2; fmax2 = tmp2
+
+		if fmax2 <= force:
+			var gap := force - fmax2
+			var width2 = max(0.0001, fmax2 - fmin2)
+			below.append({ "id": id2, "gap": gap, "width": width2, "fmin": fmin2, "fmax": fmax2 })
+			lines.append("  - " + String(id2) + " BELOW gap=" + str(gap) + " width=" + str(width2) + " [" + str(fmin2) + ", " + str(fmax2) + "]")
+
+	if below.size() == 0:
+		lines.append("[ForcePick] no IN and no BELOW; returning none")
+		_last_force_select_debug = "\n".join(lines)
+		return StringName("")
+
+	below.sort_custom(func(a, b):
+		if a["gap"] < b["gap"]: return true
+		if a["gap"] > b["gap"]: return false
+		if a["width"] < b["width"]: return true
+		if a["width"] > b["width"]: return false
+		return _rng.randf() < 0.5
+	)
+	var chosen2 = below[0]
+	lines.append("[ForcePick] chose BELOW " + String(chosen2["id"]) + " gap=" + str(chosen2["gap"]) + " width=" + str(chosen2["width"]))
+	_last_force_select_debug = "\n".join(lines)
+	return chosen2["id"]
 
 # ----------------------------
 # Damage resolution

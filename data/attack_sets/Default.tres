@@ -5,10 +5,11 @@
 [resource]
 script = ExtResource("1_4v3b1")
 description = "The Default Attack Set"
-light_id = &"LeadJab"
-medium_id = &"JabCross"
-heavy_id = &"Hook"
-special_id = &"PunchCombo"
+light_attack_ids = Array[StringName]([&"LeadJab"])
+medium_attack_ids = Array[StringName]([&"JabCross"])
+heavy_attack_ids = Array[StringName]([&"Hook"])
+special_attack_ids = Array[StringName]([&"UppercutJab"])
+combo_attack_ids = Array[StringName]([&"BackFlipToUppercut", &"PunchCombo"])
 id = &"default"
 display_name = "Default"
 metadata/_custom_type_script = "uid://cuduivpqla41w"

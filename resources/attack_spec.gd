@@ -23,3 +23,14 @@ class_name AttackSpec
 @export var damage: float = 8.0
 @export var guard_damage: float = 2.0
 @export var stagger_time_sec: float = 0.2
+
+@export_category("Selection / Force Mapping")
+@export var force_min: float = 0.0
+@export var force_max: float = 999999.0
+@export var selection_weight: float = 1.0   # optional small bias when ties remain
+
+@export_category("Combo Trigger (optional; only if this id is in AttackSetData.combo_attack_ids)")
+@export var combo_required_count: int = 0      # e.g., 2 for "two hard punches"
+@export var combo_each_min_force: float = 0.0  # each punch must be >= this
+@export var combo_window_sec: float = -1.0     # <= 0 => use character's attack_window_sec
+@export var combo_priority: int = 100          # higher wins when multiple combos match
