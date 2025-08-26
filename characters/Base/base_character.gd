@@ -48,7 +48,7 @@ signal knocked_out
 @export var nav_stuck_memory_frames: int = 6
 
 @export_category("Debug")
-@export var debug_enabled: bool = false
+@export var debug_enabled: bool = true
 @export var debug_interval: float = 0.25
 var _debug_accum: float = 0.0
 
@@ -59,13 +59,13 @@ var _debug_accum: float = 0.0
 @export_category("Force -> Category Mapping")
 @export var use_force_ranges: bool = true
 @export var light_force_min: float = 0.1
-@export var light_force_max: float = 9.99
-@export var medium_force_min: float = 10.0
-@export var medium_force_max: float = 16.99
-@export var heavy_force_min: float = 17.0
-@export var heavy_force_max: float = 29.99
-@export var special_force_min: float = 30.0
-@export var special_force_max: float = 9999.0
+@export var light_force_max: float = 999.99
+@export var medium_force_min: float = 1000
+@export var medium_force_max: float = 1999.99
+@export var heavy_force_min: float = 2000
+@export var heavy_force_max: float = 2999.99
+@export var special_force_min: float = 3000
+@export var special_force_max: float = 9999.99
 @export var category_light: StringName = &"light"
 @export var category_medium: StringName = &"medium"
 @export var category_heavy: StringName = &"heavy"
@@ -351,17 +351,22 @@ func set_input_source_id(id: int) -> void:
 # ----------------------------
 # Public helpers
 # ----------------------------
+# Log category or id requests so we can see what was queued.
 func request_attack_category(cat: StringName) -> void:
 	intents["attack_category"] = cat
 	intents["attack_id"] = StringName("")
 	intents["attack"] = true
 	_attack_wish_until = _now() + attack_press_retry_buffer_sec
+	if debug_enabled:
+		print("[AttackReq] category=", String(cat), " (force=", str(_punch_force_pending), ") wish_until=", str(_attack_wish_until))
 
 func request_attack_id(id: StringName) -> void:
 	intents["attack_id"] = id
 	intents["attack_category"] = StringName("")
 	intents["attack"] = true
 	_attack_wish_until = _now() + attack_press_retry_buffer_sec
+	if debug_enabled:
+		print("[AttackReq] id=", String(id), " wish_until=", str(_attack_wish_until))
 
 func request_auto_target() -> void:
 	auto_target_enabled = true
@@ -885,6 +890,7 @@ func _apply_horizontal_velocity(desired_dir_world: Vector3) -> void:
 
 	_last_speed_applied = max(0.001, speed)
 
+# Add verbose prints explaining how an attack is chosen and which phase we enter.
 func _handle_attack_intent() -> void:
 	var now: float = _now()
 
@@ -898,27 +904,46 @@ func _handle_attack_intent() -> void:
 	if rising:
 		_attack_wish_until = now + attack_press_retry_buffer_sec
 		wish_active = true
+		if debug_enabled:
+			print("[AttackIntent] rising edge; wish_active set; _attack_wish_until=", str(_attack_wish_until))
 
+	# If swinging, queue the next request only
 	if _attack_phase == AttackPhase.SWING and wish_active:
+		if debug_enabled:
+			print("[AttackIntent] currently SWING; queue next from intents (id=", String(intents["attack_id"]), " cat=", String(intents["attack_category"]), ")")
 		_queue_next_from_intents()
 		return
 
-	if not wish_active and not rising: return
-	if now - _fight_entered_at < attack_debounce_after_fight_enter: return
-	if _attack_phase != AttackPhase.NONE: return
+	if not wish_active and not rising:
+		return
+	if now - _fight_entered_at < attack_debounce_after_fight_enter:
+		if debug_enabled: print("[AttackIntent] debounced right after fight enter")
+		return
+	if _attack_phase != AttackPhase.NONE:
+		if debug_enabled: print("[AttackIntent] ignored: _attack_phase=", str(_attack_phase))
+		return
 	if not attack_library:
 		if debug_enabled: push_warning("BaseCharacter: attack_library not assigned.")
 		return
 
-	var id: StringName = intents["attack_id"]
+	# Choose attack id to try
+	var requested_id: StringName = intents["attack_id"]
+	var requested_cat: StringName = intents["attack_category"]
+	var id: StringName = requested_id
 	var pending_cat: StringName = &""
+	var chosen_via_cat: bool = false
+
 	if String(id) == "":
-		var cat: StringName = intents["attack_category"]
-		if String(cat) != "" and attack_set_data:
-			id = attack_set_data.get_id_for_category(cat)
-			pending_cat = cat
+		if String(requested_cat) != "" and attack_set_data:
+			id = attack_set_data.get_id_for_category(requested_cat)
+			pending_cat = requested_cat
+			chosen_via_cat = true
+
+	if debug_enabled:
+		print("[AttackSelect] requested_id='", String(requested_id), "' requested_cat='", String(requested_cat), "' => chosen_id='", String(id), "' via_cat=", str(chosen_via_cat))
+
 	if String(id) == "":
-		if debug_enabled: push_warning("BaseCharacter: no attack_id and no attack_set_data/category provided.")
+		if debug_enabled: print("[AttackSelect] no id resolved; abort")
 		return
 
 	var spec = attack_library.get_spec(id)
@@ -927,21 +952,29 @@ func _handle_attack_intent() -> void:
 		return
 
 	var last_time: float = float(_last_attack_time_by_id.get(id, -1000.0))
-	if now - last_time < max(0.0, spec.cooldown_sec): return
-	if not _has_target: return
+	if now - last_time < max(0.0, spec.cooldown_sec):
+		if debug_enabled: print("[AttackSelect] on cooldown; skip id=", String(id))
+		return
+	if not _has_target:
+		if debug_enabled: print("[AttackSelect] no target")
+		return
 
 	var d2t: float = distance_to_target()
 	var lower: float = float(max(0.0, spec.launch_min_distance))
-	var upper: float = spec.enter_distance
+	var upper: float = spec.enter_distance  # FIX: use spec, not _attack_spec_current
 	var eps: float = float(max(0.0, launch_band_epsilon))
 
 	var reposition_thresh: float = lower - eps
 	var approach_thresh: float = upper + eps
 
+	if debug_enabled:
+		print("[AttackRange] d=", str(d2t), " lower=", str(lower), " upper=", str(upper), " eps=", str(eps), " -> reposition_thresh=", str(reposition_thresh), " approach_thresh=", str(approach_thresh))
+
 	if lower > 0.0:
 		if d2t < reposition_thresh:
 			if animator and animator.has_method("start_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
+			if debug_enabled: print("[AttackPhase] REPOSITION: too close (d<", str(reposition_thresh), ") for id=", String(id))
 			_attack_phase = AttackPhase.REPOSITION
 			_attack_spec_current = spec
 			_attack_id_current = id
@@ -950,25 +983,30 @@ func _handle_attack_intent() -> void:
 		elif d2t > approach_thresh:
 			if animator and animator.has_method("start_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
+			if debug_enabled: print("[AttackPhase] APPROACH: too far (d>", str(approach_thresh), ") for id=", String(id))
 			_attack_phase = AttackPhase.APPROACH
 			_attack_spec_current = spec
 			_attack_id_current = id
 			_attack_cat_pending = pending_cat
 			return
 		else:
+			if debug_enabled: print("[AttackPhase] SWING: in band for id=", String(id))
 			_attack_cat_pending = pending_cat
 			_start_swing(spec, id, now)
 			_attack_wish_until = 0.0
 			return
 	else:
+		# No min distance: only check upper bound
 		if d2t > approach_thresh:
 			if animator and animator.has_method("start_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
+			if debug_enabled: print("[AttackPhase] APPROACH (no lower bound) for id=", String(id))
 			_attack_phase = AttackPhase.APPROACH
 			_attack_spec_current = spec
 			_attack_id_current = id
 			_attack_cat_pending = pending_cat
 		else:
+			if debug_enabled: print("[AttackPhase] SWING (no lower bound) for id=", String(id))
 			_attack_cat_pending = pending_cat
 			_start_swing(spec, id, now)
 			_attack_wish_until = 0.0
@@ -1035,6 +1073,7 @@ func _clear_queue() -> void:
 	_queued_attack_cat = &""
 	_queued_until = 0.0
 
+# Log exactly what we start swinging with, including mapped category and force.
 func _start_swing(spec, id: StringName, now: float) -> void:
 	_attack_spec_current = spec
 	_attack_id_current = id
@@ -1046,6 +1085,9 @@ func _start_swing(spec, id: StringName, now: float) -> void:
 	_punch_force_current = _punch_force_pending
 	_attack_cat_pending = &""
 	_punch_force_pending = 0.0
+
+	if debug_enabled:
+		print("[Swing] START id=", String(id), " cat=", String(_attack_cat_current), " force=", str(_punch_force_current))
 
 	if animator and animator.has_method("play_attack_id"):
 		if not (animator.has_method("is_in_fight_stance") and animator.is_in_fight_stance()):
@@ -1131,13 +1173,28 @@ func _connect_punch_input() -> void:
 		if debug_enabled:
 			push_warning("[BC] PunchInput autoload not found at /root/PunchInput")
 
+# Print exactly what we receive from PunchInput and what we do with it.
 func _on_punched(source_id: int, force: float) -> void:
-	if not round_active: return
-	if input_source_id == 0 and not accept_any_source_if_zero: return
-	if input_source_id != 0 and source_id != input_source_id: return
-	if state == State.KO: return
+	if debug_enabled:
+		print("[PunchInput] incoming src=", str(source_id), " force=", str(force), " round_active=", str(round_active))
+
+	if not round_active:
+		if debug_enabled: print("[PunchInput] ignored: round inactive")
+		return
+	if input_source_id == 0 and not accept_any_source_if_zero:
+		if debug_enabled: print("[PunchInput] ignored: input_source_id==0 and accept_any_source_if_zero==false")
+		return
+	if input_source_id != 0 and source_id != input_source_id:
+		if debug_enabled: print("[PunchInput] ignored: source mismatch (have=", str(input_source_id), ")")
+		return
+	if state == State.KO:
+		if debug_enabled: print("[PunchInput] ignored: KO")
+		return
 
 	var cat: StringName = _category_from_force(force)
+	if debug_enabled:
+		print("[PunchInput] mapped force=", str(force), " -> category=", String(cat))
+
 	_attack_cat_pending = cat
 	_punch_force_pending = force
 	request_attack_category(cat)
