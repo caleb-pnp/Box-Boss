@@ -270,7 +270,7 @@ func _validate_selected() -> void:
 			continue
 		print("  - ", String(cat), ": id=", String(id), " enter=", spec.enter_distance, " swing=", spec.swing_time_sec, " lock=", spec.move_lock_sec, " cd=", spec.cooldown_sec)
 		# Validate animator param paths if we can reach the tree
-		var anim := c.animator
+		var anim = c.animator
 		if anim and _animator_has_param(anim, String(spec.request_param_a)):
 			print("      request A OK: ", String(spec.request_param_a))
 		else:

@@ -36,6 +36,10 @@ class_name VersusRingCamera
 @export var avoid_clipping: bool = true
 @export var collision_mask: int = 1
 @export var collision_margin: float = 0.3
+# New: never place the camera closer than this due to collisions
+@export var min_distance_soft: float = 7.0
+# New: raise the ray origin above the ring center to avoid hitting low geometry
+@export var collision_origin_y_offset: float = 1.0
 
 var _cam: Camera3D
 var _angle_rad: float
@@ -160,18 +164,28 @@ func _compute_separation(targets: Array[Node3D]) -> float:
 
 func _resolve_collision(center: Vector3, desired_pos: Vector3) -> Vector3:
 	var space := get_world_3d().direct_space_state
-	var dir := desired_pos - center
+
+	# Raise the ray origin to avoid low obstacles near center
+	var origin := center + Vector3(0.0, collision_origin_y_offset, 0.0)
+	var dir := desired_pos - origin
 	var dist := dir.length()
 	if dist < 0.001:
 		return desired_pos
 	dir = dir / dist
-	var query := PhysicsRayQueryParameters3D.create(center, desired_pos)
+
+	# Do not allow camera closer than min_distance_soft
+	var target_dist = max(dist, min_distance_soft)
+	var target_pos = origin + dir * target_dist
+
+	var query := PhysicsRayQueryParameters3D.create(origin, target_pos)
 	query.collision_mask = collision_mask
 	var hit := space.intersect_ray(query)
 	if hit.is_empty():
-		return desired_pos
+		return target_pos
+
 	var hit_pos: Vector3 = hit["position"]
-	return hit_pos - dir * collision_margin
+	var safe_dist = max(min_distance_soft, (hit_pos - origin).length() - collision_margin)
+	return origin + dir * safe_dist
 
 func _remap_clamped(x: float, a: float, b: float, c: float, d: float) -> float:
 	if absf(b - a) < 0.0001:

@@ -7,5 +7,5 @@
 
 [resource]
 script = ExtResource("1_8arfk")
-modes = Array[Resource]([ExtResource("1_jkfeb"), ExtResource("2_g02ei"), ExtResource("3_g02ei")])
+modes = Array[Resource]([ExtResource("3_g02ei"), ExtResource("1_jkfeb"), ExtResource("2_g02ei")])
 metadata/_custom_type_script = "uid://dxos64ak6tq85"

@@ -1,9 +1,11 @@
+StaticBody3D
+Node3D
+CollisionShape3D
 Label
 Control
 CanvasLayer
 Camera3D
 Marker3D
-Node3D
 HBoxContainer
 MarginContainer
 GridContainer
@@ -11,4 +13,3 @@ VBoxContainer
 ItemList
 Node
 NavigationRegion3D
-AnimationTree

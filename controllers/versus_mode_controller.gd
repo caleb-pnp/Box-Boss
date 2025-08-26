@@ -12,15 +12,15 @@ class_name VersusModeController
 # If your model's visual forward isn't -Z, add a yaw offset here (degrees).
 @export var spawn_yaw_offset_degrees: float = 0.0
 
-# Target pairing controls
+# Target pairing controls (legacy)
 @export var auto_pair_targets_on_ready := false
 @export var auto_pair_delay_sec := 0.0
 
 # HUD integration
 @export_group("HUD")
 @export var fight_hud_scene: PackedScene = preload("res://gui/fight_hud.tscn")
-@export var use_countdown: bool = true                        # Show countdown before pairing targets
-@export_range(1, 10, 1) var countdown_seconds: int = 5        # 5,4,3,2,1,FIGHT
+@export var use_countdown: bool = true
+@export_range(1, 10, 1) var countdown_seconds: int = 5
 
 var _players_param: Array[Dictionary] = []
 var _map_id: StringName = &""
@@ -64,6 +64,9 @@ func on_map_ready(map_instance: Node3D) -> void:
 	_spawn_players_from_boxer_data()
 	_setup_cameras()
 
+	# Freeze fighters until "FIGHT!" (prevents early movement/attacks)
+	_set_round_active_for_all(false)
+
 	# HUD + Countdown flow (preferred if a FightHUD scene is provided)
 	var did_countdown := false
 	if fight_hud_scene:
@@ -77,7 +80,7 @@ func on_map_ready(map_instance: Node3D) -> void:
 				hud.bind_players(_spawned)
 			else:
 				print("[VersusMode][HUD][WARN] HUD missing bind_players()")
-			# Optional countdown gating pairing
+			# Optional countdown gating start
 			if use_countdown:
 				if hud.has_method("show_countdown"):
 					print("[VersusMode][HUD] Starting countdown for ", str(countdown_seconds), " seconds...")
@@ -93,29 +96,35 @@ func on_map_ready(map_instance: Node3D) -> void:
 	else:
 		print("[VersusMode][HUD] No fight_hud_scene assigned, skipping HUD")
 
-	# Pair targets either after countdown or using legacy auto-pair flags
+	# Start targeting and then unfreeze so they only move after "FIGHT!"
 	if did_countdown:
-		print("[VersusMode] Pairing targets after countdown...")
-		_pair_targets()
-		_enable_auto_face_target(true)
+		print("[VersusMode] Requesting fighters to auto-target after countdown...")
+		_request_fighters_find_targets() # mark targets first
+		_set_round_active_for_all(true)   # then allow movement/combat
 	else:
 		if auto_pair_targets_on_ready:
 			if auto_pair_delay_sec > 0.0:
 				print("[VersusMode] Auto pair delay: ", str(auto_pair_delay_sec), "s")
 				await get_tree().create_timer(auto_pair_delay_sec).timeout
-			print("[VersusMode] Auto pairing due to flags...")
-			_pair_targets()
+			print("[VersusMode] Legacy auto pairing due to flags...")
+			_pair_targets()                 # mark targets first
+			_set_round_active_for_all(true) # then allow movement/combat
+		else:
+			print("[VersusMode] Requesting fighters to auto-target (no countdown)...")
+			_request_fighters_find_targets()
+			_set_round_active_for_all(true)
 
 # Public entry if you want to trigger countdown + start from outside (e.g., after a custom intro)
 func start_round() -> void:
 	print("[VersusMode] start_round() invoked")
+	_set_round_active_for_all(false) # freeze before new round gate
 	if fight_hud_scene and _hud and is_instance_valid(_hud) and use_countdown and _hud.has_method("show_countdown"):
 		print("[VersusMode][HUD] Starting countdown from start_round(): ", str(countdown_seconds))
 		await _hud.show_countdown(countdown_seconds)
 		print("[VersusMode][HUD] Countdown finished (start_round)")
-	print("[VersusMode] Pairing targets (start_round)")
-	_pair_targets()
-	_enable_auto_face_target(true)
+	print("[VersusMode] Requesting fighters to auto-target (start_round)")
+	_request_fighters_find_targets()
+	_set_round_active_for_all(true)
 
 # -------------------------------------------------------
 # HUD helpers
@@ -136,7 +145,39 @@ func _ensure_hud() -> Node:
 	print("[VersusMode][HUD] Added HUD to parent: ", parent.name)
 	return _hud
 
-# Replace your _enable_auto_face_target with this
+# -------------------------------------------------------
+# Fighter targeting
+# -------------------------------------------------------
+func _request_fighters_find_targets() -> void:
+	var supported := 0
+	for c in _spawned:
+		if c and c.has_method("request_auto_target"):
+			c.request_auto_target()
+			supported += 1
+		elif c:
+			print("[VersusMode][WARN] ", c.name, " has no request_auto_target(), skipping.")
+	if supported == 0:
+		print("[VersusMode][WARN] No fighters support auto-targeting; falling back to pairing.")
+		_pair_targets()
+	else:
+		print("[VersusMode] Auto-target requested for ", str(supported), " fighters.")
+
+func _set_round_active_for_all(active: bool) -> void:
+	for c in _spawned:
+		if c == null:
+			continue
+		if c.has_method("set_round_active"):
+			c.set_round_active(active)
+		else:
+			# Property fallback
+			var plist := c.get_property_list()
+			for prop in plist:
+				if prop.has("name") and String(prop["name"]) == "round_active":
+					c.set("round_active", active)
+					break
+	print("[VersusMode] round_active = ", str(active), " for ", str(_spawned.size()), " fighters")
+
+# Keep this around for legacy fallback or debug
 func _enable_auto_face_target(enabled: bool) -> void:
 	for c in _spawned:
 		if c == null:
@@ -154,7 +195,6 @@ func _enable_auto_face_target(enabled: bool) -> void:
 func _has_property(obj: Object, prop: StringName) -> bool:
 	var plist := obj.get_property_list()
 	for p in plist:
-		# p is a Dictionary with keys like "name", "type", ...
 		if p.has("name") and StringName(p["name"]) == prop:
 			return true
 	return false
@@ -176,6 +216,7 @@ func _pair_targets() -> void:
 		me.set_fight_target(other)
 		print("[VersusMode] Pair: ", me.name, " -> ", other.name)
 	print("[VersusMode] Paired ", str(_spawned.size()), " players in a ring.")
+
 # -------------------------------------------------------
 # Spawning and setup
 # -------------------------------------------------------
@@ -245,6 +286,17 @@ func _spawn_players_from_boxer_data() -> void:
 			_apply_attack_selection(actor, p)
 			_apply_player_color(boxer_instance, p.get("color", Color.WHITE))
 			actor.name = "Player_" + str(src_id)
+
+			# Optional: set input source id on the character if it exposes it
+			if actor.has_method("set_input_source_id"):
+				actor.set_input_source_id(int(src_id))
+			else:
+				var plist := actor.get_property_list()
+				for prop in plist:
+					if prop.has("name") and String(prop["name"]) == "input_source_id":
+						actor.set("input_source_id", int(src_id))
+						break
+
 			_spawned.append(actor)
 			print("[VersusMode] Spawned OK: ", actor.name, " at ", str(pose.origin))
 		else:

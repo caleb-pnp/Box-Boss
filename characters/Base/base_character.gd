@@ -15,11 +15,13 @@ signal knocked_out
 @export var use_gravity: bool = true
 @export var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity") if ProjectSettings.has_setting("physics/3d/default_gravity") else 9.81
 
+@export_category("Round Flow")
+@export var round_active: bool = false
+
 @export_category("Combat (Data-Driven)")
 @export var keep_eyes_on_target: bool = true
 @export var approach_speed_scale: float = 0.8
 
-# Avoid preload to prevent parse-time dependency chains
 @export var attack_library: AttackLibrary
 @export_file("*.tres") var attack_library_path: String = "res://data/AttackLibrary.tres"
 
@@ -50,20 +52,115 @@ signal knocked_out
 @export var debug_interval: float = 0.25
 var _debug_accum: float = 0.0
 
+@export_category("Input / Punch Mapping")
+@export var input_source_id: int = 0
+@export var accept_any_source_if_zero: bool = false
+
+@export_category("Force -> Category Mapping")
+@export var use_force_ranges: bool = true
+@export var light_force_min: float = 0.1
+@export var light_force_max: float = 9.99
+@export var medium_force_min: float = 10.0
+@export var medium_force_max: float = 16.99
+@export var heavy_force_min: float = 17.0
+@export var heavy_force_max: float = 29.99
+@export var special_force_min: float = 30.0
+@export var special_force_max: float = 9999.0
+@export var category_light: StringName = &"light"
+@export var category_medium: StringName = &"medium"
+@export var category_heavy: StringName = &"heavy"
+@export var category_special: StringName = &"special"
+
+@export_category("Damage Scaling (Optional)")
+@export var scale_damage_by_force: bool = true
+@export var min_damage_scale: float = 0.9
+@export var max_damage_scale: float = 1.2
+@export var default_light_damage: int = 5
+@export var default_medium_damage: int = 8
+@export var default_heavy_damage: int = 12
+@export var default_special_damage: int = 16
+
+@export_category("Auto Targeting")
+@export var auto_target_enabled: bool = true
+@export var auto_target_reacquire_interval: float = 0.5
+@export var aggro_memory_sec: float = 3.0
+@export var switch_to_aggressor_immediately: bool = true
+
+@export_category("Auto Fight Movement")
+@export var auto_fight_movement_enabled: bool = true
+@export var arena_center: Vector3 = Vector3.ZERO
+@export var arena_radius_hint: float = 15.0
+@export var idle_strafe_interval_min: float = 0.8
+@export var idle_strafe_interval_max: float = 1.6
+@export var idle_strafe_magnitude: float = 0.6
+@export var swing_forward_push: float = 0.25
+@export var retreat_recent_hit_window: float = 1.5
+@export var retreat_hit_threshold: int = 1
+@export var retreat_push: float = -0.6
+@export var center_return_bias: float = 0.5
+
+@export_category("Spacing / Distance Control")
+@export var hold_distance: float = 2.8
+@export var hold_tolerance: float = 0.4
+@export var post_swing_backstep_sec: float = 0.35
+@export var post_swing_backstep_strength: float = 0.6
+
+@export_category("Naturalization / Desync")
+# Prefer rotation over strafing when we're already mostly facing the target.
+@export var strafe_angle_min_deg: float = 12.0
+# Desync strafing so both fighters don’t orbit in sync.
+@export var strafe_activity_prob: float = 0.55
+@export var strafe_on_time_min: float = 0.4
+@export var strafe_on_time_max: float = 1.2
+@export var strafe_off_time_min: float = 0.35
+@export var strafe_off_time_max: float = 1.0
+@export var strafe_magnitude_min: float = 0.25
+@export var strafe_magnitude_max: float = 0.7
+@export var strafe_speed_scale_min: float = 0.2     # 20% of strafe_speed
+@export var strafe_speed_scale_max: float = 0.8     # 80% of strafe_speed
+
+# If the target is circling us (high angular speed), rotate to face instead of circling with them.
+@export var rotate_instead_on_target_strafe: bool = true
+@export var target_strafe_omega_thresh_deg: float = 60.0   # deg/sec considered “they’re strafing”
+
+@export_category("Hold Ground vs Retreat")
+@export var approaching_speed_threshold: float = 0.8        # units/sec
+@export var retreat_when_pressed_slowdown: float = 0.5      # scale backpedal
+@export var hold_ground_chance_when_pressed: float = 0.35   # chance to stand ground
+
+@export_category("Retreat Tuning")
+# Global scale for backpedal speed (0.0..1.0). Lower = slower retreat.
+@export var retreat_speed_scale: float = 0.55
+# Maximum backpedal intent magnitude so we don't slam backwards (-1..0)
+@export var retreat_max_mag: float = 0.45
+
+@export_category("Center Seeking")
+# Gentle drift toward ring center over time (even when not near edge)
+@export var center_seek_enabled: bool = true
+@export var center_seek_strength: float = 0.05     # small additive intent toward center
+
+# Optional step-in/back commit tuning
+@export_category("Intent Commit")
+@export var step_back_min_sec: float = 0.25
+@export var step_back_max_sec: float = 0.45
+@export var step_in_min_sec: float = 0.35
+@export var step_in_max_sec: float = 0.7
+@export var step_back_mag: float = 0.25
+@export var step_in_mag: float = 0.25
+
 var anim: AnimationPlayer
 var agent: NavigationAgent3D
 var stats: Node
-var animator  # relax type if CharacterAnimator isn’t available at parse time
+var animator
 
-# Target can be a Node3D or a Vector3
 var _target_node: Node3D
 var _target_point: Vector3
 var _has_target: bool = false
+var _connected_target: BaseCharacter = null
 
 enum TargetMode { NONE, MOVE, FIGHT }
 var _target_mode: int = TargetMode.NONE
 
-# Intents
 var intents := {
 	"move_local": Vector2.ZERO,
 	"run": false,
@@ -76,45 +173,77 @@ var intents := {
 enum State { IDLE, MOVING, ATTACKING, STAGGERED, KO }
 var state: int = State.IDLE
 
-# Per-attack cooldowns keyed by id
 var _last_attack_time_by_id := {}
 
-# Attack phases
 enum AttackPhase { NONE, APPROACH, REPOSITION, SWING }
 var _attack_phase: int = AttackPhase.NONE
 var _attack_phase_until: float = 0.0
-var _attack_spec_current  # intentionally untyped to avoid parse dependency
+var _attack_spec_current
 var _attack_id_current: StringName = &""
 
-# Debounce and movement lock
 var _fight_entered_at: float = -1e9
 var _attack_intent_prev: bool = false
 var _move_locked_until: float = 0.0
 
-# Input buffering
 var _attack_wish_until: float = 0.0
 var _queued_attack_cat: StringName = &""
 var _queued_attack_id: StringName = &""
 var _queued_until: float = 0.0
 
-# Hysteresis memory
 var _last_move_local: Vector2 = Vector2.ZERO
 var _stuck_frames: int = 0
 
+var _attack_cat_pending: StringName = &""
+var _attack_cat_current: StringName = &""
+var _punch_force_pending: float = 0.0
+var _punch_force_current: float = 0.0
+
+var _last_aggressor: BaseCharacter = null
+var _last_aggressed_at: float = -1e9
+var _autotarget_next_check_at: float = 0.0
+
+var _last_hit_time: float = -1e9
+var _recent_hits: int = 0
+var _post_swing_until: float = 0.0
+
+# Desync/strafe state and intent commit
+var _rng := RandomNumberGenerator.new()
+var _strafe_dir: int = 0
+var _strafe_until: float = 0.0
+var _strafe_active: bool = false
+var _strafe_state_until: float = 0.0
+var _my_strafe_speed_scale: float = 1.0
+var _my_strafe_mag: float = 0.5
+
+enum Intent { NONE, STRAFE_L, STRAFE_R, STEP_BACK, STEP_IN, HOLD }
+var _intent: int = Intent.NONE
+var _intent_until: float = 0.0
+var _next_decision_at: float = 0.0
+
+# Approach/target motion tracking
+var _last_dist_to_target: float = 0.0
+var _last_update_time: float = 0.0
+var _last_target_vec: Vector3 = Vector3.ZERO
+var _last_target_vec_time: float = 0.0
+
 func _ready() -> void:
-	# Lazy-load libraries if not assigned via Inspector
+	_rng.randomize()
+
+	# Per-fighter strafe style
+	_my_strafe_speed_scale = _rng.randf_range(strafe_speed_scale_min, strafe_speed_scale_max)
+	_my_strafe_mag = _rng.randf_range(strafe_magnitude_min, strafe_magnitude_max)
+	_strafe_dir = (1 if _rng.randf() < 0.5 else -1)
+	_strafe_active = (_rng.randf() < strafe_activity_prob)
+	_strafe_state_until = _now() + (_rng.randf_range(strafe_on_time_min, strafe_on_time_max) if _strafe_active else _rng.randf_range(strafe_off_time_min, strafe_off_time_max))
+	_strafe_until = _now() + _rng.randf_range(idle_strafe_interval_min, idle_strafe_interval_max)
+
+	# Lazy-load libraries
 	if attack_library == null and attack_library_path != "":
 		var r := load(attack_library_path)
-		if r is AttackLibrary:
-			attack_library = r
-		elif debug_enabled:
-			push_warning("BaseCharacter: Failed to load AttackLibrary at " + attack_library_path)
+		if r is AttackLibrary: attack_library = r
 	if attack_set_data == null and attack_set_data_path != "":
 		var r2 := load(attack_set_data_path)
-		if r2 is AttackSetData:
-			attack_set_data = r2
-		elif debug_enabled:
-			push_warning("BaseCharacter: Failed to load AttackSetData at " + attack_set_data_path)
+		if r2 is AttackSetData: attack_set_data = r2
 
 	var model := $Model if has_node("Model") else null
 	if model:
@@ -134,14 +263,47 @@ func _ready() -> void:
 		agent.path_desired_distance = 0.5
 		agent.target_desired_distance = 0.75
 
+	add_to_group("fighters")
+	_connect_punch_input()
+
+	# Initialize tracking
+	_last_update_time = _now()
+	_last_dist_to_target = distance_to_target()
+	_last_target_vec = _vector_to_target()
+	_last_target_vec_time = _last_update_time
+
+# ----------------------------
+# Round gating
+# ----------------------------
+func set_round_active(active: bool) -> void:
+	round_active = active
+	if not active:
+		intents["move_local"] = Vector2.ZERO
+		intents["run"] = false
+		intents["retreat"] = false
+		_attack_phase = AttackPhase.NONE
+		_attack_phase_until = 0.0
+		_move_locked_until = 0.0
+		_attack_wish_until = 0.0
+		_post_swing_until = 0.0
+		_clear_queue()
+		_intent = Intent.NONE
+		_intent_until = 0.0
+		_next_decision_at = 0.0
+		if state != State.KO:
+			state = State.IDLE
+
 # ----------------------------
 # Optional setters
 # ----------------------------
 func set_attack_set_data(data: AttackSetData) -> void:
 	attack_set_data = data
 
+func set_input_source_id(id: int) -> void:
+	input_source_id = id
+
 # ----------------------------
-# Public helpers for controllers
+# Public helpers
 # ----------------------------
 func request_attack_category(cat: StringName) -> void:
 	intents["attack_category"] = cat
@@ -154,6 +316,11 @@ func request_attack_id(id: StringName) -> void:
 	intents["attack_category"] = StringName("")
 	intents["attack"] = true
 	_attack_wish_until = _now() + attack_press_retry_buffer_sec
+
+func request_auto_target() -> void:
+	auto_target_enabled = true
+	_autotarget_next_check_at = 0.0
+	_find_target_now()
 
 # ----------------------------
 # Targeting / Stance
@@ -175,6 +342,7 @@ func set_fight_target(t: Variant) -> void:
 	_attack_intent_prev = false
 
 func clear_target() -> void:
+	_disconnect_target_signals()
 	_target_node = null
 	_target_point = global_position
 	_has_target = false
@@ -185,6 +353,11 @@ func clear_target() -> void:
 	_attack_spec_current = null
 	_attack_id_current = &""
 	_attack_wish_until = 0.0
+	_attack_cat_pending = &""
+	_attack_cat_current = &""
+	_punch_force_pending = 0.0
+	_punch_force_current = 0.0
+	_post_swing_until = 0.0
 	_clear_queue()
 	if agent: agent.target_position = global_position
 	if animator and animator.has_method("end_fight_stance"):
@@ -195,11 +368,13 @@ func _set_target_internal(t: Variant, mode: int) -> void:
 	if t is Node3D:
 		_target_node = t
 		_has_target = true
+		_connect_target_signals(t)
 		var dest: Vector3 = _target_node.global_position
 		if nav_clamp_targets and agent and mode == TargetMode.MOVE:
 			dest = _nav_closest_on_map(dest)
 		if agent: agent.target_position = dest
 	elif t is Vector3:
+		_disconnect_target_signals()
 		_target_node = null
 		var dest_point: Vector3 = t
 		if nav_clamp_targets and agent and mode == TargetMode.MOVE:
@@ -216,20 +391,31 @@ func get_target_position() -> Vector3:
 	if not _has_target: return global_position
 	return _target_node.global_position if _target_node else _target_point
 
+func is_knocked_out() -> bool: return state == State.KO
+func is_alive() -> bool: return not is_knocked_out()
+
 # ----------------------------
 # Core loop
 # ----------------------------
 func _physics_process(delta: float) -> void:
-	if state == State.KO: return
-
 	# Gravity
 	if use_gravity:
-		if not is_on_floor():
-			velocity.y -= gravity * delta
-		else:
-			velocity.y = 0.0
+		if not is_on_floor(): velocity.y -= gravity * delta
+		else: velocity.y = 0.0
 	else:
 		velocity.y = 0.0
+
+	# Gate by round state
+	if not round_active or state == State.KO:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		move_and_slide()
+		if state != State.KO: state = State.IDLE
+		if animator and animator.has_method("update_locomotion"):
+			animator.update_locomotion(Vector2.ZERO, 0.0)
+		# Track target motion while idle too
+		_track_target_motion()
+		return
 
 	# Follow moving target
 	if agent and _has_target and _target_node:
@@ -238,7 +424,14 @@ func _physics_process(delta: float) -> void:
 			dest = _nav_closest_on_map(dest)
 		agent.target_position = dest
 
-	# Autopilot
+	# Auto-target
+	if auto_target_enabled:
+		var now_auto: float = _now()
+		var need_reacquire: bool = (not _has_target) or (not _is_valid_target(_target_node))
+		if need_reacquire and now_auto >= _autotarget_next_check_at:
+			_find_target_now()
+
+	# Autopilot intents
 	if use_agent_autopilot:
 		_update_autopilot_intents()
 
@@ -250,14 +443,12 @@ func _physics_process(delta: float) -> void:
 	# Move
 	var prev_position: Vector3 = global_position
 	move_and_slide()
-
-	# Stamina drain (optional)
 	var delta_pos: Vector3 = global_position - prev_position
 	var moved_distance: float = delta_pos.length()
 	if stats and moved_distance > 0.0 and stats.has_method("spend_movement"):
 		stats.spend_movement(moved_distance)
 
-	# Speed and locomotion state
+	# Locomotion state
 	var measured_h_speed: float = Vector2(delta_pos.x, delta_pos.z).length() / max(delta, 1e-6)
 	state = State.MOVING if measured_h_speed > 0.1 else State.IDLE
 
@@ -265,18 +456,120 @@ func _physics_process(delta: float) -> void:
 	_handle_attack_intent()
 	_tick_attack_phase()
 
+	# Track approach/target angular speed for next tick decisions
+	_track_target_motion()
+
 	# Anim
 	if animator and animator.has_method("update_locomotion"):
 		animator.update_locomotion(intents["move_local"], measured_h_speed)
 
 # ----------------------------
-# Autopilot
+# Auto-targeting helpers
 # ----------------------------
+func _find_target_now() -> void:
+	_autotarget_next_check_at = _now() + max(0.05, auto_target_reacquire_interval)
+
+	# Prefer last aggressor
+	if _is_valid_target(_last_aggressor) and (_now() - _last_aggressed_at) <= aggro_memory_sec:
+		set_fight_target(_last_aggressor)
+		return
+
+	# Closest alive fighter
+	var best: BaseCharacter = null
+	var best_d2 := 1e30
+	for n in get_tree().get_nodes_in_group("fighters"):
+		if n == self: continue
+		if not _is_valid_target(n): continue
+		var bc := n as BaseCharacter
+		var d2 := (bc.global_position - global_position).length_squared()
+		if d2 < best_d2:
+			best_d2 = d2
+			best = bc
+	if best: set_fight_target(best)
+
+func _is_valid_target(n: Node) -> bool:
+	if n == null or not is_instance_valid(n): return false
+	if not (n is BaseCharacter): return false
+	var bc := n as BaseCharacter
+	if bc == self: return false
+	if not bc.is_inside_tree(): return false
+	if bc.is_knocked_out(): return false
+	return true
+
+func _connect_target_signals(t: Node):
+	_disconnect_target_signals()
+	if t is BaseCharacter:
+		var bc := t as BaseCharacter
+		if bc.has_signal("knocked_out") and not bc.is_connected("knocked_out", Callable(self, "_on_target_knocked_out")):
+			bc.connect("knocked_out", Callable(self, "_on_target_knocked_out"))
+		_connected_target = bc
+
+func _disconnect_target_signals():
+	if _connected_target and is_instance_valid(_connected_target):
+		if _connected_target.is_connected("knocked_out", Callable(self, "_on_target_knocked_out")):
+			_connected_target.disconnect("knocked_out", Callable(self, "_on_target_knocked_out"))
+	_connected_target = null
+
+func _on_target_knocked_out() -> void:
+	clear_target()
+	if auto_target_enabled and round_active:
+		_find_target_now()
+
+# ----------------------------
+# Intent selection and autopilot
+# ----------------------------
+func _maybe_update_intent(now: float, d: float, closing_speed: float, omega_deg: float) -> void:
+	# Decide only when commitment expired and the pause is over
+	if now < _intent_until or now < _next_decision_at:
+		return
+
+	var low: float = hold_distance - hold_tolerance
+	var high: float = hold_distance + hold_tolerance
+
+	# Prefer step-in/out if far outside the band
+	if d > high + 0.4:
+		_intent = Intent.STEP_IN
+		_intent_until = now + _rng.randf_range(step_in_min_sec, step_in_max_sec)
+		_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
+		return
+	elif d < low - 0.4:
+		_intent = Intent.STEP_BACK
+		_intent_until = now + _rng.randf_range(step_back_min_sec, step_back_max_sec)
+		_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
+		return
+
+	# If opponent is pressing and we’re roughly in range, hold or gentle backstep
+	var near_band: bool = absf(d - hold_distance) <= (hold_tolerance * 1.2)
+	if closing_speed > approaching_speed_threshold and near_band:
+		if _rng.randf() < clampf(hold_ground_chance_when_pressed, 0.0, 1.0):
+			_intent = Intent.HOLD
+			_intent_until = now + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
+			_next_decision_at = _intent_until + _rng.randf_range(0.1, 0.3)
+			return
+		else:
+			_intent = Intent.STEP_BACK
+			_intent_until = now + _rng.randf_range(step_back_min_sec, step_back_max_sec)
+			_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
+			return
+
+	# Otherwise, maybe strafe; avoid mirroring: if target is clearly circling (|omega| high), prefer HOLD
+	var allow_strafe_now: bool = (_rng.randf() < clampf(strafe_activity_prob, 0.0, 1.0)) and not (rotate_instead_on_target_strafe and absf(omega_deg) >= target_strafe_omega_thresh_deg)
+	if allow_strafe_now:
+		_intent = Intent.STRAFE_L if _rng.randf() < 0.5 else Intent.STRAFE_R
+		_intent_until = now + _rng.randf_range(strafe_on_time_min, strafe_on_time_max)
+		_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
+	else:
+		_intent = Intent.HOLD
+		_intent_until = now + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
+		_next_decision_at = _intent_until + _rng.randf_range(0.1, 0.3)
+
 func _update_autopilot_intents() -> void:
 	if not _has_target:
 		return
 
 	var now: float = _now()
+	var d: float = distance_to_target()
+
 	# Movement lock
 	if now < _move_locked_until:
 		if animator and animator.has_method("is_in_fight_stance") and not animator.is_in_fight_stance():
@@ -304,82 +597,101 @@ func _update_autopilot_intents() -> void:
 		AttackPhase.SWING:
 			if animator and animator.has_method("is_in_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
-			intents["move_local"] = Vector2.ZERO
+			var push: float = swing_forward_push
+			if d < (hold_distance - hold_tolerance * 0.25):
+				push = -0.1
+			var ml_swing: Vector2 = Vector2(0.0, clampf(push, -1.0, 1.0))
+			intents["move_local"] = ml_swing
 			intents["run"] = false
-			intents["retreat"] = false
+			intents["retreat"] = (ml_swing.y < 0.0)
 			return
 		_:
 			pass
 
-	# Idle: hold or travel to move target
-	if _target_mode == TargetMode.MOVE:
-		var to_target: Vector3 = get_target_position() - global_position
-		to_target.y = 0.0
-		if to_target.length() <= move_arrival_tolerance or (agent and agent.is_navigation_finished()):
-			intents["move_local"] = Vector2.ZERO
-			intents["run"] = false
-			intents["retreat"] = false
-			clear_target()
-			return
-		_set_autopilot_move_towards(get_target_position())
-		intents["run"] = to_target.length() > run_distance_threshold
-		intents["retreat"] = false
-	else:
-		intents["move_local"] = Vector2.ZERO
-		intents["run"] = false
-		intents["retreat"] = false
+	# Approach/press info for intent chooser
+	var dt: float = max(0.0001, now - _last_update_time)
+	var closing_speed: float = (_last_dist_to_target - d) / dt  # >0 means they’re closing
+	var to_target: Vector3 = _vector_to_target()
+	var desired_yaw: float = _yaw_from_direction(to_target)
+	var diff_yaw: float = absf(wrapf(desired_yaw - rotation.y, -PI, PI))
+	var angle_deg: float = rad_to_deg(diff_yaw)
+	var omega_deg: float = _target_angular_speed_deg_per_sec()
 
-func _set_autopilot_move_towards(world_target: Vector3) -> void:
-	var dir_world: Vector3 = Vector3.ZERO
-	if agent:
-		var next_pos: Vector3 = agent.get_next_path_position()
-		var to_next: Vector3 = next_pos - global_position
-		to_next.y = 0.0
-		dir_world = to_next if to_next.length() > 0.001 else (world_target - global_position)
-	else:
-		dir_world = world_target - global_position
-	dir_world.y = 0.0
+	# Keep the stance fresh
+	if animator and animator.has_method("is_in_fight_stance") and not animator.is_in_fight_stance():
+		animator.start_fight_stance()
 
-	var eps: float = 0.001
-	var dist_to_target: float = (world_target - global_position).length()
+	# Update/choose intent only when needed (prevents per-frame flip-flop)
+	_maybe_update_intent(now, d, closing_speed, omega_deg)
 
-	if dir_world.length() <= eps and dist_to_target > move_arrival_tolerance:
-		_stuck_frames += 1
-		if _stuck_frames <= nav_stuck_memory_frames:
-			intents["move_local"] = _last_move_local
+	# Build movement from committed intent
+	var ml: Vector2 = Vector2.ZERO
+	match _intent:
+		Intent.STRAFE_L:
+			ml.x = -clampf(_my_strafe_mag, 0.0, 1.0)
+		Intent.STRAFE_R:
+			ml.x = clampf(_my_strafe_mag, 0.0, 1.0)
+		Intent.STEP_BACK:
+			ml.y = -min(step_back_mag, retreat_max_mag)
+		Intent.STEP_IN:
+			ml.y = clampf(step_in_mag, 0.0, 0.6)
+		Intent.HOLD, Intent.NONE:
+			ml = Vector2.ZERO
+
+	# Only small distance nudges while committed (avoid jitter)
+	var low: float = hold_distance - hold_tolerance
+	var high: float = hold_distance + hold_tolerance
+	if now >= _intent_until:
+		# No current commitment — allow mild band correction, slower magnitudes
+		if d < low:
+			ml.y += -0.15
+		elif d > high:
+			ml.y += 0.15
+
+	# Pressing logic: slow down backstepping or hold ground near the ideal range
+	var near_band: bool = absf(d - hold_distance) <= (hold_tolerance * 1.2)
+	if closing_speed > approaching_speed_threshold and near_band:
+		if _rng.randf() < clampf(hold_ground_chance_when_pressed, 0.0, 1.0):
+			if ml.y < 0.0: ml.y = 0.0
 		else:
-			intents["move_local"] = Vector2.ZERO
-	else:
-		_stuck_frames = 0
-		if dir_world.length() > eps:
-			dir_world = dir_world.normalized()
-		var right: Vector3 = global_transform.basis.x
-		var forward: Vector3 = -global_transform.basis.z
-		var x: float = dir_world.dot(right)
-		var y: float = dir_world.dot(forward)
-		var move_local: Vector2 = Vector2(x, y)
-		intents["move_local"] = move_local.normalized() if move_local.length() > 0.001 else Vector2.ZERO
-		_last_move_local = intents["move_local"]
+			if ml.y < 0.0: ml.y *= clampf(retreat_when_pressed_slowdown, 0.05, 1.0)
 
-# Move directly away from target (backpedal)
-func _set_autopilot_move_away_from(world_target: Vector3) -> void:
-	var to_target: Vector3 = world_target - global_position
-	to_target.y = 0.0
-	var dir_world: Vector3 = Vector3.ZERO
-	if to_target.length() > 0.001:
-		dir_world = -to_target.normalized()
+	# Angle gating: if very square-on and not in a strafe commitment, prefer rotation-only
+	if (_intent == Intent.NONE or _intent == Intent.HOLD) and angle_deg < max(0.0, strafe_angle_min_deg):
+		ml.x = 0.0
 
-	var right: Vector3 = global_transform.basis.x
-	var forward: Vector3 = -global_transform.basis.z
-	var x: float = dir_world.dot(right)
-	var y: float = dir_world.dot(forward)
-	var move_local: Vector2 = Vector2(x, y)
-	if move_local.length() > 0.001:
-		move_local = move_local.normalized()
-	if move_local.y > -0.2:
-		move_local.y = -0.2
-	intents["move_local"] = move_local
-	_last_move_local = intents["move_local"]
+	# Gentle center seeking always adds a tiny inward drift
+	if center_seek_enabled and arena_radius_hint > 0.001:
+		var to_center: Vector3 = arena_center - global_position
+		to_center.y = 0.0
+		var dist_from_center: float = to_center.length()
+		if dist_from_center > 0.001:
+			var inward_local: Vector2 = _world_dir_to_local_move(to_center.normalized())
+			var t_center: float = clamp(dist_from_center / max(arena_radius_hint, 0.001), 0.0, 1.0)
+			ml = ml + inward_local * (center_seek_strength * t_center)
+
+	# Edge bias toward center (stronger correction near wall)
+	if arena_radius_hint > 0.1:
+		var to_center2: Vector3 = (arena_center - global_position)
+		to_center2.y = 0.0
+		var dist_from_center2: float = to_center2.length()
+		if dist_from_center2 >= (arena_radius_hint * 0.85):
+			var inward2: Vector2 = Vector2.ZERO
+			if dist_from_center2 > 0.001:
+				inward2 = _world_dir_to_local_move(to_center2.normalized())
+			ml = (ml * (1.0 - center_return_bias)) + (inward2 * center_return_bias)
+
+	# Clamp retreat intent so we never blast backward
+	if ml.y < 0.0:
+		ml.y = max(ml.y, -clampf(retreat_max_mag, 0.0, 1.0))
+
+	# Final clamp
+	if ml.length() > 1.0:
+		ml = ml.normalized()
+
+	intents["move_local"] = ml
+	intents["run"] = false
+	intents["retreat"] = (ml.y < -0.01)
 
 # ----------------------------
 # Movement helpers
@@ -419,16 +731,20 @@ func _rotate_yaw_towards(desired_yaw: float, max_step: float) -> void:
 	else:
 		rotation.y = current_yaw + clampf(diff, -max_step, max_step)
 
-# Only sets horizontal velocity
+# ----------------------------
+# Combat
+# ----------------------------
 func _apply_horizontal_velocity(desired_dir_world: Vector3) -> void:
 	var local_move: Vector2 = intents["move_local"]
 	var speed: float = walk_speed
 	if bool(intents["run"]) and bool(intents["retreat"]):
 		speed = run_speed
 	elif local_move.y < -0.01:
-		speed = backpedal_speed
+		# Backpedal scaled down globally so defenders don't slide too fast
+		speed = backpedal_speed * clampf(retreat_speed_scale, 0.0, 1.0)
 	elif absf(local_move.x) > 0.01 and absf(local_move.y) < 0.01:
-		speed = strafe_speed
+		# Scale strafe per fighter (0.2x..0.8x) to avoid matching speeds
+		speed = strafe_speed * _my_strafe_speed_scale
 	elif bool(intents["run"]):
 		speed = run_speed
 
@@ -439,9 +755,6 @@ func _apply_horizontal_velocity(desired_dir_world: Vector3) -> void:
 	velocity.x = horizontal_vel.x
 	velocity.z = horizontal_vel.z
 
-# ----------------------------
-# Combat
-# ----------------------------
 func _handle_attack_intent() -> void:
 	var now: float = _now()
 
@@ -460,24 +773,20 @@ func _handle_attack_intent() -> void:
 		_queue_next_from_intents()
 		return
 
-	if not wish_active and not rising:
-		return
-
-	if now - _fight_entered_at < attack_debounce_after_fight_enter:
-		return
-
-	if _attack_phase != AttackPhase.NONE:
-		return
-
+	if not wish_active and not rising: return
+	if now - _fight_entered_at < attack_debounce_after_fight_enter: return
+	if _attack_phase != AttackPhase.NONE: return
 	if not attack_library:
 		if debug_enabled: push_warning("BaseCharacter: attack_library not assigned.")
 		return
 
 	var id: StringName = intents["attack_id"]
+	var pending_cat: StringName = &""
 	if String(id) == "":
 		var cat: StringName = intents["attack_category"]
 		if String(cat) != "" and attack_set_data:
 			id = attack_set_data.get_id_for_category(cat)
+			pending_cat = cat
 	if String(id) == "":
 		if debug_enabled: push_warning("BaseCharacter: no attack_id and no attack_set_data/category provided.")
 		return
@@ -488,13 +797,10 @@ func _handle_attack_intent() -> void:
 		return
 
 	var last_time: float = float(_last_attack_time_by_id.get(id, -1000.0))
-	if now - last_time < max(0.0, spec.cooldown_sec):
-		return
+	if now - last_time < max(0.0, spec.cooldown_sec): return
+	if not _has_target: return
 
-	if not _has_target:
-		return
-
-	var d: float = distance_to_target()
+	var d2t: float = distance_to_target()
 	var lower: float = float(max(0.0, spec.launch_min_distance))
 	var upper: float = spec.enter_distance
 	var eps: float = float(max(0.0, launch_band_epsilon))
@@ -503,44 +809,42 @@ func _handle_attack_intent() -> void:
 	var approach_thresh: float = upper + eps
 
 	if lower > 0.0:
-		if d < reposition_thresh:
+		if d2t < reposition_thresh:
 			if animator and animator.has_method("start_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			_attack_phase = AttackPhase.REPOSITION
 			_attack_spec_current = spec
 			_attack_id_current = id
-			if debug_enabled:
-				print("[BC] REPOSITION id=", String(id), " d=", d, " < ", reposition_thresh, " (min=", lower, " eps=", eps, ")")
+			_attack_cat_pending = pending_cat
 			return
-		elif d > approach_thresh:
+		elif d2t > approach_thresh:
 			if animator and animator.has_method("start_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			_attack_phase = AttackPhase.APPROACH
 			_attack_spec_current = spec
 			_attack_id_current = id
-			if debug_enabled:
-				print("[BC] APPROACH id=", String(id), " d=", d, " > ", approach_thresh, " (enter=", upper, " eps=", eps, ")")
+			_attack_cat_pending = pending_cat
 			return
 		else:
+			_attack_cat_pending = pending_cat
 			_start_swing(spec, id, now)
 			_attack_wish_until = 0.0
 			return
 	else:
-		if d > approach_thresh:
+		if d2t > approach_thresh:
 			if animator and animator.has_method("start_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			_attack_phase = AttackPhase.APPROACH
 			_attack_spec_current = spec
 			_attack_id_current = id
-			if debug_enabled:
-				print("[BC] APPROACH id=", String(id), " d=", d, " > ", approach_thresh)
+			_attack_cat_pending = pending_cat
 		else:
+			_attack_cat_pending = pending_cat
 			_start_swing(spec, id, now)
 			_attack_wish_until = 0.0
 
 func _tick_attack_phase() -> void:
-	if _attack_phase == AttackPhase.NONE:
-		return
+	if _attack_phase == AttackPhase.NONE: return
 	var now: float = _now()
 	match _attack_phase:
 		AttackPhase.APPROACH:
@@ -553,24 +857,20 @@ func _tick_attack_phase() -> void:
 				var swing_upper: float = upper + eps
 				if d < reposition_thresh and lower > 0.0:
 					_attack_phase = AttackPhase.REPOSITION
-					if debug_enabled:
-						print("[BC] APPROACH->REPOSITION d=", d, " < ", reposition_thresh)
 				elif d <= swing_upper:
 					_start_swing(_attack_spec_current, _attack_id_current, now)
 					_attack_wish_until = 0.0
 		AttackPhase.REPOSITION:
 			if _attack_spec_current:
-				var d: float = distance_to_target()
-				var lower: float = float(max(0.0, _attack_spec_current.launch_min_distance))
-				var upper: float = _attack_spec_current.enter_distance
-				var eps: float = float(max(0.0, launch_band_epsilon))
-				var approach_thresh: float = upper + eps
-				var swing_lower: float = lower - eps
-				if d > approach_thresh:
+				var d2: float = distance_to_target()
+				var lower2: float = float(max(0.0, _attack_spec_current.launch_min_distance))
+				var upper2: float = _attack_spec_current.enter_distance
+				var eps2: float = float(max(0.0, launch_band_epsilon))
+				var approach_thresh: float = upper2 + eps2
+				var swing_lower: float = lower2 - eps2
+				if d2 > approach_thresh:
 					_attack_phase = AttackPhase.APPROACH
-					if debug_enabled:
-						print("[BC] REPOSITION->APPROACH d=", d, " > ", approach_thresh)
-				elif d >= swing_lower:
+				elif d2 >= swing_lower:
 					_start_swing(_attack_spec_current, _attack_id_current, now)
 					_attack_wish_until = 0.0
 		AttackPhase.SWING:
@@ -578,6 +878,9 @@ func _tick_attack_phase() -> void:
 				_attack_phase = AttackPhase.NONE
 				_attack_spec_current = null
 				_attack_id_current = &""
+				_attack_cat_current = &""
+				_punch_force_current = 0.0
+				_post_swing_until = now + max(0.0, post_swing_backstep_sec)
 				if now <= _queued_until and (String(_queued_attack_id) != "" or String(_queued_attack_cat) != ""):
 					if String(_queued_attack_id) != "":
 						intents["attack_id"] = _queued_attack_id
@@ -587,21 +890,15 @@ func _tick_attack_phase() -> void:
 						intents["attack_category"] = _queued_attack_cat
 					intents["attack"] = true
 					_attack_wish_until = now + attack_press_retry_buffer_sec
-				_clear_queue()
-		_:
-			pass
 
 func _queue_next_from_intents() -> void:
 	var id: StringName = intents["attack_id"]
 	var cat: StringName = intents["attack_category"]
-	if String(id) == "" and String(cat) == "":
-		return
+	if String(id) == "" and String(cat) == "": return
 	_queued_attack_id = id
 	_queued_attack_cat = cat
 	_queued_until = _now() + attack_queue_buffer_sec
 	intents["attack"] = false
-	if debug_enabled:
-		print("[BC] Queued next attack: id=", String(id), " cat=", String(cat))
 
 func _clear_queue() -> void:
 	_queued_attack_id = &""
@@ -609,14 +906,20 @@ func _clear_queue() -> void:
 	_queued_until = 0.0
 
 func _start_swing(spec, id: StringName, now: float) -> void:
+	_attack_spec_current = spec
+	_attack_id_current = id
 	_last_attack_time_by_id[id] = now
 	state = State.ATTACKING
 	emit_signal("attacked_id", id)
 
+	_attack_cat_current = _attack_cat_pending
+	_punch_force_current = _punch_force_pending
+	_attack_cat_pending = &""
+	_punch_force_pending = 0.0
+
 	if animator and animator.has_method("play_attack_id"):
 		if not (animator.has_method("is_in_fight_stance") and animator.is_in_fight_stance()):
-			if animator.has_method("start_fight_stance"):
-				animator.start_fight_stance()
+			if animator.has_method("start_fight_stance"): animator.start_fight_stance()
 		animator.play_attack_id(id)
 
 	_move_locked_until = now + max(0.0, spec.move_lock_sec)
@@ -624,21 +927,41 @@ func _start_swing(spec, id: StringName, now: float) -> void:
 	_attack_phase_until = now + max(0.0, spec.swing_time_sec)
 
 func anim_event_hit() -> void:
-	emit_signal("attack_landed", 1.0)
+	var dmg: int = _get_current_attack_damage()
+	if _has_target and _target_node:
+		var victim := _target_node
+		if victim and victim.has_method("take_hit"):
+			victim.take_hit(dmg, self)
+	emit_signal("attack_landed", float(dmg))
 
-func take_hit(amount: int) -> void:
+func take_hit(amount: int, source: Node = null) -> void:
 	if state == State.KO: return
-	if stats and stats.has_method("take_damage"):
-		stats.take_damage(amount)
+	if source and source is BaseCharacter and source != self:
+		_last_aggressor = source as BaseCharacter
+		_last_aggressed_at = _now()
+		if switch_to_aggressor_immediately and _is_valid_target(_last_aggressor) and round_active:
+			set_fight_target(_last_aggressor)
+
+	var now: float = _now()
+	if now - _last_hit_time > retreat_recent_hit_window:
+		_recent_hits = 0
+	_last_hit_time = now
+	_recent_hits += 1
+
+	if stats and stats.has_method("take_damage"): stats.take_damage(amount)
 	emit_signal("took_hit", amount)
-	if animator and animator.has_method("play_hit"):
-		animator.play_hit(amount)
+	if animator and animator.has_method("play_hit"): animator.play_hit(amount)
 	state = State.STAGGERED
 	_attack_phase = AttackPhase.NONE
 	_attack_phase_until = 0.0
 	_move_locked_until = 0.0
 	_attack_spec_current = null
 	_attack_id_current = &""
+	_attack_cat_pending = &""
+	_attack_cat_current = &""
+	_punch_force_pending = 0.0
+	_punch_force_current = 0.0
+	_post_swing_until = 0.0
 	_clear_queue()
 	_attack_wish_until = 0.0
 
@@ -653,20 +976,126 @@ func _on_died() -> void:
 	_move_locked_until = 0.0
 	_attack_spec_current = null
 	_attack_id_current = &""
+	_attack_cat_pending = &""
+	_attack_cat_current = &""
+	_punch_force_pending = 0.0
+	_punch_force_current = 0.0
+	_post_swing_until = 0.0
 	_clear_queue()
 	_attack_wish_until = 0.0
-	if animator and animator.has_method("play_ko"):
-		animator.play_ko()
+	if animator and animator.has_method("play_ko"): animator.play_ko()
 
 func _on_animation_finished(_name: StringName) -> void:
 	if state in [State.ATTACKING, State.STAGGERED]:
 		state = State.IDLE
 
 # ----------------------------
+# PunchInput integration
+# ----------------------------
+func _connect_punch_input() -> void:
+	var router := get_node_or_null("/root/PunchInput")
+	if router:
+		if not router.is_connected("punched", Callable(self, "_on_punched")):
+			router.connect("punched", Callable(self, "_on_punched"))
+	else:
+		if debug_enabled:
+			push_warning("[BC] PunchInput autoload not found at /root/PunchInput")
+
+func _on_punched(source_id: int, force: float) -> void:
+	if not round_active: return
+	if input_source_id == 0 and not accept_any_source_if_zero: return
+	if input_source_id != 0 and source_id != input_source_id: return
+	if state == State.KO: return
+
+	var cat: StringName = _category_from_force(force)
+	_attack_cat_pending = cat
+	_punch_force_pending = force
+	request_attack_category(cat)
+
+# ----------------------------
+# Damage resolution
+# ----------------------------
+func _get_current_attack_damage() -> int:
+	var base_dmg: float = 0.0
+
+	if _attack_spec_current and _attack_spec_current.has_method("get"):
+		var v: Variant = _attack_spec_current.get("damage")
+		if typeof(v) != TYPE_NIL:
+			base_dmg = float(v)
+		if base_dmg <= 0.0:
+			var v2: Variant = _attack_spec_current.get("damage_amount")
+			if typeof(v2) != TYPE_NIL:
+				base_dmg = float(v2)
+		if base_dmg <= 0.0:
+			var v3: Variant = _attack_spec_current.get("power")
+			if typeof(v3) != TYPE_NIL:
+				base_dmg = float(v3)
+
+	if base_dmg <= 0.0:
+		if _attack_cat_current == category_special:
+			base_dmg = float(default_special_damage)
+		elif _attack_cat_current == category_heavy:
+			base_dmg = float(default_heavy_damage)
+		elif _attack_cat_current == category_medium:
+			base_dmg = float(default_medium_damage)
+		else:
+			base_dmg = float(default_light_damage)
+
+	if scale_damage_by_force and _punch_force_current > 0.0:
+		var lo: float = light_force_min
+		var hi: float = light_force_max
+		if _attack_cat_current == category_special:
+			lo = special_force_min; hi = special_force_max
+		elif _attack_cat_current == category_heavy:
+			lo = heavy_force_min; hi = heavy_force_max
+		elif _attack_cat_current == category_medium:
+			lo = medium_force_min; hi = medium_force_max
+		if hi > lo:
+			var f: float = clamp(_punch_force_current, lo, hi)
+			var t: float = (f - lo) / (hi - lo)
+			var scale: float = lerp(min_damage_scale, max_damage_scale, t)
+			base_dmg *= scale
+
+	return int(round(max(0.0, base_dmg)))
+
+# ----------------------------
 # Utilities
 # ----------------------------
 func distance_to_target() -> float:
 	return (get_target_position() - global_position).length()
+
+func _vector_to_target() -> Vector3:
+	var v: Vector3 = get_target_position() - global_position
+	v.y = 0.0
+	return v
+
+func _target_angular_speed_deg_per_sec() -> float:
+	# Compute target angular speed around us based on change in bearing.
+	var now: float = _now()
+	var dt: float = max(0.0001, now - _last_target_vec_time)
+	var cur: Vector3 = _vector_to_target()
+	if cur.length_squared() < 1e-6 or _last_target_vec.length_squared() < 1e-6:
+		_last_target_vec = cur
+		_last_target_vec_time = now
+		return 0.0
+	var a1: float = atan2(-cur.x, -cur.z)
+	var a0: float = atan2(-_last_target_vec.x, -_last_target_vec.z)
+	var d_ang: float = wrapf(a1 - a0, -PI, PI)
+	return rad_to_deg(d_ang) / dt
+
+func _track_target_motion() -> void:
+	var now: float = _now()
+	_last_dist_to_target = distance_to_target()
+	_last_update_time = now
+	_last_target_vec = _vector_to_target()
+	_last_target_vec_time = now
+
+func _world_dir_to_local_move(world_dir: Vector3) -> Vector2:
+	var right: Vector3 = global_transform.basis.x
+	var forward: Vector3 = -global_transform.basis.z
+	var x: float = world_dir.dot(right)
+	var y: float = world_dir.dot(forward)
+	return Vector2(x, y)
 
 func _nav_closest_on_map(world_point: Vector3) -> Vector3:
 	if not agent: return world_point
@@ -675,3 +1104,65 @@ func _nav_closest_on_map(world_point: Vector3) -> Vector3:
 
 func _now() -> float:
 	return float(Time.get_ticks_msec()) / 1000.0
+
+func _category_from_force(force: float) -> StringName:
+	if not use_force_ranges:
+		return category_heavy if force >= medium_force_min else category_light
+	if force >= special_force_min and force <= special_force_max:
+		return category_special
+	if force >= heavy_force_min and force <= heavy_force_max:
+		return category_heavy
+	if force >= medium_force_min and force <= medium_force_max:
+		return category_medium
+	return category_light
+
+func _set_autopilot_move_towards(world_target: Vector3) -> void:
+	var dir_world: Vector3 = Vector3.ZERO
+	if agent:
+		var next_pos: Vector3 = agent.get_next_path_position()
+		var to_next: Vector3 = next_pos - global_position
+		to_next.y = 0.0
+		dir_world = to_next if to_next.length() > 0.001 else (world_target - global_position)
+	else:
+		dir_world = world_target - global_position
+	dir_world.y = 0.0
+
+	var eps: float = 0.001
+	var dist_to_target: float = (world_target - global_position).length()
+
+	if dir_world.length() <= eps and dist_to_target > move_arrival_tolerance:
+		_stuck_frames += 1
+		if _stuck_frames <= nav_stuck_memory_frames:
+			intents["move_local"] = _last_move_local
+		else:
+			intents["move_local"] = Vector2.ZERO
+	else:
+		_stuck_frames = 0
+		if dir_world.length() > eps:
+			dir_world = dir_world.normalized()
+		var right: Vector3 = global_transform.basis.x
+		var forward: Vector3 = -global_transform.basis.z
+		var x: float = dir_world.dot(right)
+		var y: float = dir_world.dot(forward)
+		var move_local: Vector2 = Vector2(x, y)
+		intents["move_local"] = move_local.normalized() if move_local.length() > 0.001 else Vector2.ZERO
+		_last_move_local = intents["move_local"]
+
+func _set_autopilot_move_away_from(world_target: Vector3) -> void:
+	var to_target: Vector3 = world_target - global_position
+	to_target.y = 0.0
+	var dir_world: Vector3 = Vector3.ZERO
+	if to_target.length() > 0.001:
+		dir_world = -to_target.normalized()
+
+	var right: Vector3 = global_transform.basis.x
+	var forward: Vector3 = -global_transform.basis.z
+	var x: float = dir_world.dot(right)
+	var y: float = dir_world.dot(forward)
+	var move_local: Vector2 = Vector2(x, y)
+	if move_local.length() > 0.001:
+		move_local = move_local.normalized()
+	if move_local.y > -0.2:
+		move_local.y = -0.2
+	intents["move_local"] = move_local
+	_last_move_local = intents["move_local"]
