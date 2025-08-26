@@ -20,7 +20,7 @@ signal knocked_out
 
 @export_category("Combat (Data-Driven)")
 @export var keep_eyes_on_target: bool = true
-@export var approach_speed_scale: float = 0.8
+@export var approach_speed_scale: float = 1.0
 
 @export var attack_library: AttackLibrary
 @export_file("*.tres") var attack_library_path: String = "res://data/AttackLibrary.tres"
@@ -143,7 +143,7 @@ var _debug_accum: float = 0.0
 # Slow forward movement as we enter the range band: within (hold_distance + this), scale forward speed.
 @export var engage_slowdown_band_m: float = 1.0
 # Scale applied to forward speed when inside the slowdown band (0.1..1.0). 0.75 = 25% slower.
-@export var engage_forward_speed_scale: float = 0.75
+@export var engage_forward_speed_scale: float = 0.8
 # When closing, maintain at least this much extra room inside hold_distance (a small standoff so we don't bump).
 @export var engage_backoff_m: float = 1.0
 
@@ -657,7 +657,7 @@ func _update_autopilot_intents() -> void:
 			if animator and animator.has_method("is_in_fight_stance") and not animator.is_in_fight_stance():
 				animator.start_fight_stance()
 			_set_autopilot_move_towards(get_target_position())
-			intents["run"] = false
+			intents["run"] = true
 			intents["retreat"] = false
 			return
 		AttackPhase.REPOSITION:
