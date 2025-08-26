@@ -1643,47 +1643,27 @@ func _end_rush(now: float) -> void:
 	_intent_until = now + standoff_pause_sec
 	_next_decision_at = _intent_until + _rng.randf_range(0.1, 0.3)
 
-func spawn_hitbox_for_attack(attack_id: StringName, spec: Resource, impact_force: float, active_start_sec: float = -1.0, active_end_sec: float = -1.0) -> void:
-	if spec == null:
+# Activate our permanent Hitbox3D for this attack using the attack spec’s timing.
+# Optionally pass reach_override_m to force a specific reach for this attack.
+func activate_hitbox_for_attack(attack_id: StringName, spec: Resource, impact_force: float, reach_override_m: float = -1.0) -> void:
+	if hitbox == null:
+		_combat_log("No Hitbox3D node under this character.")
 		return
-	var hb := Hitbox3D.new()
-	hb.attacker = self
-	hb.attack_id = attack_id
-	hb.impact_force = impact_force
-	hb.configure_from_spec(spec)
 
-	# Optional bone attach
-	var bone_name: StringName = _spec_val(spec, &"hitbox_bone", StringName(""))
-	if String(bone_name) != "" and has_node("Skeleton3D"):
-		var sk: Skeleton3D = $Skeleton3D
-		var idx: int = sk.find_bone(String(bone_name))
-		if idx != -1:
-			sk.add_child(hb)
-			hb.set_as_top_level(false)
-			hb.transform = Transform3D.IDENTITY
-		else:
-			add_child(hb)
-	else:
-		add_child(hb)
+	# If you want to override reach per-attack (instead of spec reach_meters), uncomment:
+	# if reach_override_m >= 0.0:
+	# 	hitbox.set_reach_meters(reach_override_m)
 
-	# Compute active duration from spec or overrides
-	var start_off: float = active_start_sec if active_start_sec >= 0.0 else float(_spec_val(spec, &"active_start_sec", 0.05))
-	var end_off: float = active_end_sec if active_end_sec >= 0.0 else float(_spec_val(spec, &"active_end_sec", 0.20))
-	var duration: float = max(0.0, end_off - start_off)
+	hitbox.attacker = self
+	hitbox.activate_for_attack(attack_id, spec, impact_force)
+	_combat_log("activate_hitbox: " + String(attack_id) + " force=" + str(impact_force))
 
-	# Delay enabling for start_off, then run for duration
-	hb.visible = false
-	hb.monitoring = false
-	var timer_start := get_tree().create_timer(max(0.0, start_off))
-	timer_start.timeout.connect(func():
-		if not is_instance_valid(hb): return
-		hb.monitoring = true
-		hb.visible = true
-		hb.begin_active(Time.get_ticks_msec() / 1000.0, duration)
-	)
 
-# Thin adapter used by Hitbox3D; computes damage and forwards to your take_hit.
 func apply_hit(attacker: Node, spec: Resource, impact_force: float) -> void:
+	# Safety: never hit self (Hitbox3D already guards, this is a second layer)
+	if attacker == self:
+		return
+
 	var from_s: String = "<none>"
 	if attacker != null and attacker is Node:
 		from_s = str((attacker as Node).get_path())
