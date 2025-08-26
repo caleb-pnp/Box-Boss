@@ -155,6 +155,19 @@ var _debug_accum: float = 0.0
 # Safety timeout for a rush if we cannot reach the stop distance (blocked).
 @export var rush_timeout_sec: float = 1.5
 
+@export_category("Reaction / Rush Strategy")
+@export var reaction_lag_sec: float = 0.35                 # delay before we react to opponent’s retreat/approach
+@export var retreat_memory_sec: float = 0.6                # how long we remember opponent retreating
+@export var retreating_speed_threshold: float = 0.6        # units/sec considered a retreat
+@export var rush_trigger_small_margin_m: float = 0.15      # small extra distance above band that can trigger a rush
+@export var rush_trigger_min_time_sec: float = 0.6         # must stay above small margin for this long to rush
+@export var random_bait_backstep_prob: float = 0.3         # chance to do a bait backstep when neutral
+@export var bait_backstep_min_sec: float = 0.35
+@export var bait_backstep_max_sec: float = 0.7
+@export var bait_backstep_mag: float = 0.35                # capped by retreat_max_mag
+@export var band_correction_gain: float = 0.12             # gentle distance correction size
+@export var band_deadzone_m: float = 0.05                  # ignore corrections within this of target distance
+
 # Optional step-in/back commit tuning
 @export_category("Intent Commit")
 @export var step_back_min_sec: float = 0.25
@@ -243,10 +256,19 @@ var _last_update_time: float = 0.0
 var _last_target_vec: Vector3 = Vector3.ZERO
 var _last_target_vec_time: float = 0.0
 
-# Rush state
+# Rush/stand-off and reaction state
 var _rush_active: bool = false
-var _rush_stop_dist: float = 0.0      # distance to target at which to stop the rush
-var _rush_giveup_at: float = 0.0      # time to abort rush if blocked
+var _rush_stop_dist: float = 0.0
+var _rush_giveup_at: float = 0.0
+
+var _reaction_lag_until: float = 0.0
+var _recent_backstep_until: float = 0.0
+var _opponent_retreating_until: float = 0.0
+var _distance_above_high_since: float = -1.0
+
+# Per-intent magnitude for step motions
+var _intent_mag_y: float = 0.0
+
 
 
 
@@ -560,37 +582,44 @@ func _maybe_update_intent(now: float, d: float, closing_speed: float, omega_deg:
 	var low: float = hold_distance - hold_tolerance
 	var high: float = hold_distance + hold_tolerance
 
-	# Prefer step-in/out if far outside the band
-	if d > high + 0.4:
+	# Track whether we can rush off a small margin if it persists
+	var can_rush_small: bool = false
+	if _distance_above_high_since >= 0.0 and (now - _distance_above_high_since) >= rush_trigger_min_time_sec:
+		can_rush_small = true
+
+	# Large deviations: prefer decisive step in/out
+	if d > high + 0.4 or (can_rush_small or (now < _opponent_retreating_until and now >= _reaction_lag_until)):
 		# Start a distance-limited rush toward stop distance (hold_distance - engage_backoff_m)
 		_intent = Intent.STEP_IN
+		_intent_mag_y = 1.0
 		_rush_active = true
 		_rush_stop_dist = max(0.2, hold_distance - engage_backoff_m)
 		_rush_giveup_at = now + rush_timeout_sec
-		# Still set a small time commitment to prevent instant re-eval if distance doesn’t change much
 		_intent_until = now + _rng.randf_range(step_in_min_sec, step_in_max_sec)
 		_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
 		return
 	elif d < low - 0.4:
 		_intent = Intent.STEP_BACK
+		_intent_mag_y = min(step_back_mag, retreat_max_mag)
 		_rush_active = false
 		_intent_until = now + _rng.randf_range(step_back_min_sec, step_back_max_sec)
 		_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
+		_recent_backstep_until = _intent_until
+		_reaction_lag_until = now + reaction_lag_sec
 		return
 
-	# If opponent is pressing and we’re roughly in range, hold or gentle backstep
-	var near_band: bool = absf(d - hold_distance) <= (hold_tolerance * 1.2)
-	if closing_speed > approaching_speed_threshold and near_band:
-		_rush_active = false
-		if _rng.randf() < clampf(hold_ground_chance_when_pressed, 0.0, 1.0):
-			_intent = Intent.HOLD
-			_intent_until = now + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
-			_next_decision_at = _intent_until + _rng.randf_range(0.1, 0.3)
-			return
-		else:
+	# Neutral: sometimes do a bait backstep to create an opening
+	var neutral: bool = (_intent == Intent.NONE or _intent == Intent.HOLD or _intent == Intent.STRAFE_L or _intent == Intent.STRAFE_R)
+	if neutral and now >= _recent_backstep_until:
+		if _rng.randf() < clampf(random_bait_backstep_prob, 0.0, 1.0):
 			_intent = Intent.STEP_BACK
-			_intent_until = now + _rng.randf_range(step_back_min_sec, step_back_max_sec)
+			_intent_mag_y = min(bait_backstep_mag, retreat_max_mag)
+			_rush_active = false
+			_intent_until = now + _rng.randf_range(bait_backstep_min_sec, bait_backstep_max_sec)
 			_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
+			_recent_backstep_until = _intent_until
+			# After bait, delay our next forward reaction so the opponent can open the distance
+			_reaction_lag_until = now + reaction_lag_sec
 			return
 
 	# Otherwise, maybe strafe; avoid mirroring if target is clearly circling
@@ -598,10 +627,12 @@ func _maybe_update_intent(now: float, d: float, closing_speed: float, omega_deg:
 	_rush_active = false
 	if allow_strafe_now:
 		_intent = Intent.STRAFE_L if _rng.randf() < 0.5 else Intent.STRAFE_R
+		_intent_mag_y = 0.0
 		_intent_until = now + _rng.randf_range(strafe_on_time_min, strafe_on_time_max)
 		_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
 	else:
 		_intent = Intent.HOLD
+		_intent_mag_y = 0.0
 		_intent_until = now + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
 		_next_decision_at = _intent_until + _rng.randf_range(0.1, 0.3)
 
@@ -659,6 +690,19 @@ func _update_autopilot_intents() -> void:
 	var angle_deg: float = rad_to_deg(diff_yaw)
 	var omega_deg: float = _target_angular_speed_deg_per_sec()
 
+	# Track “above-high” duration to allow rush after a slight gap persists
+	var low_band: float = hold_distance - hold_tolerance
+	var high_band: float = hold_distance + hold_tolerance
+	if d > (high_band + rush_trigger_small_margin_m):
+		if _distance_above_high_since < 0.0:
+			_distance_above_high_since = now
+	else:
+		_distance_above_high_since = -1.0
+
+	# Opponent retreat detection (distance increasing fast)
+	if (-closing_speed) > retreating_speed_threshold:
+		_opponent_retreating_until = now + retreat_memory_sec
+
 	# Keep the stance fresh
 	if animator and animator.has_method("is_in_fight_stance") and not animator.is_in_fight_stance():
 		animator.start_fight_stance()
@@ -674,7 +718,10 @@ func _update_autopilot_intents() -> void:
 		Intent.STRAFE_R:
 			ml.x = clampf(_my_strafe_mag, 0.0, 1.0)
 		Intent.STEP_BACK:
-			ml.y = -min(step_back_mag, retreat_max_mag)
+			# If you added _intent_mag_y, use it here; otherwise keep step_back_mag.
+			# var back_mag: float = clampf(_intent_mag_y, 0.0, 1.0)
+			var back_mag: float = min(step_back_mag, retreat_max_mag)
+			ml.y = -back_mag
 		Intent.STEP_IN:
 			if _rush_active:
 				# Distance-limited rush toward stop with hysteresis
@@ -700,14 +747,15 @@ func _update_autopilot_intents() -> void:
 	if not freeze_y and now < _post_swing_until and d < (hold_distance + hold_tolerance * 0.5):
 		ml.y = -clampf(post_swing_backstep_strength, 0.0, 1.0)
 
-	# Hold distance band (skip if frozen or we’re still in a rush)
-	if not freeze_y and not _rush_active and ml == Vector2.ZERO:
-		var low: float = hold_distance - hold_tolerance
-		var high: float = hold_distance + hold_tolerance
-		if d < low:
-			ml.y += -0.15
-		elif d > high:
-			ml.y += 0.15
+	# Gentle distance corrections ONLY if:
+	# - not frozen, not rushing, not already committed, and out of reaction lag
+	if not freeze_y and not _rush_active and ml == Vector2.ZERO and now >= _intent_until and now >= _reaction_lag_until:
+		var delta_from_hold: float = d - hold_distance
+		if absf(delta_from_hold) > band_deadzone_m:
+			if delta_from_hold < 0.0:
+				ml.y += -band_correction_gain
+			else:
+				ml.y += band_correction_gain
 
 	# Pressing logic (skip if frozen)
 	if not freeze_y:
