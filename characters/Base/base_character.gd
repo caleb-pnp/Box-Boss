@@ -139,6 +139,22 @@ var _debug_accum: float = 0.0
 @export var center_seek_enabled: bool = true
 @export var center_seek_strength: float = 0.05     # small additive intent toward center
 
+@export_category("Engage / Approach Tuning")
+# Slow forward movement as we enter the range band: within (hold_distance + this), scale forward speed.
+@export var engage_slowdown_band_m: float = 1.0
+# Scale applied to forward speed when inside the slowdown band (0.1..1.0). 0.75 = 25% slower.
+@export var engage_forward_speed_scale: float = 0.75
+# When closing, maintain at least this much extra room inside hold_distance (a small standoff so we don't bump).
+@export var engage_backoff_m: float = 1.0
+
+@export_category("Stand-off / Rush")
+# Half-width of the no-flip band around the stop distance.
+@export var standoff_hysteresis_m: float = 0.15
+# After a rush ends, pause this long before choosing a new intent.
+@export var standoff_pause_sec: float = 0.25
+# Safety timeout for a rush if we cannot reach the stop distance (blocked).
+@export var rush_timeout_sec: float = 1.5
+
 # Optional step-in/back commit tuning
 @export_category("Intent Commit")
 @export var step_back_min_sec: float = 0.25
@@ -205,6 +221,7 @@ var _autotarget_next_check_at: float = 0.0
 var _last_hit_time: float = -1e9
 var _recent_hits: int = 0
 var _post_swing_until: float = 0.0
+var _last_speed_applied: float = 0.001
 
 # Desync/strafe state and intent commit
 var _rng := RandomNumberGenerator.new()
@@ -225,6 +242,13 @@ var _last_dist_to_target: float = 0.0
 var _last_update_time: float = 0.0
 var _last_target_vec: Vector3 = Vector3.ZERO
 var _last_target_vec_time: float = 0.0
+
+# Rush state
+var _rush_active: bool = false
+var _rush_stop_dist: float = 0.0      # distance to target at which to stop the rush
+var _rush_giveup_at: float = 0.0      # time to abort rush if blocked
+
+
 
 func _ready() -> void:
 	_rng.randomize()
@@ -461,7 +485,17 @@ func _physics_process(delta: float) -> void:
 
 	# Anim
 	if animator and animator.has_method("update_locomotion"):
-		animator.update_locomotion(intents["move_local"], measured_h_speed)
+		var v: Vector3 = Vector3(velocity.x, 0.0, velocity.z)
+		var right: Vector3 = global_transform.basis.x
+		var forward: Vector3 = -global_transform.basis.z
+		var lx: float = v.dot(right)
+		var ly: float = v.dot(forward)
+		# Normalize by the actual speed we applied so values map to [-1..1]
+		var anim_move_local: Vector2 = Vector2(lx, ly) / _last_speed_applied
+		# Clamp to avoid small overshoots
+		anim_move_local.x = clamp(anim_move_local.x, -1.0, 1.0)
+		anim_move_local.y = clamp(anim_move_local.y, -1.0, 1.0)
+		animator.update_locomotion(anim_move_local, measured_h_speed)
 
 # ----------------------------
 # Auto-targeting helpers
@@ -528,12 +562,18 @@ func _maybe_update_intent(now: float, d: float, closing_speed: float, omega_deg:
 
 	# Prefer step-in/out if far outside the band
 	if d > high + 0.4:
+		# Start a distance-limited rush toward stop distance (hold_distance - engage_backoff_m)
 		_intent = Intent.STEP_IN
+		_rush_active = true
+		_rush_stop_dist = max(0.2, hold_distance - engage_backoff_m)
+		_rush_giveup_at = now + rush_timeout_sec
+		# Still set a small time commitment to prevent instant re-eval if distance doesn’t change much
 		_intent_until = now + _rng.randf_range(step_in_min_sec, step_in_max_sec)
 		_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
 		return
 	elif d < low - 0.4:
 		_intent = Intent.STEP_BACK
+		_rush_active = false
 		_intent_until = now + _rng.randf_range(step_back_min_sec, step_back_max_sec)
 		_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
 		return
@@ -541,6 +581,7 @@ func _maybe_update_intent(now: float, d: float, closing_speed: float, omega_deg:
 	# If opponent is pressing and we’re roughly in range, hold or gentle backstep
 	var near_band: bool = absf(d - hold_distance) <= (hold_tolerance * 1.2)
 	if closing_speed > approaching_speed_threshold and near_band:
+		_rush_active = false
 		if _rng.randf() < clampf(hold_ground_chance_when_pressed, 0.0, 1.0):
 			_intent = Intent.HOLD
 			_intent_until = now + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
@@ -552,8 +593,9 @@ func _maybe_update_intent(now: float, d: float, closing_speed: float, omega_deg:
 			_next_decision_at = _intent_until + _rng.randf_range(strafe_off_time_min, strafe_off_time_max)
 			return
 
-	# Otherwise, maybe strafe; avoid mirroring: if target is clearly circling (|omega| high), prefer HOLD
+	# Otherwise, maybe strafe; avoid mirroring if target is clearly circling
 	var allow_strafe_now: bool = (_rng.randf() < clampf(strafe_activity_prob, 0.0, 1.0)) and not (rotate_instead_on_target_strafe and absf(omega_deg) >= target_strafe_omega_thresh_deg)
+	_rush_active = false
 	if allow_strafe_now:
 		_intent = Intent.STRAFE_L if _rng.randf() < 0.5 else Intent.STRAFE_R
 		_intent_until = now + _rng.randf_range(strafe_on_time_min, strafe_on_time_max)
@@ -610,7 +652,7 @@ func _update_autopilot_intents() -> void:
 
 	# Approach/press info for intent chooser
 	var dt: float = max(0.0001, now - _last_update_time)
-	var closing_speed: float = (_last_dist_to_target - d) / dt  # >0 means they’re closing
+	var closing_speed: float = (_last_dist_to_target - d) / dt
 	var to_target: Vector3 = _vector_to_target()
 	var desired_yaw: float = _yaw_from_direction(to_target)
 	var diff_yaw: float = absf(wrapf(desired_yaw - rotation.y, -PI, PI))
@@ -634,33 +676,53 @@ func _update_autopilot_intents() -> void:
 		Intent.STEP_BACK:
 			ml.y = -min(step_back_mag, retreat_max_mag)
 		Intent.STEP_IN:
-			ml.y = clampf(step_in_mag, 0.0, 0.6)
+			if _rush_active:
+				# Distance-limited rush toward stop with hysteresis
+				if d > (_rush_stop_dist + standoff_hysteresis_m):
+					ml.y = 1.0
+				elif now > _rush_giveup_at:
+					_end_rush(now)  # blocked too long
+				else:
+					_end_rush(now)  # reached stop band
+			else:
+				ml = Vector2.ZERO
 		Intent.HOLD, Intent.NONE:
 			ml = Vector2.ZERO
 
-	# Only small distance nudges while committed (avoid jitter)
-	var low: float = hold_distance - hold_tolerance
-	var high: float = hold_distance + hold_tolerance
-	if now >= _intent_until:
-		# No current commitment — allow mild band correction, slower magnitudes
+	# Stand-off freeze: inside the stop band, do not change Y with other nudges
+	var freeze_y: bool = false
+	if _rush_stop_dist > 0.0:
+		var low_stop: float = max(0.0, _rush_stop_dist - standoff_hysteresis_m)
+		var high_stop: float = _rush_stop_dist + standoff_hysteresis_m
+		freeze_y = (d >= low_stop and d <= high_stop)
+
+	# Post-swing spacing (skip if frozen)
+	if not freeze_y and now < _post_swing_until and d < (hold_distance + hold_tolerance * 0.5):
+		ml.y = -clampf(post_swing_backstep_strength, 0.0, 1.0)
+
+	# Hold distance band (skip if frozen or we’re still in a rush)
+	if not freeze_y and not _rush_active and ml == Vector2.ZERO:
+		var low: float = hold_distance - hold_tolerance
+		var high: float = hold_distance + hold_tolerance
 		if d < low:
 			ml.y += -0.15
 		elif d > high:
 			ml.y += 0.15
 
-	# Pressing logic: slow down backstepping or hold ground near the ideal range
-	var near_band: bool = absf(d - hold_distance) <= (hold_tolerance * 1.2)
-	if closing_speed > approaching_speed_threshold and near_band:
-		if _rng.randf() < clampf(hold_ground_chance_when_pressed, 0.0, 1.0):
-			if ml.y < 0.0: ml.y = 0.0
-		else:
-			if ml.y < 0.0: ml.y *= clampf(retreat_when_pressed_slowdown, 0.05, 1.0)
+	# Pressing logic (skip if frozen)
+	if not freeze_y:
+		var near_band: bool = absf(d - hold_distance) <= (hold_tolerance * 1.2)
+		if closing_speed > approaching_speed_threshold and near_band:
+			if _rng.randf() < clampf(hold_ground_chance_when_pressed, 0.0, 1.0):
+				if ml.y < 0.0: ml.y = 0.0
+			else:
+				if ml.y < 0.0: ml.y *= clampf(retreat_when_pressed_slowdown, 0.05, 1.0)
 
-	# Angle gating: if very square-on and not in a strafe commitment, prefer rotation-only
+	# Angle gating: if very square-on and not strafe intent, prefer rotation-only
 	if (_intent == Intent.NONE or _intent == Intent.HOLD) and angle_deg < max(0.0, strafe_angle_min_deg):
 		ml.x = 0.0
 
-	# Gentle center seeking always adds a tiny inward drift
+	# Gentle center seeking: suppress Y contribution if in stand-off freeze
 	if center_seek_enabled and arena_radius_hint > 0.001:
 		var to_center: Vector3 = arena_center - global_position
 		to_center.y = 0.0
@@ -668,9 +730,11 @@ func _update_autopilot_intents() -> void:
 		if dist_from_center > 0.001:
 			var inward_local: Vector2 = _world_dir_to_local_move(to_center.normalized())
 			var t_center: float = clamp(dist_from_center / max(arena_radius_hint, 0.001), 0.0, 1.0)
+			if freeze_y:
+				inward_local.y = 0.0
 			ml = ml + inward_local * (center_seek_strength * t_center)
 
-	# Edge bias toward center (stronger correction near wall)
+	# Edge bias: also zero Y if we’re freezing
 	if arena_radius_hint > 0.1:
 		var to_center2: Vector3 = (arena_center - global_position)
 		to_center2.y = 0.0
@@ -679,6 +743,8 @@ func _update_autopilot_intents() -> void:
 			var inward2: Vector2 = Vector2.ZERO
 			if dist_from_center2 > 0.001:
 				inward2 = _world_dir_to_local_move(to_center2.normalized())
+			if freeze_y:
+				inward2.y = 0.0
 			ml = (ml * (1.0 - center_return_bias)) + (inward2 * center_return_bias)
 
 	# Clamp retreat intent so we never blast backward
@@ -696,13 +762,16 @@ func _update_autopilot_intents() -> void:
 # ----------------------------
 # Movement helpers
 # ----------------------------
+# Replace this function to keep input magnitude (no normalization, just clamp length <= 1)
 func _compute_desired_world_direction() -> Vector3:
 	var forward: Vector3 = -global_transform.basis.z
 	var right: Vector3 = global_transform.basis.x
 	var local_move: Vector2 = intents["move_local"]
 	var world_dir: Vector3 = (forward * local_move.y) + (right * local_move.x)
-	if world_dir.length() > 1e-3:
-		world_dir = world_dir.normalized()
+	# Preserve magnitude so |local_move| scales speed; clamp so diagonals don't exceed 1
+	var len: float = world_dir.length()
+	if len > 1.0 and len > 0.0:
+		world_dir /= len
 	return world_dir
 
 func _apply_rotation_towards_target_or_velocity(desired_dir_world: Vector3, delta: float) -> void:
@@ -734,26 +803,39 @@ func _rotate_yaw_towards(desired_yaw: float, max_step: float) -> void:
 # ----------------------------
 # Combat
 # ----------------------------
+# Replace this function so applied speed is recorded; forward slowdown etc. stays intact
 func _apply_horizontal_velocity(desired_dir_world: Vector3) -> void:
 	var local_move: Vector2 = intents["move_local"]
 	var speed: float = walk_speed
+
+	# Base speed by intent direction
 	if bool(intents["run"]) and bool(intents["retreat"]):
 		speed = run_speed
 	elif local_move.y < -0.01:
-		# Backpedal scaled down globally so defenders don't slide too fast
 		speed = backpedal_speed * clampf(retreat_speed_scale, 0.0, 1.0)
+	elif local_move.y > 0.01:
+		speed = walk_speed
 	elif absf(local_move.x) > 0.01 and absf(local_move.y) < 0.01:
-		# Scale strafe per fighter (0.2x..0.8x) to avoid matching speeds
 		speed = strafe_speed * _my_strafe_speed_scale
 	elif bool(intents["run"]):
 		speed = run_speed
 
+	# Phase slowdown
 	if _attack_phase == AttackPhase.APPROACH or _attack_phase == AttackPhase.REPOSITION:
 		speed *= clampf(approach_speed_scale, 0.05, 1.0)
 
+	# Engage slowdown near range
+	if local_move.y > 0.01 and _has_target:
+		var d_to: float = distance_to_target()
+		if d_to < (hold_distance + engage_slowdown_band_m):
+			speed *= clampf(engage_forward_speed_scale, 0.1, 1.0)
+
+	# Apply velocity. desired_dir_world length is <= 1 (clamped), so magnitude scales speed.
 	var horizontal_vel: Vector3 = desired_dir_world * speed
 	velocity.x = horizontal_vel.x
 	velocity.z = horizontal_vel.z
+
+	_last_speed_applied = max(0.001, speed)
 
 func _handle_attack_intent() -> void:
 	var now: float = _now()
@@ -1166,3 +1248,9 @@ func _set_autopilot_move_away_from(world_target: Vector3) -> void:
 		move_local.y = -0.2
 	intents["move_local"] = move_local
 	_last_move_local = intents["move_local"]
+
+func _end_rush(now: float) -> void:
+	_rush_active = false
+	_intent = Intent.HOLD
+	_intent_until = now + standoff_pause_sec
+	_next_decision_at = _intent_until + _rng.randf_range(0.1, 0.3)
