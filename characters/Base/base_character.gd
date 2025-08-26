@@ -183,6 +183,21 @@ var _debug_accum: float = 0.0
 @export var consume_window_on_basic: bool = true
 @export var combo_finalize_gap_sec: float = 1.0   # inactivity gap before finalize
 
+
+# --- Knockback tuning ---
+@export_category("On Hit Tuning")
+@export var knockback_duration_sec: float = 0.1     # how fast to apply the small knockback
+@export var hitstun_immunity_while_ko: bool = true
+@export var debug_combat: bool = true
+
+# Layers used by Hurtbox/Hitbox (must match scripts)
+const LAYER_HITBOX := 2
+const LAYER_HURTBOX := 3
+
+# Set by Scene
+@onready var hurtbox: Hurtbox3D = $Hurtbox3D
+@onready var hitbox: Hitbox3D = $Hitbox3D
+
 var _window_start: float = -1e9
 var _punch_window: Array = []            # of { t: float, force: float, src: int }
 var _combo_finalize_at: float = -1e9     # next time we should finalize due to inactivity
@@ -192,6 +207,10 @@ var _last_punch_force: float = 0.0
 # Optional local debug helper (if you don't already have one)
 func _dbg(msg: String) -> void:
 	if debug_enabled: print(msg)
+
+func _combat_log(msg: String) -> void:
+	if debug_combat:
+		print("[Combat] ", get_path(), " | ", msg)
 
 var anim: AnimationPlayer
 var agent: NavigationAgent3D
@@ -334,6 +353,10 @@ func _ready() -> void:
 	_last_dist_to_target = distance_to_target()
 	_last_target_vec = _vector_to_target()
 	_last_target_vec_time = _last_update_time
+
+	# Initiazlize hitbox and hurtbox
+	if hurtbox: hurtbox.owner_character = self
+	if hitbox: hitbox.attacker = self
 
 # ----------------------------
 # Round gating
@@ -1619,3 +1642,98 @@ func _end_rush(now: float) -> void:
 	_intent = Intent.HOLD
 	_intent_until = now + standoff_pause_sec
 	_next_decision_at = _intent_until + _rng.randf_range(0.1, 0.3)
+
+func spawn_hitbox_for_attack(attack_id: StringName, spec: Resource, impact_force: float, active_start_sec: float = -1.0, active_end_sec: float = -1.0) -> void:
+	if spec == null:
+		return
+	var hb := Hitbox3D.new()
+	hb.attacker = self
+	hb.attack_id = attack_id
+	hb.impact_force = impact_force
+	hb.configure_from_spec(spec)
+
+	# Optional bone attach
+	var bone_name: StringName = _spec_val(spec, &"hitbox_bone", StringName(""))
+	if String(bone_name) != "" and has_node("Skeleton3D"):
+		var sk: Skeleton3D = $Skeleton3D
+		var idx: int = sk.find_bone(String(bone_name))
+		if idx != -1:
+			sk.add_child(hb)
+			hb.set_as_top_level(false)
+			hb.transform = Transform3D.IDENTITY
+		else:
+			add_child(hb)
+	else:
+		add_child(hb)
+
+	# Compute active duration from spec or overrides
+	var start_off: float = active_start_sec if active_start_sec >= 0.0 else float(_spec_val(spec, &"active_start_sec", 0.05))
+	var end_off: float = active_end_sec if active_end_sec >= 0.0 else float(_spec_val(spec, &"active_end_sec", 0.20))
+	var duration: float = max(0.0, end_off - start_off)
+
+	# Delay enabling for start_off, then run for duration
+	hb.visible = false
+	hb.monitoring = false
+	var timer_start := get_tree().create_timer(max(0.0, start_off))
+	timer_start.timeout.connect(func():
+		if not is_instance_valid(hb): return
+		hb.monitoring = true
+		hb.visible = true
+		hb.begin_active(Time.get_ticks_msec() / 1000.0, duration)
+	)
+
+# Thin adapter used by Hitbox3D; computes damage and forwards to your take_hit.
+func apply_hit(attacker: Node, spec: Resource, impact_force: float) -> void:
+	var from_s: String = "<none>"
+	if attacker != null and attacker is Node:
+		from_s = str((attacker as Node).get_path())
+	_combat_log("apply_hit: from=" + from_s)
+
+	if spec == null:
+		_combat_log("apply_hit: spec=null (skipping)")
+		return
+
+	var base_damage: float = float(_spec_val(spec, &"damage", 10.0))
+	var dmg: float = base_damage
+
+	if bool(_spec_val(spec, &"scale_damage_by_force", false)):
+		var fmin: float = float(_spec_val(spec, &"force_min", 0.0))
+		var fmax: float = float(_spec_val(spec, &"force_max", 1.0))
+		if fmax < fmin:
+			var tmp := fmin; fmin = fmax; fmax = tmp
+		var t: float = 0.0
+		if fmax > fmin:
+			t = clamp((impact_force - fmin) / max(0.0001, (fmax - fmin)), 0.0, 1.0)
+		var dmin: float = float(_spec_val(spec, &"min_damage", base_damage))
+		var dmax: float = float(_spec_val(spec, &"max_damage", base_damage))
+		dmg = lerp(dmin, dmax, t)
+		_combat_log("apply_hit: scaled dmg " + str(dmg) + " (force=" + str(impact_force) + " fmin=" + str(fmin) + " fmax=" + str(fmax) + " dmin=" + str(dmin) + " dmax=" + str(dmax) + ")")
+	else:
+		_combat_log("apply_hit: base dmg " + str(dmg))
+
+	# Route to your existing pipeline
+	take_hit(int(round(dmg)), attacker)
+
+	# Optional per-hit knockback
+	var kb_m: float = float(_spec_val(spec, &"knockback_meters", 0.0))
+	if kb_m > 0.0 and attacker is Node3D and self is Node3D:
+		var dir: Vector3 = ((self as Node3D).global_transform.origin - (attacker as Node3D).global_transform.origin).normalized()
+		_apply_knockback(dir, kb_m)
+		_combat_log("apply_hit: knockback " + str(kb_m) + "m")
+
+
+# Simple knockback; replace with your controller’s impulse if needed
+func _apply_knockback(dir: Vector3, meters: float) -> void:
+	if meters <= 0.0: return
+	if not (self is Node3D): return
+	var start_pos: Vector3 = (self as Node3D).global_transform.origin
+	var end_pos: Vector3 = start_pos + dir * meters
+	var tw := create_tween()
+	tw.tween_property(self, "global_position", end_pos, knockback_duration_sec).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+
+# Safe getter for Resource properties (Object.get has no default param)
+func _spec_val(s: Resource, prop: StringName, fallback):
+	if s == null:
+		return fallback
+	var v = s.get(prop)
+	return fallback if v == null else v

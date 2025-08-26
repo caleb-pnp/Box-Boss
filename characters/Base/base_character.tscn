@@ -1,12 +1,20 @@
-[gd_scene load_steps=5 format=3 uid="uid://crdju1xafvwgj"]
+[gd_scene load_steps=9 format=3 uid="uid://crdju1xafvwgj"]
 
 [ext_resource type="Script" uid="uid://utgjnyop5hmp" path="res://characters/Base/base_character.gd" id="1_5df2l"]
 [ext_resource type="Script" uid="uid://2xg8b3kkqhxc" path="res://characters/character_animator.gd" id="2_drka6"]
+[ext_resource type="Script" uid="uid://dj4cf7yitoal3" path="res://combat/hurtbox_3d.gd" id="4_4ts41"]
+[ext_resource type="Script" uid="uid://bpftxo20renih" path="res://combat/hitbox_3d.gd" id="5_q1v0g"]
 [ext_resource type="Script" uid="uid://cnm60jtnrmltc" path="res://characters/stats.gd" id="11_a2t2k"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_k7a2e"]
 radius = 0.3
 height = 1.6
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_q1v0g"]
+height = 1.6
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_4ts41"]
+size = Vector3(0.8, 1.6, 1)
 
 [node name="BaseCharacter" type="CharacterBody3D" groups=["base_character"]]
 script = ExtResource("1_5df2l")
@@ -24,3 +32,21 @@ model_root_path = NodePath("../Model")
 
 [node name="Stats" type="Node" parent="."]
 script = ExtResource("11_a2t2k")
+
+[node name="Hurtbox3D" type="Area3D" parent="." node_paths=PackedStringArray("owner_character")]
+collision_layer = 4
+collision_mask = 2
+script = ExtResource("4_4ts41")
+owner_character = NodePath("..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox3D"]
+shape = SubResource("CapsuleShape3D_q1v0g")
+
+[node name="Hitbox3D" type="Area3D" parent="."]
+collision_layer = 2
+collision_mask = 4
+script = ExtResource("5_q1v0g")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.5)
+shape = SubResource("BoxShape3D_4ts41")

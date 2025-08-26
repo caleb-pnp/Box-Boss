@@ -1,6 +1,7 @@
+CollisionShape3D
+Area3D
 StaticBody3D
 Node3D
-CollisionShape3D
 Label
 Control
 CanvasLayer
@@ -11,5 +12,3 @@ MarginContainer
 GridContainer
 VBoxContainer
 ItemList
-Node
-NavigationRegion3D

@@ -19,11 +19,6 @@ class_name AttackSpec
 @export var request_param_a: StringName = &""
 @export var request_param_b: StringName = &""
 
-@export_category("Impact")
-@export var damage: float = 8.0
-@export var guard_damage: float = 2.0
-@export var stagger_time_sec: float = 0.2
-
 @export_category("Selection / Force Mapping")
 @export var force_min: float = 0.0
 @export var force_max: float = 999999.0
@@ -34,3 +29,28 @@ class_name AttackSpec
 @export var combo_each_min_force: float = 0.0  # each punch must be >= this
 @export var combo_window_sec: float = -1.0     # <= 0 => use character's attack_window_sec
 @export var combo_priority: int = 100          # higher wins when multiple combos match
+
+# NEW: on-hit data
+@export_category("On Hit")
+@export var damage: float = 10.0
+@export var scale_damage_by_force: bool = false
+@export var min_damage: float = 5.0
+@export var max_damage: float = 25.0
+@export var stagger_sec: float = 0.2
+@export var knockback_meters: float = 0.5
+
+# NEW: hitbox timing (relative to attack start) and re-hit behavior
+@export_category("Hitbox Timing")
+@export var active_start_sec: float = 0.05  # when the hitbox becomes active in the attack
+@export var active_end_sec: float = 0.20    # when it stops being active
+@export var rehit_interval_sec: float = 0.25  # if overlapping, how often to re-apply a hit
+@export var max_rehits_per_target: int = 4    # safety limit for multi-hit attacks
+
+# NEW: hitbox shape and placement
+@export_category("Hitbox Shape")
+@export var hitbox_shape: String = "sphere"   # "sphere" | "box" | "capsule"
+@export var hitbox_radius: float = 0.5        # sphere/capsule radius
+@export var hitbox_box_extents: Vector3 = Vector3(0.5, 0.5, 0.5)
+@export var hitbox_capsule_height: float = 1.0
+@export var hitbox_offset: Vector3 = Vector3(1.0, 0.8, 0.0)  # relative to the character or bone
+@export var hitbox_bone: StringName = &""     # optional; attach to bone if provided
