@@ -1,10 +1,10 @@
 ea4bc82a6ad023ab7ee23ee620429895
-::res://::1756179175
-game.gd::GDScript::3267424580127031128::1756109950::0::1::::Game<>Node3D<><>0<>0<><>::
-game.tscn::PackedScene::8017031368834104142::1756178883::0::1::::<><><>0<>0<><>::uid://bms1agkrx66gi::::res://game.gd
+::res://::1756221279
+game.gd::GDScript/GDScript::3267424580127031128::1756109950::0::1::::Game<>Node3D<><>0<>0<><>::
+game.tscn::PackedScene/PackedScene::8017031368834104142::1756178883::0::1::::<><><>0<>0<><>::uid://bms1agkrx66gi::::res://game.gd
 icon.svg::CompressedTexture2D/CompressedTexture2D::7298632198116411309::1755677651::1755677941::1::::<><><>0<>0<>5fa643082ec93b02962c24d2d07736fa<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-main.gd::GDScript::184092285707731961::1756109079::0::1::::Main<>Node3D<><>0<>0<><>::
-main.tscn::PackedScene::564244439189605922::1756178883::0::1::::<><><>0<>0<><>::uid://cvf8c3y6pyfh::::res://main.gd<>uid://b43o513sr0ur0::::res://engine/console.tscn<>uid://b44wof1indwa4::::res://engine/loading_screen.tscn
+main.gd::GDScript/GDScript::184092285707731961::1756109079::0::1::::Main<>Node3D<><>0<>0<><>::
+main.tscn::PackedScene/PackedScene::564244439189605922::1756178883::0::1::::<><><>0<>0<><>::uid://cvf8c3y6pyfh::::res://main.gd<>uid://b43o513sr0ur0::::res://engine/console.tscn<>uid://b44wof1indwa4::::res://engine/loading_screen.tscn
 menu.tscn::PackedScene/PackedScene::4703029709498934092::1755677651::0::1::::<><><>0<>0<><>::uid://ktlh5xrdjx4::::res://gui/main_menu.tscn
 ::res://addons/::1755777027
 ::res://addons/fbx_anim_extractor/::1755822339
@@ -21,7 +21,7 @@ README.md::TextFile/TextFile::-1::1755677651::0::1::::<><><>0<>0<><>::
 ::res://addons/gdserial/bin/linux-x86_64/::1755677651
 ::res://addons/gdserial/bin/macos-arm64/::1755677651
 ::res://addons/gdserial/bin/macos-x86_64/::1755677651
-::res://addons/gdserial/bin/windows-x86_64/::1756179170
+::res://addons/gdserial/bin/windows-x86_64/::1756221274
 ::res://art/::1756082441
 ::res://art/Boxing Ring/::1755701297
 vr_boxing_ring.glb::PackedScene/PackedScene::7665926154113517696::1755699672::1755701291::1::::<><><>0<>0<>a7e63bf162078be93eba7d2d5cb11dca<>res://.godot/imported/vr_boxing_ring.glb-9c9c91fcf92e568e88f7f16781c97551.scn::uid://bmx02p3rmxt1o::::res://art/Boxing Ring/vr_boxing_ring_0.png<>uid://7kktllmxja8t::::res://art/Boxing Ring/vr_boxing_ring_1.png<>uid://bdrcj0daktonb::::res://art/Boxing Ring/vr_boxing_ring_2.png<>uid://brmnbis40tl27::::res://art/Boxing Ring/vr_boxing_ring_3.png<>uid://bihq08xl4fh2b::::res://art/Boxing Ring/vr_boxing_ring_4.png<>uid://dy714xmfj5l1v::::res://art/Boxing Ring/vr_boxing_ring_5.png<>uid://cykc6witv2x54::::res://art/Boxing Ring/vr_boxing_ring_6.png<>uid://bene5wx2cl5di::::res://art/Boxing Ring/vr_boxing_ring_7.png<>uid://72rcg5c51or::::res://art/Boxing Ring/vr_boxing_ring_8.png<>uid://bragpgvd2btte::::res://art/Boxing Ring/vr_boxing_ring_9.png<>uid://jyw541vp8d7p::::res://art/Boxing Ring/vr_boxing_ring_10.png<>uid://7hqws1a4vcg5::::res://art/Boxing Ring/vr_boxing_ring_11.png<>uid://baef257ytdqoh::::res://art/Boxing Ring/vr_boxing_ring_12.png<>uid://bb7lf5m70fh17::::res://art/Boxing Ring/vr_boxing_ring_13.png<>uid://d0puuypg3rwoj::::res://art/Boxing Ring/vr_boxing_ring_14.png<>uid://qda4da2u71mp::::res://art/Boxing Ring/vr_boxing_ring_15.png<>uid://deu852b2igjwq::::res://art/Boxing Ring/vr_boxing_ring_16.png<>uid://1rxqb6eknuml::::res://art/Boxing Ring/vr_boxing_ring_17.png<>uid://dma451tu7n8jf::::res://art/Boxing Ring/vr_boxing_ring_18.png<>uid://bgwsvs2eapts::::res://art/Boxing Ring/vr_boxing_ring_19.png<>uid://b1y5p4qq0pw0e::::res://art/Boxing Ring/vr_boxing_ring_20.png<>uid://cnq866oet1vbx::::res://art/Boxing Ring/vr_boxing_ring_21.png<>uid://clkainr23u3fu::::res://art/Boxing Ring/vr_boxing_ring_22.png<>uid://dna2d16tiglil::::res://art/Boxing Ring/vr_boxing_ring_23.png<>uid://topnsu7utt7h::::res://art/Boxing Ring/vr_boxing_ring_24.png<>uid://buoc5rq25o664::::res://art/Boxing Ring/vr_boxing_ring_25.png<>uid://i80vdb8fdo4d::::res://art/Boxing Ring/vr_boxing_ring_26.png
@@ -52,7 +52,7 @@ vr_boxing_ring_23.png::CompressedTexture2D/CompressedTexture2D::8073363148930386
 vr_boxing_ring_24.png::CompressedTexture2D/CompressedTexture2D::1363424265689533803::1755701278::1755701296::1::::<><><>0<>0<>5da2bec6444244bcfac402f08849b515<>res://.godot/imported/vr_boxing_ring_24.png-135122705308ab01a055367485cbdd30.s3tc.ctex::
 vr_boxing_ring_25.png::CompressedTexture2D/CompressedTexture2D::3819274771694522215::1755701281::1755701296::1::::<><><>0<>0<>ae67532c6e658593421b433afc8f919c<>res://.godot/imported/vr_boxing_ring_25.png-5511a6702cb2a931a5f9d3d5e88c8b5f.s3tc.ctex::
 vr_boxing_ring_26.png::CompressedTexture2D/CompressedTexture2D::631190802100436701::1755701282::1755701296::1::::<><><>0<>0<>bf8c56c365081844c347c657161fa1d2<>res://.godot/imported/vr_boxing_ring_26.png-fbca5e30bc021b10b8b4f98f8882c6a2.s3tc.ctex::
-::res://art/External/::1756208038
+::res://art/External/::1756209012
 ::res://art/External/PACKAGE_BOXING_VOXEL/::1755697084
 ::res://art/External/PACKAGE_BOXING_VOXEL/CAMERA MAN/::1755697071
 ::res://art/External/PACKAGE_BOXING_VOXEL/CAMERA MAN/OBJ/::1755697071
@@ -2087,10 +2087,6 @@ TIMEKEEPER.fbx::PackedScene/PackedScene::3792368440514015277::1589717078::175582
 TIMEKEEPER_0.png::CompressedTexture2D/CompressedTexture2D::33819212371526529::1755697348::1755823856::1::::<><><>0<>0<>c69fcb32f7f71319099cef0fc76c2ce1<>res://.godot/imported/TIMEKEEPER_0.png-5bbc77df8ea50eb4e6794fb6c48b8735.s3tc.ctex::
 ::res://art/External/PACKAGE_BOXING_VOXEL/TIMEKEEPER/VOXEL/::1755823856
 TIMEKEEPER.png::CompressedTexture2D/CompressedTexture2D::2325068476104846426::1589625314::1755823856::1::::<><><>0<>0<>207051ad8e81e5725ecc2272d6c60308<>res://.godot/imported/TIMEKEEPER.png-093cede700b4f534a0d6a817d11ce3c0.ctex::
-::res://art/External/VOXELAI/::1756208039
-son_goku_68ad9897323d5412c157f66e_metallic-68ad9897323d5412c157f66e_roughness.png::CompressedTexture2D::1955328850095233626::1756208044::1756208047::1::::<><><>0<>0<>e7ae6b5489504bacae512b3853471935<>res://.godot/imported/son_goku_68ad9897323d5412c157f66e_metallic-68ad9897323d5412c157f66e_roughness.png-cfb7e81d3444367f109e07ccdec723df.s3tc.ctex::
-son_goku_68ad9897323d5412c157f66e.jpg::CompressedTexture2D::8019051031396844030::1756208043::1756208047::1::::<><><>0<>0<>e486307ced1cc9c31db33560e8e5408c<>res://.godot/imported/son_goku_68ad9897323d5412c157f66e.jpg-ec855c6c2358cf68cbbab5e2285832c0.s3tc.ctex::
-son_goku.glb::PackedScene::6463896834666074205::1756208009::1756208046::1::::<><><>0<>0<>155c0f97871b8e7d1cdeaafbf7a91e99<>res://.godot/imported/son_goku.glb-624e8b21400278cb2d16d73f9f785238.scn::uid://dmiqumk0bvq4m::::res://art/External/VOXELAI/son_goku_68ad9897323d5412c157f66e.jpg<>uid://24f8lo686coo::::res://art/External/VOXELAI/son_goku_68ad9897323d5412c157f66e_metallic-68ad9897323d5412c157f66e_roughness.png
 ::res://art/Icons/::1756086365
 biceps.png::CompressedTexture2D/CompressedTexture2D::3373273738638251476::1756082375::1756083198::1::::<><><>0<>0<>74cf7be4d6ab1ce2907e52ad71405c77<>res://.godot/imported/biceps.png-c7d9ae5f3aad44bfa7298c98499caf2e.ctex::
 boxing_attack_defence.png::CompressedTexture2D/CompressedTexture2D::1059906203048131292::1756082974::1756083116::1::::<><><>0<>0<>8520a53d4dd13aab8a64d8eb09a91ab8<>res://.godot/imported/boxing_attack_defence.png-768b5c23391c3ab56a2aabf0605a69a9.ctex::
@@ -2241,7 +2237,7 @@ right turn 90.tres::Animation/Animation::6371322600849669350::1755778093::0::1::
 right turn.tres::Animation/Animation::3537343077437509124::1755778093::0::1::::<><><>0<>0<><>::
 running.tres::Animation/Animation::8673071930272570645::1755778093::0::1::::<><><>0<>0<><>::
 walking.tres::Animation/Animation::6161604165488681177::1755778093::0::1::::<><><>0<>0<><>::
-::res://art/Mixamo/Fighter 6A/::1756076733
+::res://art/Mixamo/Fighter 6A/::1756220108
 FIGHTER_6A.fbx::PackedScene/PackedScene::5985013298226134860::1755777713::1755777728::1::::<><><>0<>0<>2c75f67550b232dc9cb6534d3e8803ac<>res://.godot/imported/FIGHTER_6A.fbx-1ae0a9cab684fb6269753fba6f91961e.scn::uid://ponbdhtftfq::::res://art/Mixamo/Fighter 6A/FIGHTER_6A_0.png
 FIGHTER_6A.png::CompressedTexture2D/CompressedTexture2D::4039279248450481629::1756076732::1756076733::1::::<><><>0<>0<>e2f6219b9b873423e07f232a4dce0ad5<>res://.godot/imported/FIGHTER_6A.png-b997b86d9869873a0072ac38686850ee.ctex::
 FIGHTER_6A_0.png::CompressedTexture2D/CompressedTexture2D::31838977031811198::1755777728::1755827420::1::::<><><>0<>0<>e66ee5f530b4b0d8d6d278ad1dc7a498<>res://.godot/imported/FIGHTER_6A_0.png-4a2597571b7e3bc6ba48fb932e65942c.ctex::
@@ -2292,6 +2288,23 @@ Short Step Forward.tres::Animation/Animation::3624102590228433345::1755822936::0
 Step Backward.tres::Animation/Animation::2343155254011683749::1755822936::0::1::::<><><>0<>0<><>::
 Uppercut Jab.tres::Animation/Animation::7687164569299041571::1755823575::0::1::::<><><>0<>0<><>::
 Walking Backwards.tres::Animation/Animation::8872922363392600602::1755822936::0::1::::<><><>0<>0<><>::
+::res://art/Mixamo/Fighter 6A/hit/::1756220712
+Head Hit.fbx::PackedScene/PackedScene::3120796758838405276::1756220165::1756220620::1::::<><><>0<>0<>5e011fd13e7956453814381e3d0ec263<>res://.godot/imported/Head Hit.fbx-d6afb4d89f6f12fba1c297fb750f8345.scn::uid://dlmlwenok8ekx::::res://art/Mixamo/Fighter 6A/hit/Head Hit_0.png
+Head Hit_0.png::CompressedTexture2D/CompressedTexture2D::7956819269359334819::1756220620::1756220621::1::::<><><>0<>0<>33510d32844080fbb4107fff38b2cb13<>res://.godot/imported/Head Hit_0.png-9988f2c9959db119544ed0781112313a.s3tc.ctex::
+Hit To Body.fbx::PackedScene/PackedScene::1903561951614789578::1756220207::1756220620::1::::<><><>0<>0<>6522925b649420f00ae0061b18936f4c<>res://.godot/imported/Hit To Body.fbx-41d7a7350d7ef4c385e3f9d4a9b5932b.scn::uid://00y27hx8v2qp::::res://art/Mixamo/Fighter 6A/hit/Hit To Body_0.png
+Hit To Body_0.png::CompressedTexture2D/CompressedTexture2D::1807837651714937843::1756220620::1756220621::1::::<><><>0<>0<>1904bba538e7c55b72cbb4f18438267c<>res://.godot/imported/Hit To Body_0.png-e8eda6717ff02fe905f705dc1c185136.s3tc.ctex::
+Knocked Out.fbx::PackedScene/PackedScene::3108447417518228916::1756220066::1756220119::1::::<><><>0<>0<>0c1d063b2c88a282a1a596c047551e7a<>res://.godot/imported/Knocked Out.fbx-2686bf016fa14a6d2118c8b85e6bf731.scn::uid://ciamunodhlgl::::res://art/Mixamo/Fighter 6A/hit/Knocked Out_0.png
+Knocked Out_0.png::CompressedTexture2D/CompressedTexture2D::156915210025255019::1756220118::1756220119::1::::<><><>0<>0<>d56e6c0fb0d7db0bbe01be1e67ec9b23<>res://.godot/imported/Knocked Out_0.png-1bcc923a97248384ef38c0abbb309f08.s3tc.ctex::
+Receiving An Uppercut.fbx::PackedScene/PackedScene::1543646806789018323::1756220569::1756220621::1::::<><><>0<>0<>95ca42b2ef8b43a2809575076258e053<>res://.godot/imported/Receiving An Uppercut.fbx-8d5f8c6212164235d0109aa8af516e81.scn::uid://bji1gvafc2ry1::::res://art/Mixamo/Fighter 6A/hit/Receiving An Uppercut_0.png
+Receiving An Uppercut_0.png::CompressedTexture2D/CompressedTexture2D::3036225758264512678::1756220620::1756220621::1::::<><><>0<>0<>02c2b6fe5a817592684e23b4e4220760<>res://.godot/imported/Receiving An Uppercut_0.png-6e3071f691391c418ff44ad5b192d3f2.s3tc.ctex::
+Side Hit.fbx::PackedScene/PackedScene::7363371077872168152::1756220190::1756220621::1::::<><><>0<>0<>d7778cc7ff4ad886fae70c4cfe9008fb<>res://.godot/imported/Side Hit.fbx-0b1e4e0efc5fa800b0448d828b7c94eb.scn::uid://coc0n64wv5yek::::res://art/Mixamo/Fighter 6A/hit/Side Hit_0.png
+Side Hit_0.png::CompressedTexture2D/CompressedTexture2D::5761156748018732210::1756220621::1756220621::1::::<><><>0<>0<>d8883a9b8d5b1964c6f93e90664122d8<>res://.godot/imported/Side Hit_0.png-06b83d1a40a958b55430aafe6f4d6abd.s3tc.ctex::
+::res://art/Mixamo/Fighter 6A/hit/extracted/::1756221255
+Head Hit.tres::Animation/Animation::3420842253245569329::1756221241::0::1::::<><><>0<>0<><>::
+Hit To Body.tres::Animation/Animation::4218436306569153697::1756221241::0::1::::<><><>0<>0<><>::
+Knocked Out.tres::Animation/Animation::3945938169535028826::1756221241::0::1::::<><><>0<>0<><>::
+Receiving An Uppercut.tres::Animation::7562231269319608579::1756221255::0::1::::<><><>0<>0<><>::
+Side Hit.tres::Animation/Animation::5076761550451390671::1756221241::0::1::::<><><>0<>0<><>::
 ::res://art/Mixamo/Fighter 6A/moving/::1755784625
 idle.fbx::PackedScene/PackedScene::519192190288040575::1755777713::1755784621::1::::<><><>0<>0<>3dd3223887ee674ddd80cf8f6fcfed77<>res://.godot/imported/idle.fbx-d52343f5273904d122ed298c27f40304.scn::
 jump.fbx::PackedScene/PackedScene::4671263983627965542::1755777713::1755784621::1::::<><><>0<>0<>752ea1d8cbe5b48010a8f4b132a2d28c<>res://.godot/imported/jump.fbx-c4a6f9c7376006faf253c1b6b5c812b8.scn::
@@ -2318,7 +2331,7 @@ right turn 90.tres::Animation/Animation::830058705695217887::1755778107::0::1:::
 right turn.tres::Animation/Animation::8045063914660781780::1755778107::0::1::::<><><>0<>0<><>::
 running.tres::Animation/Animation::2152140906053700441::1755778376::0::1::::<><><>0<>0<><>::
 walking.tres::Animation/Animation::7300836565890736630::1755778376::0::1::::<><><>0<>0<><>::
-::res://art/Mixamo/Fighter 7A/::1756076748
+::res://art/Mixamo/Fighter 7A/::1756219723
 FIGHTER_7A.fbx::PackedScene/PackedScene::6845918603245034902::1755777770::1755777812::1::::<><><>0<>0<>6540f59ab16edc64c315ebe1ce637cc6<>res://.godot/imported/FIGHTER_7A.fbx-b74bb8faed88bb28cb9aa9480e030421.scn::uid://cktwjuai8pnfo::::res://art/Mixamo/Fighter 7A/FIGHTER_7A_0.png
 FIGHTER_7A.png::CompressedTexture2D/CompressedTexture2D::9064934327179728502::1756076747::1756076748::1::::<><><>0<>0<>2c03d230e0478d4443f820df06b5ea24<>res://.godot/imported/FIGHTER_7A.png-e87b54e3f25fe74a55a124be0157c7ea.ctex::
 FIGHTER_7A_0.png::CompressedTexture2D/CompressedTexture2D::5515305877954858100::1755777812::1755827573::1::::<><><>0<>0<>e5ac7f244de3c0ef6494d175df28dbfa<>res://.godot/imported/FIGHTER_7A_0.png-236d432b3757208a119b7cc823363526.ctex::
@@ -2363,6 +2376,23 @@ Short Step Backward.tres::Animation/Animation::2815945393588423354::1755821534::
 Short Step Forward.tres::Animation/Animation::6527812346524222810::1755821534::0::1::::<><><>0<>0<><>::
 Step Backward.tres::Animation/Animation::3422487195609494113::1755784825::0::1::::<><><>0<>0<><>::
 Uppercut Jab.tres::Animation/Animation::2937566652383208765::1755783895::0::1::::<><><>0<>0<><>::
+::res://art/Mixamo/Fighter 7A/hit/::1756220693
+Head Hit.fbx::PackedScene/PackedScene::6966830237015453894::1756219544::1756219779::1::::<><><>0<>0<>ff74ebe23a3a32177593279c56779935<>res://.godot/imported/Head Hit.fbx-9eec8925cde291264681f7743e3e3adc.scn::uid://do5jvfjccnoa3::::res://art/Mixamo/Fighter 7A/hit/Head Hit_0.png
+Head Hit_0.png::CompressedTexture2D/CompressedTexture2D::8204421425854511964::1756219778::1756219780::1::::<><><>0<>0<>a87392cb71c2ba42dc9945f2d003c36b<>res://.godot/imported/Head Hit_0.png-653c58009b605f2b6e980c1cfae141f6.s3tc.ctex::
+Hit To Body.fbx::PackedScene/PackedScene::7708800844168383008::1756219618::1756219779::1::::<><><>0<>0<>4f90d42e38832e739e6a2fb90e41ab34<>res://.godot/imported/Hit To Body.fbx-a009f5edac6e937cfb3faa9add692480.scn::uid://busd430xi8s88::::res://art/Mixamo/Fighter 7A/hit/Hit To Body_0.png
+Hit To Body_0.png::CompressedTexture2D/CompressedTexture2D::3827591805359304947::1756219779::1756219780::1::::<><><>0<>0<>aa10181d03a7538f9857708252de0101<>res://.godot/imported/Hit To Body_0.png-6dc1c7b46ce453dde2abc90a71b76279.s3tc.ctex::
+Knocked Out.fbx::PackedScene/PackedScene::4232780477097527419::1756219813::1756220119::1::::<><><>0<>0<>ecd9230a537fdd334d923177860e86b1<>res://.godot/imported/Knocked Out.fbx-628d49831a6b011d6bf90e4ee44dd9ec.scn::uid://cgljhd2ygmdud::::res://art/Mixamo/Fighter 7A/hit/Knocked Out_0.png
+Knocked Out_0.png::CompressedTexture2D/CompressedTexture2D::5217241738380000055::1756220119::1756220119::1::::<><><>0<>0<>970e563697224ddb0e955e729817c821<>res://.godot/imported/Knocked Out_0.png-cdeebefe28d12211cf6e55e8102a5798.s3tc.ctex::
+Receiving An Uppercut.fbx::PackedScene/PackedScene::240417223345189791::1756220661::1756220676::1::::<><><>0<>0<>5a26bb2cbb7d0ee2ce1224620a8d365e<>res://.godot/imported/Receiving An Uppercut.fbx-020d66c4d5c1a4254574c94fd9c0be65.scn::uid://y2s080rdlllo::::res://art/Mixamo/Fighter 7A/hit/Receiving An Uppercut_0.png
+Receiving An Uppercut_0.png::CompressedTexture2D/CompressedTexture2D::1741409770057331736::1756220675::1756220676::1::::<><><>0<>0<>4d039d0c7eacadae6acfac24221544eb<>res://.godot/imported/Receiving An Uppercut_0.png-9e70ad5331984d5fade0206e783729c3.s3tc.ctex::
+Side Hit.fbx::PackedScene/PackedScene::9219133290810099348::1756219673::1756219779::1::::<><><>0<>0<>ebf1b07573a804e69df99407ec775105<>res://.godot/imported/Side Hit.fbx-abce673a2a9671945c4d6fbb828c279d.scn::uid://btgkkrkifoxpv::::res://art/Mixamo/Fighter 7A/hit/Side Hit_0.png
+Side Hit_0.png::CompressedTexture2D/CompressedTexture2D::3733020915922527663::1756219779::1756219780::1::::<><><>0<>0<>c3d6ca9933487825983c1dd68fbeac86<>res://.godot/imported/Side Hit_0.png-835d997a0096e0f4c98253425ae5462f.s3tc.ctex::
+::res://art/Mixamo/Fighter 7A/hit/extracted/::1756221110
+Head Hit.tres::Animation/Animation::1175083175619970293::1756221004::0::1::::<><><>0<>0<><>::
+Hit To Body.tres::Animation/Animation::6776913396037516789::1756221004::0::1::::<><><>0<>0<><>::
+Knocked Out.tres::Animation/Animation::4033302179483843507::1756221004::0::1::::<><><>0<>0<><>::
+Receiving An Uppercut.tres::Animation/Animation::1255028456818573626::1756221110::0::1::::<><><>0<>0<><>::
+Side Hit.tres::Animation/Animation::5606901313565703801::1756221004::0::1::::<><><>0<>0<><>::
 ::res://art/Mixamo/Fighter 7A/moving/::1755785524
 idle.fbx::PackedScene/PackedScene::1925595543450384889::1755777770::1755783817::1::::<><><>0<>0<>75c16fe797dc6911866da53c28b8684b<>res://.godot/imported/idle.fbx-9457bcdbdd7e10d1be5c0af726ca3166.scn::
 jump.fbx::PackedScene/PackedScene::1899896302626431133::1755777770::1755783816::1::::<><><>0<>0<>74c76cd4d5f5b148fda36b38b6b4c21b<>res://.godot/imported/jump.fbx-6bf90b6b48a1bf807423f6ee2d8cd0ce.scn::
@@ -2396,47 +2426,50 @@ running.tres::Animation/Animation::5303655228675486920::1755784780::0::1::::<><>
 Walking Backwards.tres::Animation/Animation::3678128913847127775::1755785564::0::1::::<><><>0<>0<><>::
 walking.tres::Animation/Animation::7627957530990010711::1755784780::0::1::::<><><>0<>0<><>::
 ::res://cameras/::1756178883
-aim_indicator.gd::GDScript::4773602760024625876::1755834571::0::1::::AimIndicator3D<>Node3D<><>0<>0<><>::
-aim_indicator.tscn::PackedScene::4305419656707465513::1756178882::0::1::::<><><>0<>0<><>::uid://caamsmjfsg0uy::::res://cameras/aim_indicator.gd
+aim_indicator.gd::GDScript/GDScript::4773602760024625876::1755834571::0::1::::AimIndicator3D<>Node3D<><>0<>0<><>::
+aim_indicator.tscn::PackedScene/PackedScene::4305419656707465513::1756178882::0::1::::<><><>0<>0<><>::uid://caamsmjfsg0uy::::res://cameras/aim_indicator.gd
 free_fly_camera.gd::GDScript/GDScript::6232828077079508078::1755701610::0::1::::<>Node3D<><>0<>0<><>::
 free_fly_camera.tscn::PackedScene/PackedScene::2711693056264507134::1755701533::0::1::::<><><>0<>0<><>::uid://cu2h1dtxl3cfm::::res://cameras/free_fly_camera.gd
-free_fly_testing_camera.gd::GDScript::1424113358268516989::1756110262::0::1::::FreeFlyTestingCamera<>Node3D<><>0<>0<><>::
-free_fly_testing_camera.tscn::PackedScene::7935299413532215155::1756178882::0::1::::<><><>0<>0<><>::uid://uj366okfq7or::::res://cameras/free_fly_testing_camera.gd<>uid://b2ltvrojs2qcn::::res://cameras/aim_indicator.tscn
-ring_camera.gd::GDScript::6242688910458008722::1756172189::0::1::::VersusRingCamera<>Node3D<><>0<>0<><>::
-ring_camera.tscn::PackedScene::1296831006116782237::1756178883::0::1::::<><><>0<>0<><>::uid://cu7af6qf715bi::::res://cameras/ring_camera.gd
+free_fly_testing_camera.gd::GDScript/GDScript::1424113358268516989::1756110262::0::1::::FreeFlyTestingCamera<>Node3D<><>0<>0<><>::
+free_fly_testing_camera.tscn::PackedScene/PackedScene::7935299413532215155::1756178882::0::1::::<><><>0<>0<><>::uid://uj366okfq7or::::res://cameras/free_fly_testing_camera.gd<>uid://b2ltvrojs2qcn::::res://cameras/aim_indicator.tscn
+ring_camera.gd::GDScript/GDScript::6242688910458008722::1756172189::0::1::::VersusRingCamera<>Node3D<><>0<>0<><>::
+ring_camera.tscn::PackedScene/PackedScene::1296831006116782237::1756178883::0::1::::<><><>0<>0<><>::uid://cu7af6qf715bi::::res://cameras/ring_camera.gd
 ::res://characters/::1756043443
 action_state_binding.gd::GDScript/GDScript::6254850621152302492::1755740616::0::1::::ActionStateBinding<>Resource<><>0<>0<><>::
 ai_controller.gd::GDScript/GDScript::6258211832692692654::1755735504::0::1::::<>Node<><>0<>0<><>::
-character_animator.gd::GDScript::1943002795971938700::1756043443::0::1::::CharacterAnimator<>Node<><>0<>0<><>::
+character_animator.gd::GDScript/GDScript::1943002795971938700::1756043443::0::1::::CharacterAnimator<>Node<><>0<>0<><>::
 player_controller.gd::GDScript/GDScript::369792325662654413::1755735019::0::1::::<>Node<><>0<>0<><>::
 stats.gd::GDScript/GDScript::5711996242028021636::1755735638::0::1::::Stats<>Node<><>0<>0<><>::
-::res://characters/Animations/::1755959385
-Animation_Mixamo_List.txt::TextFile/TextFile::-1::1755820348::0::1::::<><><>0<>0<><>::
-Animation_Node_State_Machine_Base.res::AnimationNodeStateMachine::5823331002459621143::1755959385::0::1::::<><><>0<>0<><>::
-::res://characters/Base/::1756206499
-base_character.gd::GDScript::1443381144725712739::1756206260::0::1::::BaseCharacter<>CharacterBody3D<><>0<>0<><>::
-base_character.tscn::PackedScene::5972828412453066085::1756206499::0::1::::<><><>0<>0<><>::uid://utgjnyop5hmp::::res://characters/Base/base_character.gd<>uid://2xg8b3kkqhxc::::res://characters/character_animator.gd<>uid://cnm60jtnrmltc::::res://characters/stats.gd
+::res://characters/Animations/::1756221089
+Animation_Mixamo_List.txt::TextFile/TextFile::-1::1756221089::0::1::::<><><>0<>0<><>::
+Animation_Node_State_Machine_Base.res::AnimationNodeStateMachine/AnimationNodeStateMachine::5823331002459621143::1755959385::0::1::::<><><>0<>0<><>::
+::res://characters/Base/::1756221243
+base_character.gd::GDScript/GDScript::1443381144725712739::1756218885::0::1::::BaseCharacter<>CharacterBody3D<><>0<>0<><>::
+base_character.tscn::PackedScene::5972828412453066085::1756221243::0::1::::<><><>0<>0<><>::uid://utgjnyop5hmp::::res://characters/Base/base_character.gd<>uid://2xg8b3kkqhxc::::res://characters/character_animator.gd<>uid://dj4cf7yitoal3::::res://combat/hurtbox_3d.gd<>uid://bpftxo20renih::::res://combat/hitbox_3d.gd<>uid://cnm60jtnrmltc::::res://characters/stats.gd
 ::res://characters/Joel/::1756178882
-Joel.tscn::PackedScene::4495672121784214757::1756178882::0::1::::<><><>0<>0<><>::uid://crdju1xafvwgj::::res://characters/Base/base_character.tscn<>uid://nq28cnf50oec::::res://characters/Models/Fighter 7A.tscn
-::res://characters/Models/::1756206678
-Debug_ColorRamp_Shader_WIth_Offset.gdshader::Shader::2856760364375760400::1756206678::0::1::::<><><>0<>0<><>::
-Fighter 6A.tscn::PackedScene::3688991918165848717::1756206678::0::1::::<><><>0<>0<><>::uid://ponbdhtftfq::::res://art/Mixamo/Fighter 6A/FIGHTER_6A_0.png<>uid://rdm0gyu15dbr::::res://art/Mixamo/Fighter 6A/moving/extracted/idle.tres<>uid://cwb2vwykipobq::::res://art/Mixamo/Fighter 6A/moving/extracted/jump.tres<>uid://cry8i3gn6pme8::::res://art/Mixamo/Fighter 6A/moving/extracted/left strafe walking.tres<>uid://bldyjv7fgwiff::::res://art/Mixamo/Fighter 6A/moving/extracted/left strafe.tres<>uid://dlgilnmmrfw3x::::res://art/Mixamo/Fighter 6A/moving/extracted/left turn 90.tres<>uid://b1pg47ufljkqd::::res://art/Mixamo/Fighter 6A/moving/extracted/left turn.tres<>uid://bnfmbdyoqnhxg::::res://art/Mixamo/Fighter 6A/moving/extracted/right strafe walking.tres<>uid://44vsu58u1bmg::::res://art/Mixamo/Fighter 6A/moving/extracted/right strafe.tres<>uid://l3c7feij6a7x::::res://art/Mixamo/Fighter 6A/moving/extracted/right turn 90.tres<>uid://dmvda6sb108no::::res://art/Mixamo/Fighter 6A/moving/extracted/right turn.tres<>uid://5wrpf6aybj8l::::res://art/Mixamo/Fighter 6A/moving/extracted/running.tres<>uid://dcatygty243fe::::res://art/Mixamo/Fighter 6A/moving/extracted/walking.tres<>uid://ba2otdtha3oew::::res://art/Mixamo/Fighter 6A/fighting/extracted/Back Flip To Uppercut.tres<>uid://d2i3riio8kpli::::res://art/Mixamo/Fighter 6A/fighting/extracted/Hook.tres<>uid://cx5d87p0bkrfv::::res://art/Mixamo/Fighter 6A/fighting/extracted/Idle.tres<>uid://cex8t62ohslis::::res://art/Mixamo/Fighter 6A/fighting/extracted/Jab Cross.tres<>uid://bxcoue71752yb::::res://art/Mixamo/Fighter 6A/fighting/extracted/Lead Jab.tres<>uid://dvaft4y0aw1d2::::res://art/Mixamo/Fighter 6A/fighting/extracted/Long Left Side Step.tres<>uid://djx2paje5yitn::::res://art/Mixamo/Fighter 6A/fighting/extracted/Long Right Side Step.tres<>uid://c8t8ric2lgulu::::res://art/Mixamo/Fighter 6A/fighting/extracted/Long Step Forward.tres<>uid://cryrnaj8tfxgl::::res://art/Mixamo/Fighter 6A/fighting/extracted/Punch Combo.tres<>uid://ba58joengk5se::::res://art/Mixamo/Fighter 6A/fighting/extracted/Running Backward.tres<>uid://d113ijbqvbwi1::::res://art/Mixamo/Fighter 6A/fighting/extracted/Short Step Backward.tres<>uid://brvso73tdbkll::::res://art/Mixamo/Fighter 6A/fighting/extracted/Short Step Forward.tres<>uid://8nboo7gj3q6x::::res://art/Mixamo/Fighter 6A/fighting/extracted/Step Backward.tres<>uid://dhryqh2wyumn0::::res://art/Mixamo/Fighter 6A/fighting/extracted/Uppercut Jab.tres<>uid://dyody8vpn8p0u::::res://art/Mixamo/Fighter 6A/fighting/extracted/Walking Backwards.tres<>uid://co74n75r2ge1t::::res://characters/Animations/Animation_Node_State_Machine_Base.res
-Fighter 7A.tscn::PackedScene::947183426760357322::1756206499::0::1::::<><><>0<>0<><>::uid://cktwjuai8pnfo::::res://art/Mixamo/Fighter 7A/FIGHTER_7A_0.png<>uid://ciauv4w21sgw5::::res://art/Mixamo/Fighter 7A/moving/extracted/idle.tres<>uid://ds5bi0etr1jyc::::res://art/Mixamo/Fighter 7A/moving/extracted/jump.tres<>uid://35bfi4mnxxyy::::res://art/Mixamo/Fighter 7A/moving/extracted/left strafe walking.tres<>uid://3ka400h5jybb::::res://art/Mixamo/Fighter 7A/moving/extracted/left strafe.tres<>uid://bogdps8qjk2tq::::res://art/Mixamo/Fighter 7A/moving/extracted/left turn 90.tres<>uid://b3rest205n1d7::::res://art/Mixamo/Fighter 7A/moving/extracted/left turn.tres<>uid://bjqm6axm3mgh6::::res://art/Mixamo/Fighter 7A/moving/extracted/right strafe walking.tres<>uid://cx778077x1x4t::::res://art/Mixamo/Fighter 7A/moving/extracted/right strafe.tres<>uid://cc0go2o40mech::::res://art/Mixamo/Fighter 7A/moving/extracted/right turn 90.tres<>uid://j5vpa6kkqwuh::::res://art/Mixamo/Fighter 7A/moving/extracted/right turn.tres<>uid://chteorkxpdl25::::res://art/Mixamo/Fighter 7A/moving/extracted/running.tres<>uid://dgxbl1cg783xr::::res://art/Mixamo/Fighter 7A/moving/extracted/walking.tres<>uid://bo2oadg2gif4w::::res://art/Mixamo/Fighter 7A/fighting/extracted/Back Flip To Uppercut.tres<>uid://8iyj2omgm6cx::::res://art/Mixamo/Fighter 7A/fighting/extracted/Hook.tres<>uid://rpmaowlcgldv::::res://art/Mixamo/Fighter 7A/fighting/extracted/Idle.tres<>uid://dm0syfmobhoep::::res://art/Mixamo/Fighter 7A/fighting/extracted/Jab Cross.tres<>uid://u1nopcd8ylli::::res://art/Mixamo/Fighter 7A/fighting/extracted/Lead Jab.tres<>uid://d1i84d4ir822m::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Left Side Step.tres<>uid://dqcque6yvlci8::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Right Side Step.tres<>uid://ceje8ij5je52l::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Step Forward.tres<>uid://bj70kuvhyymej::::res://art/Mixamo/Fighter 7A/fighting/extracted/Punch Combo.tres<>uid://bo044m42jq4ft::::res://art/Mixamo/Fighter 7A/fighting/extracted/Step Backward.tres<>uid://bh38j8m5yk4yj::::res://art/Mixamo/Fighter 7A/fighting/extracted/Uppercut Jab.tres<>uid://co74n75r2ge1t::::res://characters/Animations/Animation_Node_State_Machine_Base.res<>uid://cy60bwgj6t1s1::::res://art/Mixamo/Fighter 7A/moving/extracted/Running Backward.tres<>uid://bsnyimgdc1c5l::::res://art/Mixamo/Fighter 7A/moving/extracted/Walking Backwards.tres<>uid://bgechd4db0pta::::res://art/Mixamo/Fighter 7A/fighting/extracted/Short Step Backward.tres<>uid://c0aed6wn0uuyk::::res://art/Mixamo/Fighter 7A/fighting/extracted/Short Step Forward.tres
+Joel.tscn::PackedScene/PackedScene::4495672121784214757::1756178882::0::1::::<><><>0<>0<><>::uid://crdju1xafvwgj::::res://characters/Base/base_character.tscn<>uid://nq28cnf50oec::::res://characters/Models/Fighter 7A.tscn
+::res://characters/Models/::1756221243
+Debug_ColorRamp_Shader_WIth_Offset.gdshader::Shader::2856760364375760400::1756221243::0::1::::<><><>0<>0<><>::
+Fighter 6A.tscn::PackedScene/PackedScene::3688991918165848717::1756206678::0::1::::<><><>0<>0<><>::uid://ponbdhtftfq::::res://art/Mixamo/Fighter 6A/FIGHTER_6A_0.png<>uid://rdm0gyu15dbr::::res://art/Mixamo/Fighter 6A/moving/extracted/idle.tres<>uid://cwb2vwykipobq::::res://art/Mixamo/Fighter 6A/moving/extracted/jump.tres<>uid://cry8i3gn6pme8::::res://art/Mixamo/Fighter 6A/moving/extracted/left strafe walking.tres<>uid://bldyjv7fgwiff::::res://art/Mixamo/Fighter 6A/moving/extracted/left strafe.tres<>uid://dlgilnmmrfw3x::::res://art/Mixamo/Fighter 6A/moving/extracted/left turn 90.tres<>uid://b1pg47ufljkqd::::res://art/Mixamo/Fighter 6A/moving/extracted/left turn.tres<>uid://bnfmbdyoqnhxg::::res://art/Mixamo/Fighter 6A/moving/extracted/right strafe walking.tres<>uid://44vsu58u1bmg::::res://art/Mixamo/Fighter 6A/moving/extracted/right strafe.tres<>uid://l3c7feij6a7x::::res://art/Mixamo/Fighter 6A/moving/extracted/right turn 90.tres<>uid://dmvda6sb108no::::res://art/Mixamo/Fighter 6A/moving/extracted/right turn.tres<>uid://5wrpf6aybj8l::::res://art/Mixamo/Fighter 6A/moving/extracted/running.tres<>uid://dcatygty243fe::::res://art/Mixamo/Fighter 6A/moving/extracted/walking.tres<>uid://ba2otdtha3oew::::res://art/Mixamo/Fighter 6A/fighting/extracted/Back Flip To Uppercut.tres<>uid://d2i3riio8kpli::::res://art/Mixamo/Fighter 6A/fighting/extracted/Hook.tres<>uid://cx5d87p0bkrfv::::res://art/Mixamo/Fighter 6A/fighting/extracted/Idle.tres<>uid://cex8t62ohslis::::res://art/Mixamo/Fighter 6A/fighting/extracted/Jab Cross.tres<>uid://bxcoue71752yb::::res://art/Mixamo/Fighter 6A/fighting/extracted/Lead Jab.tres<>uid://dvaft4y0aw1d2::::res://art/Mixamo/Fighter 6A/fighting/extracted/Long Left Side Step.tres<>uid://djx2paje5yitn::::res://art/Mixamo/Fighter 6A/fighting/extracted/Long Right Side Step.tres<>uid://c8t8ric2lgulu::::res://art/Mixamo/Fighter 6A/fighting/extracted/Long Step Forward.tres<>uid://cryrnaj8tfxgl::::res://art/Mixamo/Fighter 6A/fighting/extracted/Punch Combo.tres<>uid://ba58joengk5se::::res://art/Mixamo/Fighter 6A/fighting/extracted/Running Backward.tres<>uid://d113ijbqvbwi1::::res://art/Mixamo/Fighter 6A/fighting/extracted/Short Step Backward.tres<>uid://brvso73tdbkll::::res://art/Mixamo/Fighter 6A/fighting/extracted/Short Step Forward.tres<>uid://8nboo7gj3q6x::::res://art/Mixamo/Fighter 6A/fighting/extracted/Step Backward.tres<>uid://dhryqh2wyumn0::::res://art/Mixamo/Fighter 6A/fighting/extracted/Uppercut Jab.tres<>uid://dyody8vpn8p0u::::res://art/Mixamo/Fighter 6A/fighting/extracted/Walking Backwards.tres<>uid://co74n75r2ge1t::::res://characters/Animations/Animation_Node_State_Machine_Base.res
+Fighter 7A.tscn::PackedScene/PackedScene::947183426760357322::1756221089::0::1::::<><><>0<>0<><>::uid://cktwjuai8pnfo::::res://art/Mixamo/Fighter 7A/FIGHTER_7A_0.png<>uid://ciauv4w21sgw5::::res://art/Mixamo/Fighter 7A/moving/extracted/idle.tres<>uid://ds5bi0etr1jyc::::res://art/Mixamo/Fighter 7A/moving/extracted/jump.tres<>uid://35bfi4mnxxyy::::res://art/Mixamo/Fighter 7A/moving/extracted/left strafe walking.tres<>uid://3ka400h5jybb::::res://art/Mixamo/Fighter 7A/moving/extracted/left strafe.tres<>uid://bogdps8qjk2tq::::res://art/Mixamo/Fighter 7A/moving/extracted/left turn 90.tres<>uid://b3rest205n1d7::::res://art/Mixamo/Fighter 7A/moving/extracted/left turn.tres<>uid://bjqm6axm3mgh6::::res://art/Mixamo/Fighter 7A/moving/extracted/right strafe walking.tres<>uid://cx778077x1x4t::::res://art/Mixamo/Fighter 7A/moving/extracted/right strafe.tres<>uid://cc0go2o40mech::::res://art/Mixamo/Fighter 7A/moving/extracted/right turn 90.tres<>uid://j5vpa6kkqwuh::::res://art/Mixamo/Fighter 7A/moving/extracted/right turn.tres<>uid://chteorkxpdl25::::res://art/Mixamo/Fighter 7A/moving/extracted/running.tres<>uid://dgxbl1cg783xr::::res://art/Mixamo/Fighter 7A/moving/extracted/walking.tres<>uid://bo2oadg2gif4w::::res://art/Mixamo/Fighter 7A/fighting/extracted/Back Flip To Uppercut.tres<>uid://8iyj2omgm6cx::::res://art/Mixamo/Fighter 7A/fighting/extracted/Hook.tres<>uid://rpmaowlcgldv::::res://art/Mixamo/Fighter 7A/fighting/extracted/Idle.tres<>uid://dm0syfmobhoep::::res://art/Mixamo/Fighter 7A/fighting/extracted/Jab Cross.tres<>uid://u1nopcd8ylli::::res://art/Mixamo/Fighter 7A/fighting/extracted/Lead Jab.tres<>uid://d1i84d4ir822m::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Left Side Step.tres<>uid://dqcque6yvlci8::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Right Side Step.tres<>uid://ceje8ij5je52l::::res://art/Mixamo/Fighter 7A/fighting/extracted/Long Step Forward.tres<>uid://bj70kuvhyymej::::res://art/Mixamo/Fighter 7A/fighting/extracted/Punch Combo.tres<>uid://bo044m42jq4ft::::res://art/Mixamo/Fighter 7A/fighting/extracted/Step Backward.tres<>uid://bh38j8m5yk4yj::::res://art/Mixamo/Fighter 7A/fighting/extracted/Uppercut Jab.tres<>uid://co74n75r2ge1t::::res://characters/Animations/Animation_Node_State_Machine_Base.res<>uid://cy60bwgj6t1s1::::res://art/Mixamo/Fighter 7A/moving/extracted/Running Backward.tres<>uid://bsnyimgdc1c5l::::res://art/Mixamo/Fighter 7A/moving/extracted/Walking Backwards.tres<>uid://bgechd4db0pta::::res://art/Mixamo/Fighter 7A/fighting/extracted/Short Step Backward.tres<>uid://c0aed6wn0uuyk::::res://art/Mixamo/Fighter 7A/fighting/extracted/Short Step Forward.tres<>uid://q0hpie4n0ps4::::res://art/Mixamo/Fighter 7A/hit/extracted/Head Hit.tres<>uid://c3s11kgfwyy7v::::res://art/Mixamo/Fighter 7A/hit/extracted/Hit To Body.tres<>uid://bxp05rwgkeipv::::res://art/Mixamo/Fighter 7A/hit/extracted/Knocked Out.tres<>uid://r47euoxpu3go::::res://art/Mixamo/Fighter 7A/hit/extracted/Receiving An Uppercut.tres<>uid://cl5a30l2e8mgv::::res://art/Mixamo/Fighter 7A/hit/extracted/Side Hit.tres
 ::res://characters/MrT/::1756178882
-MrT.tscn::PackedScene::2389400960026134669::1756178882::0::1::::<><><>0<>0<><>::uid://crdju1xafvwgj::::res://characters/Base/base_character.tscn<>uid://bss8fmtbfracr::::res://characters/Models/Fighter 6A.tscn
+MrT.tscn::PackedScene/PackedScene::2389400960026134669::1756178882::0::1::::<><><>0<>0<><>::uid://crdju1xafvwgj::::res://characters/Base/base_character.tscn<>uid://bss8fmtbfracr::::res://characters/Models/Fighter 6A.tscn
+::res://combat/::1756215331
+hitbox_3d.gd::GDScript/GDScript::3450770701351658203::1756215331::0::1::::Hitbox3D<>Area3D<><>0<>0<><>::
+hurtbox_3d.gd::GDScript/GDScript::7850960679856320562::1756213396::0::1::::Hurtbox3D<>Area3D<><>0<>0<><>::
 ::res://controllers/::1756170616
-game_controller_base.gd::GDScript::1411366773433762155::1756106201::0::1::::GameControllerBase<>Node<><>0<>0<><>::
-mode_command_style_controller.gd::GDScript::4298516634782063952::1756092645::0::1::::ModeCommandStyleController<>GameControllerBase<><>0<>0<><>::
-mode_live_windows_controller.gd::GDScript::7280391886744399181::1756092645::0::1::::ModeLiveWindowsController<>GameControllerBase<><>0<>0<><>::
-mode_strongest_wins_controller.gd::GDScript::7009572034145034920::1756092645::0::1::::ModeStrongestWinsController<>GameControllerBase<><>0<>0<><>::
-pre_fight_controller.gd::GDScript::222036777489081444::1756170616::0::1::::PreFightController<>GameControllerBase<><>0<>0<><>::
-versus_mode_controller.gd::GDScript::7853610149106339556::1756170157::0::1::::VersusModeController<>GameControllerBase<><>0<>0<><>::
-::res://data/::1756206678
+game_controller_base.gd::GDScript/GDScript::1411366773433762155::1756106201::0::1::::GameControllerBase<>Node<><>0<>0<><>::
+mode_command_style_controller.gd::GDScript/GDScript::4298516634782063952::1756092645::0::1::::ModeCommandStyleController<>GameControllerBase<><>0<>0<><>::
+mode_live_windows_controller.gd::GDScript/GDScript::7280391886744399181::1756092645::0::1::::ModeLiveWindowsController<>GameControllerBase<><>0<>0<><>::
+mode_strongest_wins_controller.gd::GDScript/GDScript::7009572034145034920::1756092645::0::1::::ModeStrongestWinsController<>GameControllerBase<><>0<>0<><>::
+pre_fight_controller.gd::GDScript/GDScript::222036777489081444::1756170616::0::1::::PreFightController<>GameControllerBase<><>0<>0<><>::
+versus_mode_controller.gd::GDScript/GDScript::7853610149106339556::1756170157::0::1::::VersusModeController<>GameControllerBase<><>0<>0<><>::
+::res://data/::1756221225
 AttackLibrary.tres::Resource/AttackLibrary::2924470450578541043::1756039153::0::1::::<><><>0<>0<><>::uid://by7hw7yjeft1c::::res://resources/attack_spec.gd<>uid://w31bhakuja8u::::res://data/attacks/LeadJab.tres<>uid://dlktj6fbf0nm5::::res://resources/attack_library.gd<>uid://dabdlbfqfrbpv::::res://data/attacks/JabCross.tres<>uid://c0asotocoke3r::::res://data/attacks/Hook.tres<>uid://80wd2wgn7sxm::::res://data/attacks/PunchCombo.tres<>uid://dc5pu6r5vw5d7::::res://data/attacks/UppercutJab.tres<>uid://cfdhh7f7abbk3::::res://data/attacks/BackFlipToUppercut.tres
-AttackSetLibrary.tres::Resource/AttackSetLibrary::6205935097330283905::1756179303::0::1::::<><><>0<>0<><>::uid://bq8v07mhlitsl::::res://resources/attack_set_library.gd<>uid://cshyjn6utm1wo::::res://data/attack_sets/Default.tres
-BoxerLibrary.tres::Resource/BoxerLibrary::3452964562180034401::1756179303::0::1::::<><><>0<>0<><>::uid://ffjrp08qv4ar::::res://data/boxers/Joel.tres<>uid://e8t751p5n5dt::::res://resources/boxer_library.gd<>uid://jm1rtfleartc::::res://data/boxers/MrT.tres
-MapLibrary.tres::Resource/MapLibrary::938300686916618989::1756179302::0::1::::<><><>0<>0<><>::uid://qgjsx8l3g0v2::::res://resources/map_library.gd<>uid://cgcc4f4fh4d81::::res://data/maps/Stadium.tres
-ModeLibrary.tres::Resource/ModeLibrary::9212347881344419884::1756206678::0::1::::<><><>0<>0<><>::uid://dxos64ak6tq85::::res://resources/mode_library.gd<>uid://c3vae0ui3r8ds::::res://data/modes/Versus.tres
+AttackSetLibrary.tres::Resource/AttackSetLibrary::6205935097330283905::1756221225::0::1::::<><><>0<>0<><>::uid://bq8v07mhlitsl::::res://resources/attack_set_library.gd<>uid://cshyjn6utm1wo::::res://data/attack_sets/Default.tres
+BoxerLibrary.tres::Resource/BoxerLibrary::3452964562180034401::1756221225::0::1::::<><><>0<>0<><>::uid://ffjrp08qv4ar::::res://data/boxers/Joel.tres<>uid://e8t751p5n5dt::::res://resources/boxer_library.gd<>uid://jm1rtfleartc::::res://data/boxers/MrT.tres
+MapLibrary.tres::Resource/MapLibrary::938300686916618989::1756221225::0::1::::<><><>0<>0<><>::uid://qgjsx8l3g0v2::::res://resources/map_library.gd<>uid://cgcc4f4fh4d81::::res://data/maps/Stadium.tres
+ModeLibrary.tres::Resource/ModeLibrary::9212347881344419884::1756221225::0::1::::<><><>0<>0<><>::uid://dxos64ak6tq85::::res://resources/mode_library.gd<>uid://c3vae0ui3r8ds::::res://data/modes/Versus.tres
 ::res://data/attacks/::1756206495
 BackFlipToUppercut.tres::Resource/AttackSpec::5130417928270443964::1756206491::0::1::::<><><>0<>0<><>::uid://by7hw7yjeft1c::::res://resources/attack_spec.gd
 Hook.tres::Resource/AttackSpec::6528681385002369353::1756206495::0::1::::<><><>0<>0<><>::uid://by7hw7yjeft1c::::res://resources/attack_spec.gd
@@ -2444,8 +2477,8 @@ JabCross.tres::Resource/AttackSpec::7161528284526306735::1756206491::0::1::::<><
 LeadJab.tres::Resource/AttackSpec::1603537932901105982::1756184426::0::1::::<><><>0<>0<><>::uid://by7hw7yjeft1c::::res://resources/attack_spec.gd
 PunchCombo.tres::Resource/AttackSpec::2369183867536555250::1756206491::0::1::::<><><>0<>0<><>::uid://by7hw7yjeft1c::::res://resources/attack_spec.gd
 UppercutJab.tres::Resource/AttackSpec::7362519197624310910::1756206491::0::1::::<><><>0<>0<><>::uid://by7hw7yjeft1c::::res://resources/attack_spec.gd
-::res://data/attack_sets/::1756184557
-Default.tres::Resource/AttackSetData::6052165208747832754::1756184557::0::1::::<><><>0<>0<><>::uid://cuduivpqla41w::::res://resources/attack_set_data.gd
+::res://data/attack_sets/::1756221225
+Default.tres::Resource/AttackSetData::6052165208747832754::1756221225::0::1::::<><><>0<>0<><>::uid://cuduivpqla41w::::res://resources/attack_set_data.gd
 ::res://data/boxers/::1756077135
 Joel.tres::Resource/BoxerData::361843746383714061::1756077135::0::1::::<><><>0<>0<><>::uid://c8h10by6gd43o::::res://resources/boxer_data.gd<>uid://b5b0ce36ypxm0::::res://characters/Joel/Joel.tscn<>uid://d2fee5on3snco::::res://art/Mixamo/Fighter 7A/FIGHTER_7A.png
 MrT.tres::Resource/BoxerData::658082132272150188::1756076918::0::1::::<><><>0<>0<><>::uid://c8h10by6gd43o::::res://resources/boxer_data.gd<>uid://bxswlr8blc2rp::::res://art/Mixamo/Fighter 6A/FIGHTER_6A.png<>uid://babpc46w0o75r::::res://characters/MrT/MrT.tscn
@@ -2456,16 +2489,16 @@ AttackDefence.tres::Resource/ModeData::851797379387392174::1756083265::0::1::::<
 Strongest.tres::Resource/ModeData::390808207034412103::1756083265::0::1::::<><><>0<>0<><>::uid://bocblcoyk2rts::::res://art/Icons/biceps.png<>uid://b1l5u33ek3y18::::res://resources/mode_data.gd
 Versus.tres::Resource/ModeData::6781489409643432900::1756094639::0::1::::<><><>0<>0<><>::uid://b1l5u33ek3y18::::res://resources/mode_data.gd<>uid://cjxk6887kk5ql::::res://art/Icons/boxing_versus.png
 ::res://docs/::1755991671
-README_CONTROLLERS_HOST.md::TextFile::-1::1755991671::0::1::::<><><>0<>0<><>::
-README_GAME_FLOW.md::TextFile::-1::1755990785::0::1::::<><><>0<>0<><>::
+README_CONTROLLERS_HOST.md::TextFile/TextFile::-1::1755991671::0::1::::<><><>0<>0<><>::
+README_GAME_FLOW.md::TextFile/TextFile::-1::1755990785::0::1::::<><><>0<>0<><>::
 ::res://engine/::1756179297
 client_settings.gd::GDScript/GDScript::6902020860098693752::1755677651::0::1::::ClientSettings<>Resource<><>0<>0<><>::
 console.gd::GDScript/GDScript::6507615310568998620::1755677651::0::1::::<>CanvasLayer<><>0<>0<><>::
 console.tscn::PackedScene/PackedScene::4480604747728780355::1755677651::0::1::::<><><>0<>0<><>::uid://cyylqdie4rwmu::::res://engine/console.gd
-loading_screen.gd::GDScript::3566606586056313065::1756107217::0::1::::LoadingScreen<>Control<><>0<>0<><>::
-loading_screen.tscn::PackedScene::4483125182181969117::1756178883::0::1::::<><><>0<>0<><>::uid://bq2xqvy1i8ept::::res://engine/loading_screen.gd
+loading_screen.gd::GDScript/GDScript::3566606586056313065::1756107217::0::1::::LoadingScreen<>Control<><>0<>0<><>::
+loading_screen.tscn::PackedScene/PackedScene::4483125182181969117::1756178883::0::1::::<><><>0<>0<><>::uid://bq2xqvy1i8ept::::res://engine/loading_screen.gd
 map_info.gd::GDScript/GDScript::2239642339868858333::1755677651::0::1::::MapInfo<>Resource<><>0<>0<><>::
-map_manager.gd::GDScript::407722411393543683::1756105727::0::1::::MapLoader<>Node<><>0<>0<><>::
+map_manager.gd::GDScript/GDScript::407722411393543683::1756105727::0::1::::MapLoader<>Node<><>0<>0<><>::
 network_manager.gd::GDScript/GDScript::8967763452136992961::1755677651::0::1::::<>Node<><>0<>0<><>::
 utils.gd::GDScript/GDScript::7665883895671793128::1755677651::0::1::::Utils<>RefCounted<><>0<>0<><>::
 ::res://engine/input/::1755677651
@@ -2483,49 +2516,49 @@ LoginInputVideoReceiver.gd::GDScript/GDScript::7088176657332936097::1755677651::
 omnistat_api_client.gd::GDScript/GDScript::3432850864531227097::1755677651::0::1::::<>Node<><>0<>0<><>::
 serial_manager.gd::GDScript/GDScript::5150000055738548758::1755677651::0::1::::<>Control<><>0<>0<><>::
 ::res://gui/::1756179310
-character_select.tscn::PackedScene::5544089229897176964::1756178882::0::1::::<><><>0<>0<><>::uid://c7qnmu8ltdeie::::res://ui/prefight_view.gd<>uid://bitn8ke5we6m0::::res://ui/prefight_character_grid.gd
-character_tile.tscn::PackedScene::2440666719494948723::1756179310::0::1::::<><><>0<>0<><>::uid://c87n1qv34ijj8::::res://ui/character_tile.gd
-fight_hud.tscn::PackedScene::2907951734710944697::1756178883::0::1::::<><><>0<>0<><>::uid://ctl7cptaadje::::res://ui/fight_hud.gd<>uid://pty0qg7e5hs4::::res://ui/versus_stats.gd<>uid://djeqxr133lvjc::::res://ui/countdown_overlay.gd
-game_hud.tscn::PackedScene::4358708513063818759::1756178883::0::1::::<><><>0<>0<><>::
-loading_overlay.tscn::PackedScene::8006054716253007153::1756104172::0::1::::<><><>0<>0<><>::uid://bc7ta7mukaaxi::::res://themes/main.tres
-lobby.tscn::PackedScene::3180662156229826560::1756178883::0::1::::<><><>0<>0<><>::
-lobby_player_entry.tscn::PackedScene::1661997927552194887::1756178883::0::1::::<><><>0<>0<><>::
-main_menu.gd::GDScript::4100106309901849709::1756017091::0::1::::<>Control<><>0<>0<><>::
-main_menu.tscn::PackedScene::21817459211559511::1756178884::0::1::::<><><>0<>0<><>::uid://byoefft6qqbcf::::res://gui/main_menu.gd<>uid://bc7ta7mukaaxi::::res://themes/main.tres
-pre_game.tscn::PackedScene::5509121431751076379::1756178882::0::1::::<><><>0<>0<><>::
-scoring_hud.tscn::PackedScene::5759040612148563475::1756178883::0::1::::<><><>0<>0<><>::uid://bc7ta7mukaaxi::::res://themes/main.tres
+character_select.tscn::PackedScene/PackedScene::5544089229897176964::1756178882::0::1::::<><><>0<>0<><>::uid://c7qnmu8ltdeie::::res://ui/prefight_view.gd<>uid://bitn8ke5we6m0::::res://ui/prefight_character_grid.gd
+character_tile.tscn::PackedScene/PackedScene::2440666719494948723::1756179310::0::1::::<><><>0<>0<><>::uid://c87n1qv34ijj8::::res://ui/character_tile.gd
+fight_hud.tscn::PackedScene/PackedScene::2907951734710944697::1756178883::0::1::::<><><>0<>0<><>::uid://ctl7cptaadje::::res://ui/fight_hud.gd<>uid://pty0qg7e5hs4::::res://ui/versus_stats.gd<>uid://djeqxr133lvjc::::res://ui/countdown_overlay.gd
+game_hud.tscn::PackedScene/PackedScene::4358708513063818759::1756178883::0::1::::<><><>0<>0<><>::
+loading_overlay.tscn::PackedScene/PackedScene::8006054716253007153::1756104172::0::1::::<><><>0<>0<><>::uid://bc7ta7mukaaxi::::res://themes/main.tres
+lobby.tscn::PackedScene/PackedScene::3180662156229826560::1756178883::0::1::::<><><>0<>0<><>::
+lobby_player_entry.tscn::PackedScene/PackedScene::1661997927552194887::1756178883::0::1::::<><><>0<>0<><>::
+main_menu.gd::GDScript/GDScript::4100106309901849709::1756017091::0::1::::<>Control<><>0<>0<><>::
+main_menu.tscn::PackedScene/PackedScene::21817459211559511::1756178884::0::1::::<><><>0<>0<><>::uid://byoefft6qqbcf::::res://gui/main_menu.gd<>uid://bc7ta7mukaaxi::::res://themes/main.tres
+pre_game.tscn::PackedScene/PackedScene::5509121431751076379::1756178882::0::1::::<><><>0<>0<><>::
+scoring_hud.tscn::PackedScene/PackedScene::5759040612148563475::1756178883::0::1::::<><><>0<>0<><>::uid://bc7ta7mukaaxi::::res://themes/main.tres
 ::res://input/::1756180507
-punch_input.gd::GDScript::5401543406874818015::1756180507::0::1::::PunchInputRouter<>Node<><>0<>0<><>::
+punch_input.gd::GDScript/GDScript::5401543406874818015::1756180507::0::1::::PunchInputRouter<>Node<><>0<>0<><>::
 ::res://maps/::1756094975
 ::res://maps/Base/::1755677651
 base_map.gd::GDScript/GDScript::6572948216008186182::1755677651::0::1::::BaseMap<>Node3D<><>0<>0<><>::
 base_map.tscn::PackedScene/PackedScene::1476449512587606325::1755677651::0::1::::<><><>0<>0<><>::uid://c0v8q5ke6k71s::::res://maps/Base/base_map.gd
 ::res://maps/common/::1756115604
-spawn_point.gd::GDScript::6187299692759507983::1756115604::0::1::::SpawnPoint<>Marker3D<><>0<>0<><>::
+spawn_point.gd::GDScript/GDScript::6187299692759507983::1756115604::0::1::::SpawnPoint<>Marker3D<><>0<>0<><>::
 ::res://maps/Stadium/::1756178878
-stadium.tscn::PackedScene::6759121642420134611::1756178878::0::1::::<><><>0<>0<><>::uid://vbg54mu3e1or::::res://maps/Base/base_map.tscn<>uid://bmx02p3rmxt1o::::res://art/Boxing Ring/vr_boxing_ring_0.png<>uid://7kktllmxja8t::::res://art/Boxing Ring/vr_boxing_ring_1.png<>uid://bdrcj0daktonb::::res://art/Boxing Ring/vr_boxing_ring_2.png<>uid://brmnbis40tl27::::res://art/Boxing Ring/vr_boxing_ring_3.png<>uid://bihq08xl4fh2b::::res://art/Boxing Ring/vr_boxing_ring_4.png<>uid://dy714xmfj5l1v::::res://art/Boxing Ring/vr_boxing_ring_5.png<>uid://cykc6witv2x54::::res://art/Boxing Ring/vr_boxing_ring_6.png<>uid://bene5wx2cl5di::::res://art/Boxing Ring/vr_boxing_ring_7.png<>uid://72rcg5c51or::::res://art/Boxing Ring/vr_boxing_ring_8.png<>uid://bragpgvd2btte::::res://art/Boxing Ring/vr_boxing_ring_9.png<>uid://jyw541vp8d7p::::res://art/Boxing Ring/vr_boxing_ring_10.png<>uid://7hqws1a4vcg5::::res://art/Boxing Ring/vr_boxing_ring_11.png<>uid://baef257ytdqoh::::res://art/Boxing Ring/vr_boxing_ring_12.png<>uid://bb7lf5m70fh17::::res://art/Boxing Ring/vr_boxing_ring_13.png<>uid://d0puuypg3rwoj::::res://art/Boxing Ring/vr_boxing_ring_14.png<>uid://qda4da2u71mp::::res://art/Boxing Ring/vr_boxing_ring_15.png<>uid://deu852b2igjwq::::res://art/Boxing Ring/vr_boxing_ring_16.png<>uid://1rxqb6eknuml::::res://art/Boxing Ring/vr_boxing_ring_17.png<>uid://dma451tu7n8jf::::res://art/Boxing Ring/vr_boxing_ring_18.png<>uid://bgwsvs2eapts::::res://art/Boxing Ring/vr_boxing_ring_19.png<>uid://b1y5p4qq0pw0e::::res://art/Boxing Ring/vr_boxing_ring_20.png<>uid://cnq866oet1vbx::::res://art/Boxing Ring/vr_boxing_ring_21.png<>uid://clkainr23u3fu::::res://art/Boxing Ring/vr_boxing_ring_22.png<>uid://dna2d16tiglil::::res://art/Boxing Ring/vr_boxing_ring_23.png<>uid://topnsu7utt7h::::res://art/Boxing Ring/vr_boxing_ring_24.png<>uid://buoc5rq25o664::::res://art/Boxing Ring/vr_boxing_ring_25.png<>uid://i80vdb8fdo4d::::res://art/Boxing Ring/vr_boxing_ring_26.png<>uid://sqgu8qqnt5ft::::res://cameras/ring_camera.tscn<>uid://cuff6l14vap8b::::res://maps/common/spawn_point.gd
-::res://resources/::1756184005
-attack_library.gd::GDScript::7953154439646955746::1755955257::0::1::::AttackLibrary<>Resource<><>0<>0<><>::
-attack_set_data.gd::GDScript::6184041126519717742::1756183940::0::1::::AttackSetData<>SelectableData<><>0<>0<><>::
-attack_set_library.gd::GDScript::3578888049099252235::1756040964::0::1::::AttackSetLibrary<>Resource<><>0<>0<><>::
-attack_spec.gd::GDScript::4137479043788058186::1756184005::0::1::::AttackSpec<>Resource<><>0<>0<><>::
-boxer_data.gd::GDScript::7105147229394564370::1756040495::0::1::::BoxerData<>SelectableData<><>0<>0<><>::
-boxer_library.gd::GDScript::350092225291207961::1756040520::0::1::::BoxerLibrary<>Resource<><>0<>0<><>::
-map_data.gd::GDScript::2727751585326522929::1756087605::0::1::::MapData<>SelectableData<><>0<>0<><>::
-map_library.gd::GDScript::1135987621511134681::1756087630::0::1::::MapLibrary<>Resource<><>0<>0<><>::
-mode_data.gd::GDScript::4235897513342254325::1756094616::0::1::::ModeData<>SelectableData<><>0<>0<><>::
-mode_library.gd::GDScript::8803656532465434248::1756080392::0::1::::ModeLibrary<>Resource<><>0<>0<><>::
-combo_rule.gd::GDScript::5194271933778957772::1756182746::0::1::::ComboRule<>Resource<><>0<>0<><>::
-selectable_data.gd::GDScript::7896580102380117792::1756040437::0::1::::SelectableData<>Resource<><>0<>0<><>::
-::res://testing/::1756168529
-test_harness.gd::GDScript::6923577864150280928::1756168529::0::1::::<>Node<><>0<>0<><>::
-::res://themes/::1756179302
-main.tres::Theme::2594013782168571702::1756179302::0::1::::<><><>0<>0<><>::
+stadium.tscn::PackedScene/PackedScene::6759121642420134611::1756178878::0::1::::<><><>0<>0<><>::uid://vbg54mu3e1or::::res://maps/Base/base_map.tscn<>uid://bmx02p3rmxt1o::::res://art/Boxing Ring/vr_boxing_ring_0.png<>uid://7kktllmxja8t::::res://art/Boxing Ring/vr_boxing_ring_1.png<>uid://bdrcj0daktonb::::res://art/Boxing Ring/vr_boxing_ring_2.png<>uid://brmnbis40tl27::::res://art/Boxing Ring/vr_boxing_ring_3.png<>uid://bihq08xl4fh2b::::res://art/Boxing Ring/vr_boxing_ring_4.png<>uid://dy714xmfj5l1v::::res://art/Boxing Ring/vr_boxing_ring_5.png<>uid://cykc6witv2x54::::res://art/Boxing Ring/vr_boxing_ring_6.png<>uid://bene5wx2cl5di::::res://art/Boxing Ring/vr_boxing_ring_7.png<>uid://72rcg5c51or::::res://art/Boxing Ring/vr_boxing_ring_8.png<>uid://bragpgvd2btte::::res://art/Boxing Ring/vr_boxing_ring_9.png<>uid://jyw541vp8d7p::::res://art/Boxing Ring/vr_boxing_ring_10.png<>uid://7hqws1a4vcg5::::res://art/Boxing Ring/vr_boxing_ring_11.png<>uid://baef257ytdqoh::::res://art/Boxing Ring/vr_boxing_ring_12.png<>uid://bb7lf5m70fh17::::res://art/Boxing Ring/vr_boxing_ring_13.png<>uid://d0puuypg3rwoj::::res://art/Boxing Ring/vr_boxing_ring_14.png<>uid://qda4da2u71mp::::res://art/Boxing Ring/vr_boxing_ring_15.png<>uid://deu852b2igjwq::::res://art/Boxing Ring/vr_boxing_ring_16.png<>uid://1rxqb6eknuml::::res://art/Boxing Ring/vr_boxing_ring_17.png<>uid://dma451tu7n8jf::::res://art/Boxing Ring/vr_boxing_ring_18.png<>uid://bgwsvs2eapts::::res://art/Boxing Ring/vr_boxing_ring_19.png<>uid://b1y5p4qq0pw0e::::res://art/Boxing Ring/vr_boxing_ring_20.png<>uid://cnq866oet1vbx::::res://art/Boxing Ring/vr_boxing_ring_21.png<>uid://clkainr23u3fu::::res://art/Boxing Ring/vr_boxing_ring_22.png<>uid://dna2d16tiglil::::res://art/Boxing Ring/vr_boxing_ring_23.png<>uid://topnsu7utt7h::::res://art/Boxing Ring/vr_boxing_ring_24.png<>uid://buoc5rq25o664::::res://art/Boxing Ring/vr_boxing_ring_25.png<>uid://i80vdb8fdo4d::::res://art/Boxing Ring/vr_boxing_ring_26.png<>uid://sqgu8qqnt5ft::::res://cameras/ring_camera.tscn<>uid://cuff6l14vap8b::::res://maps/common/spawn_point.gd
+::res://resources/::1756209072
+attack_library.gd::GDScript/GDScript::7953154439646955746::1755955257::0::1::::AttackLibrary<>Resource<><>0<>0<><>::
+attack_set_data.gd::GDScript/GDScript::6184041126519717742::1756183940::0::1::::AttackSetData<>SelectableData<><>0<>0<><>::
+attack_set_library.gd::GDScript/GDScript::3578888049099252235::1756040964::0::1::::AttackSetLibrary<>Resource<><>0<>0<><>::
+attack_spec.gd::GDScript/GDScript::4137479043788058186::1756209072::0::1::::AttackSpec<>Resource<><>0<>0<><>::
+boxer_data.gd::GDScript/GDScript::7105147229394564370::1756040495::0::1::::BoxerData<>SelectableData<><>0<>0<><>::
+boxer_library.gd::GDScript/GDScript::350092225291207961::1756040520::0::1::::BoxerLibrary<>Resource<><>0<>0<><>::
+combo_rule.gd::GDScript/GDScript::5194271933778957772::1756182746::0::1::::ComboRule<>Resource<><>0<>0<><>::
+map_data.gd::GDScript/GDScript::2727751585326522929::1756087605::0::1::::MapData<>SelectableData<><>0<>0<><>::
+map_library.gd::GDScript/GDScript::1135987621511134681::1756087630::0::1::::MapLibrary<>Resource<><>0<>0<><>::
+mode_data.gd::GDScript/GDScript::4235897513342254325::1756094616::0::1::::ModeData<>SelectableData<><>0<>0<><>::
+mode_library.gd::GDScript/GDScript::8803656532465434248::1756080392::0::1::::ModeLibrary<>Resource<><>0<>0<><>::
+selectable_data.gd::GDScript/GDScript::7896580102380117792::1756040437::0::1::::SelectableData<>Resource<><>0<>0<><>::
+::res://testing/::1756220804
+test_harness.gd::GDScript/GDScript::6923577864150280928::1756220804::0::1::::<>Node<><>0<>0<><>::
+::res://themes/::1756221225
+main.tres::Theme::2594013782168571702::1756221225::0::1::::<><><>0<>0<><>::
 ::res://ui/::1756125169
-character_tile.gd::GDScript::7155969921244440775::1756077387::0::1::::CharacterTile<>PanelContainer<><>0<>0<><>::
-countdown_overlay.gd::GDScript::7800232634353843232::1756125133::0::1::::CountdownOverlay<>Control<><>0<>0<><>::
-fight_hud.gd::GDScript::180326026010631650::1756125169::0::1::::FightHUD<>CanvasLayer<><>0<>0<><>::
-player_preview_panel.gd::GDScript::1527598547812714853::1756029203::0::1::::PlayerPreviewPanel<>HBoxContainer<><>0<>0<><>::
-prefight_character_grid.gd::GDScript::2988003395034696173::1756123282::0::1::::PrefightCharacterGrid<>GridContainer<><>0<>0<><>::
-prefight_view.gd::GDScript::7052726260271869068::1756090135::0::1::::PrefightView<>Control<><>0<>0<><>::
-versus_stats.gd::GDScript::1093558535674534605::1756123490::0::1::::VersusStats<>Control<><>0<>0<><>::
+character_tile.gd::GDScript/GDScript::7155969921244440775::1756077387::0::1::::CharacterTile<>PanelContainer<><>0<>0<><>::
+countdown_overlay.gd::GDScript/GDScript::7800232634353843232::1756125133::0::1::::CountdownOverlay<>Control<><>0<>0<><>::
+fight_hud.gd::GDScript/GDScript::180326026010631650::1756125169::0::1::::FightHUD<>CanvasLayer<><>0<>0<><>::
+player_preview_panel.gd::GDScript/GDScript::1527598547812714853::1756029203::0::1::::PlayerPreviewPanel<>HBoxContainer<><>0<>0<><>::
+prefight_character_grid.gd::GDScript/GDScript::2988003395034696173::1756123282::0::1::::PrefightCharacterGrid<>GridContainer<><>0<>0<><>::
+prefight_view.gd::GDScript/GDScript::7052726260271869068::1756090135::0::1::::PrefightView<>Control<><>0<>0<><>::
+versus_stats.gd::GDScript/GDScript::1093558535674534605::1756123490::0::1::::VersusStats<>Control<><>0<>0<><>::

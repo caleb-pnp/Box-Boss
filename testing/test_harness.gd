@@ -260,7 +260,7 @@ func _validate_selected() -> void:
 	# Check mapping for the four categories
 	var cats := [StringName("light"), StringName("medium"), StringName("heavy"), StringName("special")]
 	for cat in cats:
-		var id := (c.attack_set_data.get_id_for_category(cat) if c.attack_set_data else StringName(""))
+		var id = (c.attack_set_data.get_id_for_category(cat) if c.attack_set_data else StringName(""))
 		if String(id) == "":
 			print("  - ", String(cat), ": NO ID configured")
 			continue

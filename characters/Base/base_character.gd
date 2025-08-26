@@ -212,7 +212,6 @@ func _combat_log(msg: String) -> void:
 	if debug_combat:
 		print("[Combat] ", get_path(), " | ", msg)
 
-var anim: AnimationPlayer
 var agent: NavigationAgent3D
 var stats: Node
 var animator
@@ -326,12 +325,6 @@ func _ready() -> void:
 	if attack_set_data == null and attack_set_data_path != "":
 		var r2 := load(attack_set_data_path)
 		if r2 is AttackSetData: attack_set_data = r2
-
-	var model := $Model if has_node("Model") else null
-	if model:
-		anim = (model.find_child("AnimationPlayer") as AnimationPlayer)
-	if anim:
-		anim.connect("animation_finished", Callable(self, "_on_animation_finished"))
 
 	agent = (get_node_or_null(navigation_agent_path) as NavigationAgent3D) if navigation_agent_path != NodePath("") else ($NavigationAgent3D as NavigationAgent3D)
 	stats = get_node_or_null(stats_node_path) if stats_node_path != NodePath("") else $Stats
@@ -1236,7 +1229,7 @@ func _clear_queue() -> void:
 	_queued_attack_cat = &""
 	_queued_until = 0.0
 
-# Log exactly what we start swinging with, including mapped category and force.
+# REPLACE: _start_swing to trigger Hitbox3D
 func _start_swing(spec, id: StringName, now: float) -> void:
 	_attack_spec_current = spec
 	_attack_id_current = id
@@ -1257,17 +1250,20 @@ func _start_swing(spec, id: StringName, now: float) -> void:
 			if animator.has_method("start_fight_stance"): animator.start_fight_stance()
 		animator.play_attack_id(id)
 
+	# Lock movement during swing
 	_move_locked_until = now + max(0.0, spec.move_lock_sec)
 	_attack_phase = AttackPhase.SWING
 	_attack_phase_until = now + max(0.0, spec.swing_time_sec)
 
+	# Activate permanent Hitbox3D using spec timing (active_start_sec/end_sec)
+	if hitbox:
+		activate_hitbox_for_attack(_attack_id_current, _attack_spec_current, _punch_force_current)
+
+# REPLACE: anim_event_hit to avoid direct damage (Hitbox3D handles collisions)
 func anim_event_hit() -> void:
-	var dmg: int = _get_current_attack_damage()
-	if _has_target and _target_node:
-		var victim := _target_node
-		if victim and victim.has_method("take_hit"):
-			victim.take_hit(dmg, self)
-	emit_signal("attack_landed", float(dmg))
+	# Keep for VFX/SFX timing only. Do not apply damage here.
+	if debug_enabled:
+		_combat_log("anim_event_hit triggered (damage handled by Hitbox3D)")
 
 func take_hit(amount: int, source: Node = null) -> void:
 	if state == State.KO: return
@@ -1320,9 +1316,6 @@ func _on_died() -> void:
 	_attack_wish_until = 0.0
 	if animator and animator.has_method("play_ko"): animator.play_ko()
 
-func _on_animation_finished(_name: StringName) -> void:
-	if state in [State.ATTACKING, State.STAGGERED]:
-		state = State.IDLE
 
 # ----------------------------
 # PunchInput integration
@@ -1643,24 +1636,23 @@ func _end_rush(now: float) -> void:
 	_intent_until = now + standoff_pause_sec
 	_next_decision_at = _intent_until + _rng.randf_range(0.1, 0.3)
 
-# Activate our permanent Hitbox3D for this attack using the attack spec’s timing.
-# Optionally pass reach_override_m to force a specific reach for this attack.
+# ADD: Activate our permanent Hitbox3D using spec timing.
 func activate_hitbox_for_attack(attack_id: StringName, spec: Resource, impact_force: float, reach_override_m: float = -1.0) -> void:
 	if hitbox == null:
 		_combat_log("No Hitbox3D node under this character.")
 		return
-
-	# If you want to override reach per-attack (instead of spec reach_meters), uncomment:
+	# Optional per-attack reach override:
 	# if reach_override_m >= 0.0:
 	# 	hitbox.set_reach_meters(reach_override_m)
 
 	hitbox.attacker = self
 	hitbox.activate_for_attack(attack_id, spec, impact_force)
-	_combat_log("activate_hitbox: " + String(attack_id) + " force=" + str(impact_force))
+	_combat_log("activate_hitbox: %s force=%.2f" % [String(attack_id), impact_force])
 
 
+# REPLACE: thin adapter used by Hitbox3D; computes damage and forwards to take_hit.
 func apply_hit(attacker: Node, spec: Resource, impact_force: float) -> void:
-	# Safety: never hit self (Hitbox3D already guards, this is a second layer)
+	# Safety: never hit self (Hitbox3D also guards)
 	if attacker == self:
 		return
 

@@ -19,3 +19,10 @@ Fight Moves:
 	Punch Combo (Four Punch Combo)
 	Uppercut Jab (Uppercut Jab And Open Palm Strike Combo)
 	Back Flip To Uppercut (Back Flip to Uppercut Combo)
+
+Hit Moves:
+	Side Hit (Receiving A Hit In The Side)
+	Head Hit (Receiving A Medium Hit To The Head From A Straight Punch)
+	Hit To Body (Receiving A Body Hit By A Straight Punch)
+	Knocked Out (Knocked Out Falling To Back)
+	Receiving An Uppercut (Getting Hit By An Uppercut) - In Place (GOOD FOR BACKWARD STUMBLE ~ 0.5m)
