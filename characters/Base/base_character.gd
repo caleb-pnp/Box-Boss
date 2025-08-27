@@ -190,9 +190,17 @@ var _debug_accum: float = 0.0
 @export var hitstun_immunity_while_ko: bool = true
 @export var debug_combat: bool = true
 
+
 # Layers used by Hurtbox/Hitbox (must match scripts)
 const LAYER_HITBOX := 2
 const LAYER_HURTBOX := 3
+
+const ATTACK_QUEUE_TIMEOUT = 1.0 # seconds
+const ATTACK_RANGE = 2.0 # meters (example, set as needed)
+
+var attack_queue: Array = []         # Each element: { attack_id: ..., time: float }
+var is_in_range: bool = false
+
 
 # Set by Scene
 @onready var hurtbox: Hurtbox3D = $Hurtbox3D
@@ -203,6 +211,9 @@ var _punch_window: Array = []            # of { t: float, force: float, src: int
 var _combo_finalize_at: float = -1e9     # next time we should finalize due to inactivity
 var _window_dirty: bool = false          # new punches since last finalize
 var _last_punch_force: float = 0.0
+
+var _original_collision_layer: int
+var _original_collision_mask: int
 
 # Optional local debug helper (if you don't already have one)
 func _dbg(msg: String) -> void:
@@ -487,70 +498,94 @@ func is_alive() -> bool: return not is_knocked_out()
 # Core loop
 # ----------------------------
 func _physics_process(delta: float) -> void:
-	# Gravity
+	# 1. Gravity
 	if use_gravity:
-		if not is_on_floor(): velocity.y -= gravity * delta
-		else: velocity.y = 0.0
+		if not is_on_floor():
+			velocity.y -= gravity * delta
+		else:
+			velocity.y = 0.0
 	else:
 		velocity.y = 0.0
 
-	# PATCH: Apply knockback blending
+	# 2. Knockback (highest priority; blocks all other movement/AI)
 	if knockback_timer > 0.0:
 		knockback_timer -= delta
 		velocity.x = knockback_velocity.x
 		velocity.z = knockback_velocity.z
+		move_and_slide()
 		if knockback_timer <= 0.0:
 			knockback_velocity = Vector3.ZERO
+			collision_layer = _original_collision_layer
+			collision_mask = _original_collision_mask
+			_combat_log("DEBUG: Knockback collision restored: layer=%d, mask=%d" % [_original_collision_layer, _original_collision_mask])
+		return
 
-	# Handle stagger recovery
-	if state == State.STAGGERED:
-		if _now() >= _stagger_until:
-			state = State.IDLE
-		else:
-			velocity.x = 0.0
-			velocity.z = 0.0
-			move_and_slide()
-			if animator and animator.has_method("update_locomotion"):
-				animator.update_locomotion(Vector2.ZERO, 0.0)
-			_track_target_motion()
-			return
+	# 3. Move lock second priority (blocks all input/AI, except gravity)
+	if _move_locked_until > _now():
+		velocity.x = 0.0
+		velocity.z = 0.0
+		move_and_slide()
+		if animator and animator.has_method("update_locomotion"):
+			animator.update_locomotion(Vector2.ZERO, 0.0)
+		_track_target_motion()
+		return
 
-	# Gate by round state
+	# 4. KO or round end
 	if not round_active or state == State.KO:
 		velocity.x = 0.0
 		velocity.z = 0.0
 		move_and_slide()
-		if state != State.KO: state = State.IDLE
+		if state != State.KO:
+			state = State.IDLE
 		if animator and animator.has_method("update_locomotion"):
 			animator.update_locomotion(Vector2.ZERO, 0.0)
-		# Track target motion while idle too
 		_track_target_motion()
 		return
 
-	# Follow moving target
+	# 5. (Optional) Stagger state (uncomment if you want to handle it here)
+	# if state == State.STAGGERED:
+	# 	if _now() >= _stagger_until:
+	# 		state = State.IDLE
+	# 	else:
+	# 		velocity.x = 0.0
+	# 		velocity.z = 0.0
+	# 		move_and_slide()
+	# 		if animator and animator.has_method("update_locomotion"):
+	# 			animator.update_locomotion(Vector2.ZERO, 0.0)
+	# 		_track_target_motion()
+	# 		return
+
+	# 6. AI/autopilot/steering section
 	if agent and _has_target and _target_node:
 		var dest: Vector3 = _target_node.global_position
 		if nav_clamp_targets and _target_mode == TargetMode.MOVE:
 			dest = _nav_closest_on_map(dest)
 		agent.target_position = dest
 
-	# Auto-target
 	if auto_target_enabled:
 		var now_auto: float = _now()
 		var need_reacquire: bool = (not _has_target) or (not _is_valid_target(_target_node))
 		if need_reacquire and now_auto >= _autotarget_next_check_at:
 			_find_target_now()
 
-	# Autopilot intents
 	if use_agent_autopilot:
 		_update_autopilot_intents()
 
-	# Steering and velocity
+	# 7. Compute desired movement and rotation
 	var desired_move_dir_world: Vector3 = _compute_desired_world_direction()
-	_apply_rotation_towards_target_or_velocity(desired_move_dir_world, delta)
+
+	# Only rotate if not locked, knocked back, or staggered
+	if not (_move_locked_until > _now() or knockback_timer > 0.0 or state == State.STAGGERED):
+		_apply_rotation_towards_target_or_velocity(desired_move_dir_world, delta)
+
+	# 8. Clamp minimum distance if needed (add your logic here)
+	# var target_dist = (_target_node.global_position - global_position).length()
+	# if target_dist < MIN_DESIRED_DISTANCE:
+	# 	desired_move_dir_world = Vector3.ZERO
+
 	_apply_horizontal_velocity(desired_move_dir_world)
 
-	# Move
+	# 9. Move and update position
 	var prev_position: Vector3 = global_position
 	move_and_slide()
 	var delta_pos: Vector3 = global_position - prev_position
@@ -558,18 +593,14 @@ func _physics_process(delta: float) -> void:
 	if stats and moved_distance > 0.0 and stats.has_method("spend_movement"):
 		stats.spend_movement(moved_distance)
 
-	# Locomotion state
+	# 10. Update locomotion state
 	var measured_h_speed: float = Vector2(delta_pos.x, delta_pos.z).length() / max(delta, 1e-6)
 	state = State.MOVING if measured_h_speed > 0.1 else State.IDLE
 
-	# Combat
+	# 11. Combat and housekeeping
 	_handle_attack_intent()
 	_tick_attack_phase()
-
-	# Track approach/target angular speed for next tick decisions
 	_track_target_motion()
-
-	# Finalize any pending window if its gap elapsed
 	_finalize_attack_window_if_due()
 
 
@@ -1724,6 +1755,7 @@ func apply_hit(attacker: Node, spec: Resource, impact_force: float) -> void:
 		dir.y = 0.0
 		dir = dir.normalized()
 		var velocity = kb_m / max(kb_dur, 0.01)
+		_combat_log("DEBUG: knockback: kb_m=%.3f kb_dur=%.3f velocity=%.3f direction=%s" % [kb_m, kb_dur, velocity, str(dir)])
 		_apply_knockback(dir, velocity, kb_dur)
 		_combat_log("apply_hit: knockback " + str(kb_m) + "m over " + str(kb_dur) + "s")
 
@@ -1731,6 +1763,16 @@ func apply_hit(attacker: Node, spec: Resource, impact_force: float) -> void:
 func _apply_knockback(direction: Vector3, velocity: float, duration: float):
 	knockback_velocity = direction.normalized() * velocity
 	knockback_timer = duration
+	_combat_log("DEBUG: _apply_knockback: velocity=%s, duration=%.3f" % [str(knockback_velocity), duration])
+
+	 # Store original collision layers/masks
+	_original_collision_layer = collision_layer
+	_original_collision_mask = collision_mask
+
+	# Move to a non-fighter layer (e.g., layer 2) to avoid pushing attacker
+	collision_layer = 2
+	collision_mask = 2
+	_combat_log("DEBUG: Knockback collision swap: layer=2, mask=2")
 
 # Simple knockback; replace with your controller’s impulse if needed
 #func _apply_knockback(dir: Vector3, meters: float) -> void:
