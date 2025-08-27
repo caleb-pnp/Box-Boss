@@ -4,17 +4,18 @@ class_name CharacterAnimator
 @export_category("Model Root (Preferred)")
 @export var model_root_path: NodePath
 
-@export_category("State Machine States")
+@export_category("Base State Machine")
+@export var base_state_alive: StringName = &"Alive"
+@export var base_state_ko: StringName = &"Knocked Out"
+@export var locomotion_sm_name: StringName = &"Locomotion"  # Nested SM inside Alive
+
+@export_category("Locomotion States")
 @export var state_moving: StringName = &"Moving"
 @export var state_fighting: StringName = &"Fighting"
 
 @export_category("Locomotion Blend Params")
-@export var moving_blend_param: StringName = &"parameters/Moving/Move2D/blend_position"
-@export var fighting_blend_param: StringName = &"parameters/Fighting/Move2D/blend_position"
-
-@export_category("Optional Reacts")
-@export var hit_request_param: StringName = &""
-@export var ko_request_param: StringName = &""
+@export var moving_blend_param: StringName = &"parameters/Alive/Locomotion/Moving/blend_position"
+@export var fighting_blend_param: StringName = &"parameters/Alive/Locomotion/Fighting/blend_position"
 
 @export_category("Locomotion Mapping")
 @export var swap_xy: bool = false
@@ -29,7 +30,7 @@ class_name CharacterAnimator
 @export var locomotion_smoothing: float = 12.0
 
 @export_category("Optional Time Scale")
-@export var time_scale_param: StringName = &"parameters/Fighting/Move2DTimeScale/scale"
+@export var time_scale_param: StringName = &"parameters/Alive/Move2DTimeScale/scale"
 @export var min_time_scale: float = 0.1
 @export var max_time_scale: float = 1.5
 @export var move2d_timescale_threshold: float = 0.1
@@ -51,10 +52,17 @@ class_name CharacterAnimator
 @export var log_param_discovery: bool = true
 @export var debug_verbose: bool = false
 
+@export_category("Hit Reacts")
+@export var base_state_hit: StringName = &"Hit"
+@export var hit_substates: PackedStringArray = [&"Head Hit", &"Side Hit", &"Hit To Body"] # For normal hits
+@export var hit_uppercut_substate: StringName = &"Receiving An Uppercut" # For knockback only
+@export var hit_sm_name: StringName = &"Hit" # The nested state machine node for Hit inside base
+
 const DEFAULT_MODEL_NAME := "Model"
 
 var _tree: AnimationTree
-var _playback: AnimationNodeStateMachinePlayback
+var _playback_base: AnimationNodeStateMachinePlayback      # Base SM (Alive/Knocked Out/Hit)
+var _playback_locomotion: AnimationNodeStateMachinePlayback # Nested SM inside Alive (Moving/Fighting)
 var anim_player: AnimationPlayer
 var _fight_mode: bool = false
 
@@ -73,23 +81,35 @@ func _ready() -> void:
 # ------------ Stance control ------------
 func start_fight_stance() -> void:
 	_fight_mode = true
+	enter_alive() # ensure base is Alive when animating combat
 	_travel_to_current_stance()
 
 func end_fight_stance() -> void:
 	_fight_mode = false
+	enter_alive()
 	_travel_to_current_stance()
 
 func set_fight_stance(active: bool) -> void:
 	_fight_mode = active
+	enter_alive()
 	_travel_to_current_stance()
 
 func is_in_fight_stance() -> bool:
 	return _fight_mode
 
+# Ensure we are in Alive state on the Base SM
+func enter_alive() -> void:
+	if not _ensure_tree(): return
+	if _playback_base and _playback_base.get_current_node() != base_state_alive:
+		_playback_base.travel(base_state_alive)
+
 # ------------ Driving ------------
 func update_locomotion(local_move: Vector2, horizontal_speed: float) -> void:
 	if not _ensure_tree():
 		return
+
+	# Make sure we're on Alive while moving
+	enter_alive()
 
 	var v := local_move
 	if v.length() < input_deadzone:
@@ -149,17 +169,40 @@ func play_attack_id(id: StringName) -> void:
 	await _fire_oneshot(chosen)
 	_toggle_by_attack_id[spec.id] = not use_b
 
+# Normal hits: random substate
 func play_hit(_amount: int) -> void:
-	if not _ensure_tree() or hit_request_param == &"":
+	if not _ensure_tree():
 		return
-	if not _fight_mode:
-		start_fight_stance()
-	await _fire_oneshot(hit_request_param)
+	_abort_all_oneshots()
+	if _playback_base and _playback_base.get_current_node() != base_state_hit:
+		_playback_base.travel(base_state_hit)
+	var rand_idx := randi() % hit_substates.size()
+	var chosen_substate := hit_substates[rand_idx]
+	var hit_playback := _find_nested_playback(hit_sm_name)
+	if hit_playback and hit_playback.get_current_node() != chosen_substate:
+		hit_playback.travel(chosen_substate)
 
-func play_ko() -> void:
-	if not _ensure_tree() or ko_request_param == &"":
+func play_hit_react() -> void:
+	play_hit(0)
+
+# Special knockback/uppercut hit
+func play_knockback_react() -> void:
+	if not _ensure_tree():
 		return
-	await _fire_oneshot(ko_request_param)
+	_abort_all_oneshots()
+	if _playback_base and _playback_base.get_current_node() != base_state_hit:
+		_playback_base.travel(base_state_hit)
+	var hit_playback := _find_nested_playback(hit_sm_name)
+	if hit_playback and hit_playback.get_current_node() != hit_uppercut_substate:
+		hit_playback.travel(hit_uppercut_substate)
+
+# KO: travel Base SM to Knocked Out
+func play_ko() -> void:
+	if not _ensure_tree():
+		return
+	if _playback_base:
+		_playback_base.travel(base_state_ko)
+		return
 
 # ------------ Internals ------------
 func _ensure_blend_params() -> void:
@@ -178,7 +221,7 @@ func _ensure_blend_params() -> void:
 		var moving_candidates: Array[String] = []
 		var fighting_candidates: Array[String] = []
 		for name in _param_names:
-			if name.ends_with("/Move2D/blend_position"):
+			if name.ends_with("/blend_position"):
 				var lname := name.to_lower()
 				if lname.find("/moving/") >= 0:
 					moving_candidates.append(name)
@@ -190,7 +233,7 @@ func _ensure_blend_params() -> void:
 				found_moving = moving_candidates[0]
 			else:
 				for name in _param_names:
-					if name.ends_with("/Move2D/blend_position"):
+					if name.ends_with("/blend_position"):
 						found_moving = name
 						break
 
@@ -199,7 +242,7 @@ func _ensure_blend_params() -> void:
 				found_fighting = fighting_candidates[0]
 			else:
 				for name in _param_names:
-					if name.ends_with("/Move2D/blend_position"):
+					if name.ends_with("/blend_position"):
 						found_fighting = name
 						break
 
@@ -211,7 +254,6 @@ func _ensure_blend_params() -> void:
 	elif log_param_discovery and debug_verbose:
 		print_debug("[Animator] Blend params already valid: MOVING=", moving_blend_param, " FIGHTING=", fighting_blend_param)
 
-
 func _ensure_tree() -> bool:
 	if _tree:
 		return true
@@ -219,11 +261,11 @@ func _ensure_tree() -> bool:
 	return _tree != null
 
 func _travel_to_current_stance() -> void:
-	if not _playback:
+	if not _playback_locomotion:
 		return
 	var target := state_fighting if _fight_mode else state_moving
-	if _playback.get_current_node() != target:
-		_playback.travel(target)
+	if _playback_locomotion.get_current_node() != target:
+		_playback_locomotion.travel(target)
 
 func _set_vec2(path: StringName, v: Vector2) -> bool:
 	if path == &"" or not _tree: return false
@@ -250,8 +292,11 @@ func _resolve_anim_nodes() -> void:
 	anim_player = _find_animation_player(model_root)
 	if _tree:
 		_tree.active = true
-		_playback = _tree.get("parameters/playback") as AnimationNodeStateMachinePlayback
+		# Base playback: top-level StateMachine (Alive/Knocked Out/Hit)
+		_playback_base = _tree.get("parameters/playback") as AnimationNodeStateMachinePlayback
 		_cache_param_names()
+		# Nested Locomotion playback inside Alive
+		_playback_locomotion = _find_nested_playback(locomotion_sm_name)
 
 func _resolve_model_root() -> Node:
 	if model_root_path != NodePath(""):
@@ -313,7 +358,25 @@ func _param_exists(path: String) -> bool:
 		_cache_param_names()
 	return _param_names.has(path)
 
-# OneShot helper
+# Find a nested StateMachine playback property by name (e.g., "Locomotion")
+func _find_nested_playback(sm_name: StringName) -> AnimationNodeStateMachinePlayback:
+	if not _tree:
+		return null
+	if _param_names.is_empty():
+		_cache_param_names()
+	var needle := ("/" + String(sm_name).to_lower() + "/") as String
+	for name in _param_names:
+		if name.ends_with("/playback"):
+			var lname := name.to_lower()
+			if lname.find(needle) >= 0:
+				var pb := _tree.get(name) as AnimationNodeStateMachinePlayback
+				if pb:
+					if debug_enabled:
+						print_debug("[Animator] Found nested playback: ", name)
+					return pb
+	return null
+
+# OneShot helper (unchanged)
 func _fire_oneshot(req_param: StringName) -> void:
 	if req_param == &"" or not _tree: return
 	var req := String(req_param)
@@ -333,3 +396,11 @@ func _fire_oneshot(req_param: StringName) -> void:
 		var wait_s := (attack_restart_wait if attack_restart_wait > 0.0 else 0.06)
 		await get_tree().create_timer(wait_s).timeout
 	_tree.set(req, 1)
+
+# Abort all OneShots (for use when entering Hit state)
+func _abort_all_oneshots() -> void:
+	if not _tree:
+		return
+	for name in _param_names:
+		if name.ends_with("/active") and bool(_tree.get(name)):
+			_tree.set(name, false)

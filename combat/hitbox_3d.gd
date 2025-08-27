@@ -102,23 +102,19 @@ func set_reach_meters(reach_m: float) -> void:
 	_log("reach set -> size.z=" + str(reach_m) + " offset.z=" + str(xf.origin.z))
 
 # Configure from a spec WITHOUT replacing your shape.
-# Optional property: reach_meters (float)
-# Optional: rehit_interval_sec, max_rehits_per_target, active_start_sec, active_end_sec
+# Only property: reach_meters (float)
+# Optional: rehit_interval_sec, max_rehits_per_target
 func configure_from_spec(spec: Resource) -> void:
 	_spec = spec
 	if spec == null:
 		return
-	# If spec provides reach, apply it
-	var has_reach = spec.has_method("get") and spec.has_property("reach_meters")
-	if has_reach:
-		var r = spec.get("reach_meters")
-		if typeof(r) == TYPE_FLOAT or typeof(r) == TYPE_INT:
-			set_reach_meters(float(r))
+	if "reach_meters" in spec:
+		set_reach_meters(float(spec.reach_meters))
 	# Re-hit cadence
-	if spec.has_property("rehit_interval_sec"):
-		rehit_interval_sec = float(spec.get("rehit_interval_sec"))
-	if spec.has_property("max_rehits_per_target"):
-		max_rehits_per_target = int(spec.get("max_rehits_per_target"))
+	if "rehit_interval_sec" in spec:
+		rehit_interval_sec = float(spec.rehit_interval_sec)
+	if "max_rehits_per_target" in spec:
+		max_rehits_per_target = int(spec.max_rehits_per_target)
 
 # Activate using spec timing (if present), else immediately for duration if you call activate() directly.
 func activate_for_attack(attack_id: StringName, spec: Resource, impact_force: float) -> void:
@@ -129,10 +125,10 @@ func activate_for_attack(attack_id: StringName, spec: Resource, impact_force: fl
 	var start_off: float = 0.05
 	var end_off: float = 0.20
 	if spec != null:
-		if spec.has_property("active_start_sec"):
-			start_off = float(spec.get("active_start_sec"))
-		if spec.has_property("active_end_sec"):
-			end_off = float(spec.get("active_end_sec"))
+		if "active_start_sec" in spec:
+			start_off = float(spec.active_start_sec)
+		if "active_end_sec" in spec:
+			end_off = float(spec.active_end_sec)
 	var duration: float = max(0.0, end_off - start_off)
 	_activation_delay_sec = max(0.0, start_off)
 	_activation_duration_sec = duration
