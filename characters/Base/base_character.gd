@@ -306,6 +306,10 @@ var _intent_mag_y: float = 0.0
 var _last_combo_debug: String = ""
 var _last_force_select_debug: String = ""
 
+# PATCH: Knockback variables
+var knockback_velocity: Vector3 = Vector3.ZERO
+var knockback_timer: float = 0.0
+
 
 func _ready() -> void:
 	_rng.randomize()
@@ -488,6 +492,14 @@ func _physics_process(delta: float) -> void:
 		else: velocity.y = 0.0
 	else:
 		velocity.y = 0.0
+
+	# PATCH: Apply knockback blending
+	if knockback_timer > 0.0:
+		knockback_timer -= delta
+		velocity.x = knockback_velocity.x
+		velocity.z = knockback_velocity.z
+		if knockback_timer <= 0.0:
+			knockback_velocity = Vector3.ZERO
 
 	# Gate by round state
 	if not round_active or state == State.KO:
@@ -1686,22 +1698,32 @@ func apply_hit(attacker: Node, spec: Resource, impact_force: float) -> void:
 	# Route to your existing pipeline
 	take_hit(int(round(dmg)), attacker)
 
-	# Optional per-hit knockback
-	var kb_m: float = float(_spec_val(spec, &"knockback_meters", 0.0))
-	if kb_m > 0.0 and attacker is Node3D and self is Node3D:
-		var dir: Vector3 = ((self as Node3D).global_transform.origin - (attacker as Node3D).global_transform.origin).normalized()
-		_apply_knockback(dir, kb_m)
-		_combat_log("apply_hit: knockback " + str(kb_m) + "m")
+	if animator and animator.has_method("cancel_attack_oneshot"):
+		animator.cancel_attack_oneshot()
 
+	var kb_m: float = float(_spec_val(spec, &"knockback_meters", 0.0))
+	var kb_dur: float = float(_spec_val(spec, &"knockback_duration_sec", knockback_duration_sec))
+	if kb_m > 0.0 and attacker is Node3D and self is Node3D:
+		var dir: Vector3 = ((self as Node3D).global_transform.origin - (attacker as Node3D).global_transform.origin)
+		dir.y = 0.0
+		dir = dir.normalized()
+		var velocity = kb_m / max(kb_dur, 0.01)
+		_apply_knockback(dir, velocity, kb_dur)
+		_combat_log("apply_hit: knockback " + str(kb_m) + "m over " + str(kb_dur) + "s")
+
+
+func _apply_knockback(direction: Vector3, velocity: float, duration: float):
+	knockback_velocity = direction.normalized() * velocity
+	knockback_timer = duration
 
 # Simple knockback; replace with your controller’s impulse if needed
-func _apply_knockback(dir: Vector3, meters: float) -> void:
-	if meters <= 0.0: return
-	if not (self is Node3D): return
-	var start_pos: Vector3 = (self as Node3D).global_transform.origin
-	var end_pos: Vector3 = start_pos + dir * meters
-	var tw := create_tween()
-	tw.tween_property(self, "global_position", end_pos, knockback_duration_sec).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+#func _apply_knockback(dir: Vector3, meters: float) -> void:
+	#if meters <= 0.0: return
+	#if not (self is Node3D): return
+	#var start_pos: Vector3 = (self as Node3D).global_transform.origin
+	#var end_pos: Vector3 = start_pos + dir * meters
+	#var tw := create_tween()
+	#tw.tween_property(self, "global_position", end_pos, knockback_duration_sec).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
 
 # Safe getter for Resource properties (Object.get has no default param)
 func _spec_val(s: Resource, prop: StringName, fallback):

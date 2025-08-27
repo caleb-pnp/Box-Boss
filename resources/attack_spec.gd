@@ -40,6 +40,7 @@ class_name AttackSpec
 @export var max_damage: float = 25.0
 @export var stagger_sec: float = 0.2
 @export var knockback_meters: float = 0.5
+@export var knockback_duration_sec: float = 0.5
 
 @export_category("Hitbox Timing")
 @export var active_start_sec: float = 0.25 # when the hitbox becomes active in the attack

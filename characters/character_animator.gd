@@ -204,6 +204,9 @@ func play_ko() -> void:
 		_playback_base.travel(base_state_ko)
 		return
 
+func cancel_attack_oneshot():
+	_abort_all_oneshots()
+
 # ------------ Internals ------------
 func _ensure_blend_params() -> void:
 	if not _tree:
