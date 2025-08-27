@@ -309,6 +309,7 @@ var _last_force_select_debug: String = ""
 # PATCH: Knockback variables
 var knockback_velocity: Vector3 = Vector3.ZERO
 var knockback_timer: float = 0.0
+var _stagger_until: float = -1.0
 
 
 func _ready() -> void:
@@ -500,6 +501,19 @@ func _physics_process(delta: float) -> void:
 		velocity.z = knockback_velocity.z
 		if knockback_timer <= 0.0:
 			knockback_velocity = Vector3.ZERO
+
+	# Handle stagger recovery
+	if state == State.STAGGERED:
+		if _now() >= _stagger_until:
+			state = State.IDLE
+		else:
+			velocity.x = 0.0
+			velocity.z = 0.0
+			move_and_slide()
+			if animator and animator.has_method("update_locomotion"):
+				animator.update_locomotion(Vector2.ZERO, 0.0)
+			_track_target_motion()
+			return
 
 	# Gate by round state
 	if not round_active or state == State.KO:
@@ -1277,7 +1291,7 @@ func anim_event_hit() -> void:
 	if debug_enabled:
 		_combat_log("anim_event_hit triggered (damage handled by Hitbox3D)")
 
-func take_hit(amount: int, source: Node = null) -> void:
+func take_hit(amount: int, source: Node = null, stagger_duration: float = 0.2) -> void:
 	if state == State.KO: return
 	if source and source is BaseCharacter and source != self:
 		_last_aggressor = source as BaseCharacter
@@ -1295,6 +1309,8 @@ func take_hit(amount: int, source: Node = null) -> void:
 	emit_signal("took_hit", amount)
 	if animator and animator.has_method("play_hit"): animator.play_hit(amount)
 	state = State.STAGGERED
+	_stagger_until = now + stagger_duration
+
 	_attack_phase = AttackPhase.NONE
 	_attack_phase_until = 0.0
 	_move_locked_until = 0.0
@@ -1695,8 +1711,8 @@ func apply_hit(attacker: Node, spec: Resource, impact_force: float) -> void:
 	else:
 		_combat_log("apply_hit: base dmg " + str(dmg))
 
-	# Route to your existing pipeline
-	take_hit(int(round(dmg)), attacker)
+	var stagger_sec: float = float(_spec_val(spec, &"stagger_sec", 0.2)) # fallback if not present
+	take_hit(int(round(dmg)), attacker, stagger_sec)
 
 	if animator and animator.has_method("cancel_attack_oneshot"):
 		animator.cancel_attack_oneshot()
