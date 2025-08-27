@@ -195,12 +195,6 @@ var _debug_accum: float = 0.0
 const LAYER_HITBOX := 2
 const LAYER_HURTBOX := 3
 
-const ATTACK_QUEUE_TIMEOUT = 1.0 # seconds
-const ATTACK_RANGE = 2.0 # meters (example, set as needed)
-
-var attack_queue: Array = []         # Each element: { attack_id: ..., time: float }
-var is_in_range: bool = false
-
 
 # Set by Scene
 @onready var hurtbox: Hurtbox3D = $Hurtbox3D

@@ -31,6 +31,6 @@ knockback_meters = 0.1
 knockback_duration_sec = 0.05
 active_start_sec = 0.8
 active_end_sec = 2.8
-rehit_interval_sec = 0.25
+rehit_interval_sec = 0.24
 max_rehits_per_target = 4
 metadata/_custom_type_script = "uid://by7hw7yjeft1c"
