@@ -169,32 +169,30 @@ func play_attack_id(id: StringName) -> void:
 	await _fire_oneshot(chosen)
 	_toggle_by_attack_id[spec.id] = not use_b
 
-# Normal hits: random substate
-func play_hit(_amount: int) -> void:
+# Play a hit animation by type: "head", "side", "body", or "uppercut"
+func play_hit(hit_type: String) -> void:
 	if not _ensure_tree():
 		return
 	_abort_all_oneshots()
 	if _playback_base and _playback_base.get_current_node() != base_state_hit:
 		_playback_base.travel(base_state_hit)
-	var rand_idx := randi() % hit_substates.size()
-	var chosen_substate := hit_substates[rand_idx]
 	var hit_playback := _find_nested_playback(hit_sm_name)
+	var chosen_substate := ""
+	match hit_type:
+		"head":
+			chosen_substate = "Head Hit"
+		"side":
+			chosen_substate = "Side Hit"
+		"body":
+			chosen_substate = "Hit To Body"
+		"uppercut":
+			chosen_substate = String(hit_uppercut_substate)
+		_:
+			chosen_substate = "Hit To Body"
 	if hit_playback and hit_playback.get_current_node() != chosen_substate:
 		hit_playback.travel(chosen_substate)
-
-func play_hit_react() -> void:
-	play_hit(0)
-
-# Special knockback/uppercut hit
-func play_knockback_react() -> void:
-	if not _ensure_tree():
-		return
-	_abort_all_oneshots()
-	if _playback_base and _playback_base.get_current_node() != base_state_hit:
-		_playback_base.travel(base_state_hit)
-	var hit_playback := _find_nested_playback(hit_sm_name)
-	if hit_playback and hit_playback.get_current_node() != hit_uppercut_substate:
-		hit_playback.travel(hit_uppercut_substate)
+	if debug_enabled:
+		print("[CharacterAnimator] play_hit: type=%s, substate=%s" % [hit_type, chosen_substate])
 
 # KO: travel Base SM to Knocked Out
 func play_ko() -> void:

@@ -212,6 +212,7 @@ const LAYER_HURTBOX := 3
 
 # --- Attack Queue ---
 var _attack_queue: Array = []
+var _current_attack: Dictionary = {}   # <-- Add this line
 
 # Set by Scene
 var _original_collision_layer: int
@@ -386,6 +387,7 @@ func queue_attack(attack_id: StringName) -> void:
 	_cleanup_attack_queue(now)
 	if debug_enabled:
 		print("[AttackQueue] Queued attack id=", String(attack_id), " at ", str(now), " (queue size=", str(_attack_queue.size()), ")")
+		print("[AttackQueue] Current queue: ", _attack_queue)
 
 func request_attack_id(id: StringName) -> void:
 	queue_attack(id)
@@ -403,6 +405,7 @@ func _cleanup_attack_queue(now: float) -> void:
 
 func _clear_attack_queue() -> void:
 	_attack_queue.clear()
+	_current_attack = {}
 
 # ----------------------------
 # Targeting / Stance
@@ -497,6 +500,12 @@ func _physics_process(delta: float) -> void:
 			_combat_log("DEBUG: Knockback collision restored: layer=%d, mask=%d" % [_original_collision_layer, _original_collision_mask])
 		return
 
+	if _stagger_until > _now():
+		velocity.x = 0.0
+		velocity.z = 0.0
+		move_and_slide()
+		return
+
 	# 3. Move lock second priority (blocks all input/AI, except gravity)
 	if _move_locked_until > _now():
 		velocity.x = 0.0
@@ -579,9 +588,10 @@ func _physics_process(delta: float) -> void:
 func _process_attack_queue() -> void:
 	if state == State.KO or not round_active:
 		return
-	if _attack_phase != AttackPhase.NONE:
-		return # Already attacking or busy
-
+	if _attack_phase == AttackPhase.SWING:
+		return # Only block if actually swinging
+	if _current_attack:  # Already working on an attack
+		return
 	if _attack_queue.is_empty():
 		return
 
@@ -590,19 +600,41 @@ func _process_attack_queue() -> void:
 	if _attack_queue.is_empty():
 		return
 
-	var next = _attack_queue[0]
-	var id: StringName = next["id"]
+	# Always pop the next attack and set as current
+	_current_attack = _attack_queue.pop_front()
+	if debug_enabled:
+		print("[AttackQueue] Popped attack for processing: ", _current_attack)
+
+	var id: StringName = _current_attack["id"]
+	var queued_at := float(_current_attack["queued_at"])
+	var age := now - queued_at
+	var is_last = (_attack_queue.size() == 0)  # Already popped
+
+	# Drop if not last and too old (shouldn't happen, but for safety)
+	if not is_last and age > 1.0:
+		if debug_enabled:
+			print("[AttackQueue] Dropping stale attack (id=", String(id), "), age=", str(age), "s (>1.0s) -- not last in queue.")
+		_current_attack = {}
+		return
+
 	var spec = attack_library.get_spec(id)
 	if spec == null:
-		_attack_queue.pop_front()
+		if debug_enabled:
+			print("[AttackQueue] Dropping attack (id=", String(id), ") -- no spec found.")
+		_current_attack = {}
 		return
 
 	var last_time: float = float(_last_attack_time_by_id.get(id, -1000.0))
 	if now - last_time < max(0.0, spec.cooldown_sec):
-		_attack_queue.pop_front()
+		if debug_enabled:
+			print("[AttackQueue] Dropping attack (id=", String(id), ") -- still in cooldown (", str(now - last_time), "s < ", str(spec.cooldown_sec), "s)")
+		_current_attack = {}
 		return
 
 	if not _has_target:
+		if debug_enabled:
+			print("[AttackQueue] No target, cannot process attack.")
+		_current_attack = {}
 		return
 
 	var d2t: float = distance_to_target()
@@ -612,30 +644,38 @@ func _process_attack_queue() -> void:
 
 	if lower > 0.0:
 		if d2t < (lower - eps):
+			if debug_enabled:
+				print("[AttackQueue] REPOSITION for attack (id=", String(id), "), d2t=", str(d2t), " < lower=", str(lower - eps))
 			_attack_phase = AttackPhase.REPOSITION
 			_attack_spec_current = spec
 			_attack_id_current = id
 			return
 		elif d2t > (upper + eps):
+			if debug_enabled:
+				print("[AttackQueue] APPROACH for attack (id=", String(id), "), d2t=", str(d2t), " > upper=", str(upper + eps))
 			_attack_phase = AttackPhase.APPROACH
 			_attack_spec_current = spec
 			_attack_id_current = id
 			return
 		else:
+			if debug_enabled:
+				print("[AttackQueue] Launching attack (id=", String(id), ") at distance=", str(d2t))
 			_attack_cat_current = &""
 			_start_swing(spec, id, now)
-			_attack_queue.pop_front()
 			return
 	else:
 		if d2t > (upper + eps):
+			if debug_enabled:
+				print("[AttackQueue] APPROACH for attack (id=", String(id), "), d2t=", str(d2t), " > upper=", str(upper + eps))
 			_attack_phase = AttackPhase.APPROACH
 			_attack_spec_current = spec
 			_attack_id_current = id
 			return
 		else:
+			if debug_enabled:
+				print("[AttackQueue] Launching attack (id=", String(id), ") at distance=", str(d2t))
 			_attack_cat_current = &""
 			_start_swing(spec, id, now)
-			_attack_queue.pop_front()
 			return
 
 func _tick_attack_phase() -> void:
@@ -674,6 +714,8 @@ func _tick_attack_phase() -> void:
 				_attack_cat_current = &""
 				_punch_force_current = 0.0
 				_post_swing_until = now + max(0.0, post_swing_backstep_sec)
+				_current_attack = {}  # <-- Clear after swing!
+
 
 func _start_swing(spec, id: StringName, now: float) -> void:
 	_attack_spec_current = spec
@@ -733,6 +775,10 @@ func take_hit(amount: int, source: Node = null, stagger_duration: float = 0.2) -
 	_punch_force_current = 0.0
 	_post_swing_until = 0.0
 	_clear_attack_queue()
+
+	intents["move_local"] = Vector2.ZERO
+	intents["run"] = false
+	intents["retreat"] = false
 
 func _on_health_changed(current: int, _max: int) -> void:
 	if current <= 0: _on_died()

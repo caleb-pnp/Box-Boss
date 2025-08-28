@@ -5,31 +5,76 @@ class_name Hitbox3D
 const LAYER_HITBOX := 2
 const LAYER_HURTBOX := 3
 
-@export var attacker: Node = null                 # BaseCharacter
+@export var attacker: Node = null
 @export var debug_hitbox: bool = true
 @export var rehit_interval_sec: float = 0.25
 @export var max_rehits_per_target: int = 4
-@export var disable_shape_when_inactive: bool = true  # set false to always see the shape in Debug -> Visible Collision Shapes
+@export var disable_shape_when_inactive: bool = true
 
-# Active window control
+# --- Public API ---
+func activate_for_attack(attack_id: StringName, spec: Resource, impact_force: float) -> void:
+	_attack_id = attack_id
+	_impact_force = impact_force
+	configure_from_spec(spec)
+	var start_off: float = 0.05
+	var end_off: float = 0.20
+	if spec != null:
+		if "active_start_sec" in spec:
+			start_off = float(spec.active_start_sec)
+		if "active_end_sec" in spec:
+			end_off = float(spec.active_end_sec)
+	var duration: float = max(0.0, end_off - start_off)
+	_activation_delay_sec = max(0.0, start_off)
+	_activation_duration_sec = duration
+	_log("schedule activate: start_off=" + str(_activation_delay_sec) + " duration=" + str(_activation_duration_sec))
+	_timer_activate.start(_activation_delay_sec)
+
+func deactivate() -> void:
+	_active = false
+	monitoring = false
+	_set_shape_disabled(true)
+	_log("DEACTIVATE")
+
+func configure_from_spec(spec: Resource) -> void:
+	_spec = spec
+	if spec == null:
+		return
+	if "reach_meters" in spec:
+		set_reach_meters(float(spec.reach_meters))
+	if "rehit_interval_sec" in spec:
+		rehit_interval_sec = float(spec.rehit_interval_sec)
+	if "max_rehits_per_target" in spec:
+		max_rehits_per_target = int(spec.max_rehits_per_target)
+
+func set_reach_meters(reach_m: float) -> void:
+	if _shape_cs == null:
+		_find_predefined_shape()
+	if _shape_cs == null:
+		return
+	if _box == null:
+		_log("set_reach_meters skipped (shape is not BoxShape3D)")
+		return
+	reach_m = max(0.0, reach_m)
+	var s: Vector3 = _box.size
+	s.z = reach_m
+	_box.size = s
+	var xf := _shape_cs.transform
+	xf.origin.z = -reach_m * 0.5
+	_shape_cs.transform = xf
+	_log("reach set -> size.z=" + str(reach_m) + " offset.z=" + str(xf.origin.z))
+
+# --- Internal/Private (unchanged from your version) ---
+
 var _active: bool = false
 var _active_until: float = 0.0
 var _activation_delay_sec: float = 0.0
 var _activation_duration_sec: float = 0.0
-
-# Re-hit tracking
 var _rehit_next_time: Dictionary = {}
 var _rehit_count: Dictionary = {}
-
-# Current attack info
 var _attack_id: StringName = &""
 var _spec: Resource = null
 var _impact_force: float = 0.0
-
-# Timer
 var _timer_activate: Timer = null
-
-# Predefined shape references (do NOT create/replace; we only read/modify)
 var _shape_cs: CollisionShape3D = null
 var _box: BoxShape3D = null
 
@@ -45,22 +90,15 @@ func _ready() -> void:
 	monitorable = true
 	set_collision_layer_value(LAYER_HITBOX, true)
 	set_collision_mask_value(LAYER_HURTBOX, true)
-
 	_find_predefined_shape()
-
-	# Signals
 	connect("area_entered", Callable(self, "_on_area_entered"))
-
-	# Activation timer
 	_timer_activate = Timer.new()
 	_timer_activate.one_shot = true
 	add_child(_timer_activate)
 	_timer_activate.connect("timeout", Callable(self, "_on_activation_timer_timeout"))
-
 	set_physics_process(true)
 	_log("ready()")
 
-# Locate the existing CollisionShape3D and BoxShape3D set in the editor
 func _find_predefined_shape() -> void:
 	_shape_cs = null
 	_box = null
@@ -71,72 +109,11 @@ func _find_predefined_shape() -> void:
 	if _shape_cs == null:
 		_log("WARNING: No CollisionShape3D child found; cannot collide.")
 		return
-	# We do NOT replace the shape; we only adjust if it's a box
 	if _shape_cs.shape is BoxShape3D:
 		_box = _shape_cs.shape
 	else:
 		_log("Note: CollisionShape3D is not a BoxShape3D; reach resizing will be skipped.")
 
-# Public API
-
-# Set reach in meters by adjusting only the Z size and Z offset.
-# Model faces -Z, so we push origin.z = -reach/2.
-func set_reach_meters(reach_m: float) -> void:
-	if _shape_cs == null:
-		_find_predefined_shape()
-	if _shape_cs == null:
-		return
-	if _box == null:
-		# Shape is not a BoxShape3D; cannot adjust size.z cleanly
-		_log("set_reach_meters skipped (shape is not BoxShape3D)")
-		return
-	reach_m = max(0.0, reach_m)
-	# Adjust Z size, preserve X/Y
-	var s: Vector3 = _box.size
-	s.z = reach_m
-	_box.size = s
-	# Center in front of the character along -Z by half the reach
-	var xf := _shape_cs.transform
-	xf.origin.z = -reach_m * 0.5
-	_shape_cs.transform = xf
-	_log("reach set -> size.z=" + str(reach_m) + " offset.z=" + str(xf.origin.z))
-
-# Configure from a spec WITHOUT replacing your shape.
-# Only property: reach_meters (float)
-# Optional: rehit_interval_sec, max_rehits_per_target
-func configure_from_spec(spec: Resource) -> void:
-	_spec = spec
-	if spec == null:
-		return
-	if "reach_meters" in spec:
-		set_reach_meters(float(spec.reach_meters))
-	# Re-hit cadence
-	if "rehit_interval_sec" in spec:
-		rehit_interval_sec = float(spec.rehit_interval_sec)
-	if "max_rehits_per_target" in spec:
-		max_rehits_per_target = int(spec.max_rehits_per_target)
-
-# Activate using spec timing (if present), else immediately for duration if you call activate() directly.
-func activate_for_attack(attack_id: StringName, spec: Resource, impact_force: float) -> void:
-	_attack_id = attack_id
-	_impact_force = impact_force
-	configure_from_spec(spec)
-
-	var start_off: float = 0.05
-	var end_off: float = 0.20
-	if spec != null:
-		if "active_start_sec" in spec:
-			start_off = float(spec.active_start_sec)
-		if "active_end_sec" in spec:
-			end_off = float(spec.active_end_sec)
-	var duration: float = max(0.0, end_off - start_off)
-	_activation_delay_sec = max(0.0, start_off)
-	_activation_duration_sec = duration
-
-	_log("schedule activate: start_off=" + str(_activation_delay_sec) + " duration=" + str(_activation_duration_sec))
-	_timer_activate.start(_activation_delay_sec)
-
-# Immediate activation for a given duration (seconds)
 func activate(duration_sec: float) -> void:
 	var now_time: float = Time.get_ticks_msec() / 1000.0
 	_active = true
@@ -147,14 +124,6 @@ func activate(duration_sec: float) -> void:
 	_rehit_count.clear()
 	_log("ACTIVATE for " + str(duration_sec) + "s (until " + str(_active_until) + ")")
 
-func deactivate() -> void:
-	_active = false
-	monitoring = false
-	_set_shape_disabled(true)
-	_log("DEACTIVATE")
-
-# Internals
-
 func _physics_process(delta: float) -> void:
 	if not _active:
 		return
@@ -162,14 +131,11 @@ func _physics_process(delta: float) -> void:
 	if now_time >= _active_until:
 		deactivate()
 		return
-
-	# Poll overlaps to allow periodic re-hits
 	var areas := get_overlapping_areas()
 	for area in areas:
 		var hb := area as Hurtbox3D
 		if hb == null or hb.owner_character == null:
 			continue
-		# Prevent self-hits
 		if attacker != null and hb.owner_character == attacker:
 			continue
 		_try_apply_hit(hb.owner_character, now_time)
@@ -180,7 +146,6 @@ func _on_area_entered(area: Area3D) -> void:
 	var hb := area as Hurtbox3D
 	if hb == null or hb.owner_character == null:
 		return
-	# Prevent self-hits
 	if attacker != null and hb.owner_character == attacker:
 		return
 	_try_apply_hit(hb.owner_character, Time.get_ticks_msec() / 1000.0)
@@ -191,18 +156,15 @@ func _try_apply_hit(target: Node, now_time: float) -> void:
 	var key := target.get_instance_id()
 	var next_ok: float = float(_rehit_next_time.get(key, -1.0))
 	var count: int = int(_rehit_count.get(key, 0))
-
 	if count >= max_rehits_per_target:
 		return
 	if next_ok >= 0.0 and now_time < next_ok:
 		return
-
 	_rehit_next_time[key] = now_time + rehit_interval_sec
 	_rehit_count[key] = count + 1
-
-	if target.has_method("apply_hit"):
+	if target.has_method("receive_hit"):
 		_log("HIT -> " + str(target.get_path()) + " #" + str(_rehit_count[key]) + " force=" + str(_impact_force))
-		target.apply_hit(attacker, _spec, _impact_force)
+		target.receive_hit(attacker, _spec, _impact_force)
 	else:
 		_log("target missing apply_hit(attacker, spec, force)")
 

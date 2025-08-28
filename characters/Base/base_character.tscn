@@ -1,8 +1,11 @@
-[gd_scene load_steps=9 format=3 uid="uid://crdju1xafvwgj"]
+[gd_scene load_steps=12 format=3 uid="uid://crdju1xafvwgj"]
 
-[ext_resource type="Script" uid="uid://utgjnyop5hmp" path="res://characters/Base/base_character.gd" id="1_5df2l"]
+[ext_resource type="Script" uid="uid://chatckygpl4ay" path="res://characters/base_character.gd" id="1_sdmlt"]
 [ext_resource type="Script" uid="uid://2xg8b3kkqhxc" path="res://characters/character_animator.gd" id="2_drka6"]
+[ext_resource type="Script" uid="uid://vnjjlcep1gmi" path="res://characters/controllers/auto_move_controller.gd" id="3_sdmlt"]
 [ext_resource type="Script" uid="uid://dj4cf7yitoal3" path="res://combat/hurtbox_3d.gd" id="4_4ts41"]
+[ext_resource type="Script" uid="uid://bmr1twj8sqwal" path="res://characters/controllers/combat_controller.gd" id="4_k7a2e"]
+[ext_resource type="Script" uid="uid://ctf25tsys30i3" path="res://characters/controllers/hit_response_controller.gd" id="5_5df2l"]
 [ext_resource type="Script" uid="uid://bpftxo20renih" path="res://combat/hitbox_3d.gd" id="5_q1v0g"]
 [ext_resource type="Script" uid="uid://cnm60jtnrmltc" path="res://characters/stats.gd" id="11_a2t2k"]
 
@@ -17,7 +20,7 @@ height = 1.6
 size = Vector3(0.8, 1.6, 1.5)
 
 [node name="BaseCharacter" type="CharacterBody3D" groups=["base_character"]]
-script = ExtResource("1_5df2l")
+script = ExtResource("1_sdmlt")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_k7a2e")
@@ -29,6 +32,15 @@ shape = SubResource("CapsuleShape3D_k7a2e")
 [node name="CharacterAnimator" type="Node" parent="."]
 script = ExtResource("2_drka6")
 model_root_path = NodePath("../Model")
+
+[node name="AutoMoveController" type="Node" parent="."]
+script = ExtResource("3_sdmlt")
+
+[node name="CombatController" type="Node" parent="."]
+script = ExtResource("4_k7a2e")
+
+[node name="HitResponseController" type="Node" parent="."]
+script = ExtResource("5_5df2l")
 
 [node name="Stats" type="Node" parent="."]
 script = ExtResource("11_a2t2k")

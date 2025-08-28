@@ -5,7 +5,7 @@ class_name PreFightController
 @export var set_select_sec: float = 5
 @export var mode_select_sec: float = 5
 @export var map_select_sec: float = 5
-@export var summary_sec: float = 5
+@export var summary_sec: float = 1
 
 @export var boxer_library: BoxerLibrary = preload("res://data/BoxerLibrary.tres")
 @export var attack_set_library: AttackSetLibrary = preload("res://data/AttackSetLibrary.tres")

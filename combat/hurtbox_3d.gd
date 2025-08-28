@@ -4,7 +4,8 @@ class_name Hurtbox3D
 @export var owner_character: Node = null
 @export var debug_hurtbox: bool = true
 
-# Layers: must match Hitbox3D
+signal hit_received(attacker, spec, impact_force)
+
 const LAYER_HITBOX := 2
 const LAYER_HURTBOX := 3
 
@@ -20,8 +21,6 @@ func _ready() -> void:
 	monitorable = true
 	set_collision_layer_value(LAYER_HURTBOX, true)
 	set_collision_mask_value(LAYER_HITBOX, true)
-
-	# Warn if no shape
 	var has_shape := false
 	for c in get_children():
 		if c is CollisionShape3D:
@@ -30,3 +29,8 @@ func _ready() -> void:
 	if not has_shape:
 		_log("WARNING: No CollisionShape3D. Add one so this can be hit.")
 	_log("ready() layer(HURTBOX)=" + str(get_collision_layer_value(LAYER_HURTBOX)) + " mask(HITBOX)=" + str(get_collision_mask_value(LAYER_HITBOX)) + " monitoring=" + str(monitoring))
+
+# Called by Hitbox3D when a hit is detected
+func receive_hit(attacker, spec, impact_force) -> void:
+	_log("receive_hit: emitting hit_received")
+	emit_signal("hit_received", attacker, spec, impact_force)
