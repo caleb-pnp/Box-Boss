@@ -16,6 +16,7 @@ var target_node: Node3D = null
 var target_point: Vector3 = Vector3.ZERO
 var has_target: bool = false
 var target_mode: int = TargetMode.NONE
+var move_locked: bool = false
 
 var agent: NavigationAgent3D = null
 var stats: Node = null
@@ -91,6 +92,13 @@ func _physics_process(delta):
 			_dbg("_physics_process: KO")
 			pass
 
+	if move_locked:
+		# Optionally, stop movement here too
+		velocity.x = 0
+		velocity.z = 0
+		move_and_slide()
+		return
+
 	move_and_slide()
 
 # When Punch Received, Forward to Controller
@@ -124,6 +132,8 @@ func on_attack_finished():
 ## ---- MOVEMENT PUBLIC FUNCTIONS -----
 # Move in a direction (local or world), with a speed scale (0..1), and pose/stance
 func move_direction(local_dir: Vector2, speed_scale: float = 1.0, fighting_pose: bool = true) -> void:
+	if move_locked:
+		return
 	_dbg("move_direction: local_dir=%s, speed_scale=%.2f, fighting_pose=%s" % [str(local_dir), speed_scale, str(fighting_pose)])
 	var forward: Vector3 = -global_transform.basis.z
 	var right: Vector3 = global_transform.basis.x
@@ -142,6 +152,8 @@ func move_direction(local_dir: Vector2, speed_scale: float = 1.0, fighting_pose:
 
 # Move toward a world point, with speed scale and pose
 func move_towards_point(target: Vector3, speed_scale: float = 1.0, fighting_pose: bool = true) -> void:
+	if move_locked:
+		return
 	_dbg("move_towards_point: target=%s, speed_scale=%.2f, fighting_pose=%s" % [str(target), speed_scale, str(fighting_pose)])
 	var to_target = target - global_position
 	to_target.y = 0.0
@@ -155,6 +167,8 @@ func move_towards_point(target: Vector3, speed_scale: float = 1.0, fighting_pose
 
 # Strafe around a point (positive x = right, negative x = left), with speed scale and pose
 func strafe_around_point(target: Vector3, strafe_dir: float, speed_scale: float = 1.0, fighting_pose: bool = true) -> void:
+	if move_locked:
+		return
 	_dbg("strafe_around_point: target=%s, strafe_dir=%.2f, speed_scale=%.2f, fighting_pose=%s" % [str(target), strafe_dir, speed_scale, str(fighting_pose)])
 	var to_target = target - global_position
 	to_target.y = 0.0
@@ -173,6 +187,12 @@ func stop_movement() -> void:
 	_dbg("stop_movement: velocity set to zero")
 	velocity.x = 0.0
 	velocity.z = 0.0
+	if animator and animator.has_method("update_locomotion"):
+		animator.update_locomotion(Vector2.ZERO, 0.0)
+
+func smooth_stop():
+	velocity = velocity.lerp(Vector3.ZERO, 0.2) # 0.2 is smoothing factor, adjust as needed
+	move_and_slide()
 	if animator and animator.has_method("update_locomotion"):
 		animator.update_locomotion(Vector2.ZERO, 0.0)
 

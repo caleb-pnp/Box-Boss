@@ -2,8 +2,9 @@ extends Node
 class_name CombatController
 
 @export var max_attack_setup_time: float = 5.0
-@export var combo_close_window_time: float = 1.0
+@export var combo_close_window_time: float = 0.5
 @export var combo_close_window_max_time: float = 5.0
+@export var combo_close_window_extension_time: float = 0.3
 @export var retreat_buffer: float = 0.15
 
 var character: BaseCharacter = null
@@ -16,14 +17,16 @@ var setup_start_time: float = 0.0
 var setup_window_attacks: Array = []
 var setup_window_open: bool = false
 var setup_window_close_time: float = 0.0
-var setup_option: String = "fixed" # "fixed", "closing", "instant"
+var setup_window_last_attack_time: float = 0.0
+var setup_option: String = "instant" # "fixed", "closing", "instant", "sliding"
 
 # --- Attack Phases ---
 enum Phase { NONE, SETUP, SWING, POST_SWING, RETREAT, REPOSITION }
 var phase: int = Phase.NONE
 var phase_until: float = 0.0
 
-var debug_enabled: bool = true
+var debug_enabled: bool = false
+var debug_combos: bool = false
 
 
 func reset() -> void:
@@ -65,15 +68,16 @@ func handle_punch(source_id: int, force: float) -> void:
 	var attack_id: StringName = _select_attack_by_force_from_set(force)
 	if String(attack_id) != "":
 		_log("CombatController: Queued attack from punch input: %s (force=%.2f)" % [String(attack_id), force])
-		queue_attack(attack_id)
+		queue_attack(attack_id, force)
 
-func queue_attack(attack_id: StringName) -> void:
+func queue_attack(attack_id: StringName, force: float = 0.0) -> void:
 	if String(attack_id) == "":
 		return
 	var now := _now()
-	attack_queue.append({ "id": attack_id, "queued_at": now })
+	var entry = { "id": attack_id, "queued_at": now, "force": force }
+	attack_queue.append(entry)
 	if setup_window_open:
-		setup_window_attacks.append({ "id": attack_id, "queued_at": now })
+		setup_window_attacks.append(entry)
 	_log("CombatController: Attack queued: %s" % String(attack_id))
 
 # --- Main Attack Queue Processing ---
@@ -104,13 +108,11 @@ func _process_setup_phase() -> void:
 	var to_target = target_pos - character.global_position
 	to_target.y = 0.0
 	var dist = to_target.length()
-	var buffer = 0.1
-	var arrived: bool = dist <= enter_distance + buffer # Add a small buffer
+	var buffer = 0.15
+	var arrived = dist <= enter_distance + buffer and dist >= min_distance - buffer
 
-	# Always face the target
 	_face_target()
 
-	# Move toward or away to respect both min and max distance
 	if dist > enter_distance + buffer:
 		var approach_pos = target_pos - to_target.normalized() * enter_distance
 		character.move_towards_point(approach_pos, 1.0, true)
@@ -137,60 +139,131 @@ func _process_setup_phase() -> void:
 	elif setup_option == "instant":
 		if arrived:
 			_finalize_combo_and_swing()
+	elif setup_option == "sliding":
+		if not arrived:
+			# Move smoothly toward the spot
+			var approach_pos = target_pos - to_target.normalized() * enter_distance
+			character.move_towards_point(approach_pos, 1.0, true)
+			return
+
+		# Arrived at attack spot
+		if not setup_window_open:
+			setup_window_open = true
+			setup_start_time = now
+			setup_window_close_time = now + combo_close_window_time
+			setup_window_last_attack_time = now
+			character.stop_movement()
+
+		# If a new punch is queued, extend the window (but not beyond max time)
+		if attack_queue.size() > 0:
+			setup_window_close_time = min(
+				now + combo_close_window_extension_time,
+				setup_start_time + combo_close_window_max_time
+			)
+			setup_window_last_attack_time = now
+			attack_queue.clear() # Move attacks to setup_window_attacks as usual
+
+		# Always check if the close time has elapsed
+		if now >= setup_window_close_time or (now - setup_start_time) >= combo_close_window_max_time:
+			_finalize_combo_and_swing()
 
 	_log("SETUP PHASE: attack_id=%s, dist=%.3f, min_distance=%.3f, enter_distance=%.3f" % [str(attack_id), dist, min_distance, enter_distance])
-
 func _finalize_combo_and_swing() -> void:
 	setup_window_open = false
 	var combo = _calculate_combo(setup_window_attacks)
+	if debug_combos:
+		print("[ComboDebug] Combo result: ", combo)
 	if combo.has("combo_id"):
 		_log("CombatController: Combo detected: %s" % String(combo["combo_id"]))
+		current_attack = combo
 		_start_swing(combo)
 	else:
 		var best = _pick_biggest_force_attack(setup_window_attacks)
 		_log("CombatController: No combo, using biggest force attack: %s" % String(best.get("id", "")))
+		current_attack = best
 		_start_swing(best)
 	setup_window_attacks.clear()
 	phase = Phase.SWING
 	phase_until = _now() + _get_swing_duration(current_attack)
+	if debug_combos:
+		print("[CombatController] SWING: attack_id=%s, swing_time_sec=%.2f" % [
+			str(current_attack.get("id", "")),
+			_get_swing_duration(current_attack)
+		])
 
 # --- Combo Calculation ---
 func _calculate_combo(attacks: Array) -> Dictionary:
 	if not character or not character.attack_set_data or not character.attack_library:
 		return {}
 
-	# Get combo parameters from attack_set_data or use defaults
-	var combo_required_count := 0
-	var combo_each_min_force := 0.0
-	var combo_window_sec := -1.0
-
-	if "combo_required_count" in character.attack_set_data:
-		combo_required_count = int(character.attack_set_data.combo_required_count)
-	if "combo_each_min_force" in character.attack_set_data:
-		combo_each_min_force = float(character.attack_set_data.combo_each_min_force)
-	if "combo_window_sec" in character.attack_set_data:
-		combo_window_sec = float(character.attack_set_data.combo_window_sec)
-	if combo_window_sec <= 0.0 and "attack_window_sec" in character:
-		combo_window_sec = float(character.attack_window_sec)
-
-	if combo_required_count <= 0 or combo_each_min_force <= 0.0 or combo_window_sec <= 0.0:
-		return {}
-
-	var now := _now()
-	var valid_attacks: Array = []
-	for entry in attacks:
-		if entry.has("queued_at") and entry.has("force"):
-			var t = float(entry["queued_at"])
-			var f = float(entry["force"])
-			if now - t <= combo_window_sec and f >= combo_each_min_force:
-				valid_attacks.append(entry)
-
-	if valid_attacks.size() >= combo_required_count:
-		return {
-			"combo_id": "force_combo",
-			"attacks": valid_attacks.slice(valid_attacks.size() - combo_required_count, valid_attacks.size())
+	var combos = []
+	if "combo_attack_ids" in character.attack_set_data:
+		combos = []
+		for combo_id in character.attack_set_data.combo_attack_ids:
+			var found = false
+			for attack_spec in character.attack_library.attacks:
+				if "id" in attack_spec and attack_spec.id == combo_id:
+					combos.append(attack_spec)
+					found = true
+					break
+			if debug_combos and not found:
+				print("[ComboDebug] Combo ID not found in attack_library.attacks array: ", combo_id)
+	else:
+		var fallback_combo = {
+			"id": "force_combo",
+			"required_count": character.attack_set_data["combo_required_count"] if "combo_required_count" in character.attack_set_data else 0,
+			"each_min_force": character.attack_set_data["combo_each_min_force"] if "combo_each_min_force" in character.attack_set_data else 0.0,
+			"window_sec": character.attack_set_data["combo_window_sec"] if "combo_window_sec" in character.attack_set_data else -1.0,
+			"priority": 0
 		}
-	return {}
+		combos = [fallback_combo]
+
+	var now = _now()
+	var best_combo = {}
+	var best_priority = -INF
+
+	for combo in combos:
+		var required_count = int(combo["combo_required_count"]) if "combo_required_count" in combo else 0
+		var each_min_force = float(combo["combo_each_min_force"]) if "combo_each_min_force" in combo else 0.0
+		var window_sec = float(combo["combo_window_sec"]) if "combo_window_sec" in combo else -1.0
+		var priority = int(combo["combo_priority"]) if "combo_priority" in combo else 0
+		if debug_combos:
+			print("[ComboDebug] Checking combo: id=%s, required_count=%d, each_min_force=%.2f, window_sec=%.2f, priority=%d" % [
+				combo["id"] if "id" in combo else "force_combo", required_count, each_min_force, window_sec, priority
+			])
+		if required_count <= 0 or each_min_force <= 0.0:
+			if debug_combos:
+				print("[ComboDebug] Skipping combo due to invalid requirements.")
+			continue
+
+		var valid_attacks = []
+		for entry in attacks:
+			if entry.has("queued_at") and entry.has("force"):
+				var t = float(entry["queued_at"])
+				var f = float(entry["force"])
+				if (window_sec < 0.0 or now - t <= window_sec) and f >= each_min_force:
+					valid_attacks.append(entry)
+					if debug_combos:
+						print("[ComboDebug]   Valid attack: id=%s, force=%.2f, t=%.2f (age=%.2f)" % [
+							entry["id"], f, t, now-t
+						])
+		if debug_combos:
+			print("[ComboDebug]   Found %d valid attacks for this combo." % valid_attacks.size())
+
+		if valid_attacks.size() >= required_count:
+			if debug_combos:
+				print("[ComboDebug]   Combo matched! Priority=%d" % priority)
+			if priority > best_priority:
+				best_priority = priority
+				best_combo = {
+					"combo_id": combo["id"] if "id" in combo else "force_combo",
+					"id": combo["id"] if "id" in combo else "force_combo",
+					"attacks": valid_attacks.slice(valid_attacks.size() - required_count, valid_attacks.size())
+				}
+				if debug_combos:
+					print("[ComboDebug]   >>> This combo will be used!")
+
+	return best_combo if best_combo.size() > 0 else {}
 
 # --- Force-based Selection ---
 func _pick_biggest_force_attack(attacks: Array) -> Dictionary:
@@ -308,6 +381,7 @@ func _process_post_swing_phase() -> void:
 	var now := _now()
 	character.stop_movement()
 	if now >= phase_until:
+		character.move_locked = false
 		phase = Phase.RETREAT
 		phase_until = now + 1.0 # Optional: max time to try retreating
 		# Deactivate hitbox at end of swing
@@ -399,6 +473,8 @@ func _log(msg: String) -> void:
 
 # --- Swing Logic ---
 func _start_swing(attack: Dictionary) -> void:
+	if character:
+		character.move_locked = true
 	var attack_id = attack.get("id", "")
 	if character.animator and character.animator.has_method("play_attack_id") and attack_id != "":
 		character.animator.play_attack_id(attack_id)

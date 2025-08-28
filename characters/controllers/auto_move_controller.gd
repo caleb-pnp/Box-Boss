@@ -21,7 +21,7 @@ var character: BaseCharacter = null
 @export var center_seek_strength: float = 0.05
 
 # --- Stance Distance Variables
-@export var hold_distance: float = 2.8
+@export var hold_distance: float = 3.0
 @export var hold_tolerance: float = 0.4
 
 # --- Step Back Variables

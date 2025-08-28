@@ -26,7 +26,7 @@ class_name CharacterAnimator
 @export_category("Speed/Radius")
 @export var use_speed_scale_for_radius: bool = true
 @export var speed_for_full_blend: float = 2.0
-@export var smooth_input: bool = false
+@export var smooth_input: bool = true
 @export var locomotion_smoothing: float = 12.0
 
 @export_category("Optional Time Scale")
