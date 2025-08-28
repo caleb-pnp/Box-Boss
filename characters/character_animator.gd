@@ -24,8 +24,8 @@ class_name CharacterAnimator
 @export var input_deadzone: float = 0.05
 
 @export_category("Speed/Radius")
-@export var use_speed_scale_for_radius: bool = false
-@export var speed_for_full_blend: float = 6.0
+@export var use_speed_scale_for_radius: bool = true
+@export var speed_for_full_blend: float = 2.0
 @export var smooth_input: bool = false
 @export var locomotion_smoothing: float = 12.0
 
@@ -35,7 +35,7 @@ class_name CharacterAnimator
 @export var max_time_scale: float = 1.5
 @export var move2d_timescale_threshold: float = 0.1
 @export var move2d_timescale_idle: float = 1.0
-@export var move2d_timescale_active: float = 1.5
+@export var move2d_timescale_speed_factor: float = 5.0
 
 @export_category("Attacks (Data-Driven)")
 @export var attack_library: AttackLibrary = preload("res://data/AttackLibrary.tres")
@@ -139,7 +139,12 @@ func update_locomotion(local_move: Vector2, horizontal_speed: float) -> void:
 		var ax := absf(_blend_vec.x)
 		var ay := absf(_blend_vec.y)
 		var active := (ax >= move2d_timescale_threshold) or (ay >= move2d_timescale_threshold)
-		_set_float(time_scale_param, move2d_timescale_active if active else move2d_timescale_idle)
+		var timescale := move2d_timescale_idle
+		if active:
+			# Scale timescale by speed factor
+			timescale = (horizontal_speed / max(0.001, speed_for_full_blend)) * move2d_timescale_speed_factor
+			timescale = clamp(timescale, min_time_scale, max_time_scale)
+		_set_float(time_scale_param, timescale)
 
 	_travel_to_current_stance()
 
