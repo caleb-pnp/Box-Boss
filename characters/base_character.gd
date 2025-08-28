@@ -4,26 +4,13 @@ class_name BaseCharacter
 enum State { IDLE, AUTO_MOVE, ATTACKING, HIT_RESPONSE, KO }
 enum TargetMode { NONE, MOVE, FIGHT }
 
-# --- Character Movement Settings ---
+# --- Shared Character Movement Settings ---
 @export var walk_speed: float = 5.0
-@export var strafe_speed_scale_min: float = 0.2
-@export var strafe_speed_scale_max: float = 0.8
-@export var strafe_magnitude_min: float = 0.25
-@export var strafe_magnitude_max: float = 0.7
-@export var strafe_activity_prob: float = 0.55
-@export var strafe_on_time_min: float = 0.4
-@export var strafe_on_time_max: float = 1.2
-@export var strafe_off_time_min: float = 0.35
-@export var strafe_off_time_max: float = 1.0
-@export var retreat_max_mag: float = 0.45
-@export var retreat_speed_scale: float = 0.55
-
-# --- Center Seeking Settings
-@export var center_seek_enabled: bool = true
-@export var center_seek_strength: float = 0.05
+@export var turn_speed_deg: float = 180.0 # Degrees per second for facing target
 
 # --- Shared Character State, Target and Movement Variables ---
 var state: int = State.IDLE
+var auto_target_enabled: bool = false
 var target_node: Node3D = null
 var target_point: Vector3 = Vector3.ZERO
 var has_target: bool = false
@@ -63,7 +50,7 @@ func set_input_source_id(id: int) -> void:
 var debug_enabled: bool = true
 
 func _ready():
-	# assing self to controllers
+	_dbg("_ready: Assigning self to controllers")
 	auto_move.setup(self)
 	combat.character = self
 	hit_response.character = self
@@ -85,38 +72,52 @@ func _connect_punch_input() -> void:
 			_dbg("[BC] PunchInput autoload not found at /root/PunchInput")
 
 func _physics_process(delta):
+	_dbg("_physics_process: state=%s" % str(state))
 	match state:
 		State.HIT_RESPONSE:
+			_dbg("_physics_process: HIT_RESPONSE, calling hit_response.process")
 			hit_response.process(delta)
 		State.ATTACKING:
+			_dbg("_physics_process: ATTACKING, calling combat.process")
 			combat.process(delta)
 		State.AUTO_MOVE:
+			_dbg("_physics_process: AUTO_MOVE, calling auto_move.process")
 			auto_move.process(delta)
 		State.IDLE:
-			# Idle logic
+			_dbg("_physics_process: IDLE")
 			pass
 		State.KO:
-			# KO logic
+			_dbg("_physics_process: KO")
 			pass
 
 	move_and_slide()
 
-
-
 # When Punch Received, Forward to Controller
 func _on_punched(source_id: int, force: float) -> void:
 	_dbg("[Punch] src=" + str(source_id) + " force=" + str(force))
-	if not round_active: return
-	if input_source_id != 0 and source_id != input_source_id: return
-	if state == State.KO: return
-	if combat:
-		combat.handle_punch(source_id, force)
-
-
+	if not round_active:
+		_dbg("_on_punched: round not active, ignoring punch")
+		return
+	if input_source_id != 0 and source_id != input_source_id:
+		_dbg("_on_punched: input_source_id mismatch, ignoring punch")
+		return
+	if state == State.KO:
+		_dbg("_on_punched: state is KO, ignoring punch")
+		return
+	if state == State.HIT_RESPONSE:
+		_dbg("_on_punched: in HIT_RESPONSE, forwarding to hit_response.handle_punch")
+		hit_response.handle_punch(source_id, force)
+	else:
+		if combat:
+			_dbg("_on_punched: forwarding to combat.handle_punch")
+			combat.handle_punch(source_id, force)
+			state = State.ATTACKING
+			_dbg("_on_punched: state set to ATTACKING")
 
 ## ---- MOVEMENT PUBLIC FUNCTIONS -----
 # Move in a direction (local or world), with a speed scale (0..1), and pose/stance
 func move_direction(local_dir: Vector2, speed_scale: float = 1.0, fighting_pose: bool = true) -> void:
+	_dbg("move_direction: local_dir=%s, speed_scale=%.2f, fighting_pose=%s" % [str(local_dir), speed_scale, str(fighting_pose)])
 	var forward: Vector3 = -global_transform.basis.z
 	var right: Vector3 = global_transform.basis.x
 	var move_vec: Vector3 = (forward * local_dir.y) + (right * local_dir.x)
@@ -134,6 +135,7 @@ func move_direction(local_dir: Vector2, speed_scale: float = 1.0, fighting_pose:
 
 # Move toward a world point, with speed scale and pose
 func move_towards_point(target: Vector3, speed_scale: float = 1.0, fighting_pose: bool = true) -> void:
+	_dbg("move_towards_point: target=%s, speed_scale=%.2f, fighting_pose=%s" % [str(target), speed_scale, str(fighting_pose)])
 	var to_target = target - global_position
 	to_target.y = 0.0
 	if to_target.length() > 0.01:
@@ -141,10 +143,12 @@ func move_towards_point(target: Vector3, speed_scale: float = 1.0, fighting_pose
 		var local_dir = _world_dir_to_local_move(dir)
 		move_direction(local_dir, speed_scale, fighting_pose)
 	else:
+		_dbg("move_towards_point: Already at target, stopping movement")
 		stop_movement()
 
 # Strafe around a point (positive x = right, negative x = left), with speed scale and pose
 func strafe_around_point(target: Vector3, strafe_dir: float, speed_scale: float = 1.0, fighting_pose: bool = true) -> void:
+	_dbg("strafe_around_point: target=%s, strafe_dir=%.2f, speed_scale=%.2f, fighting_pose=%s" % [str(target), strafe_dir, speed_scale, str(fighting_pose)])
 	var to_target = target - global_position
 	to_target.y = 0.0
 	if to_target.length() > 0.01:
@@ -154,33 +158,41 @@ func strafe_around_point(target: Vector3, strafe_dir: float, speed_scale: float 
 		var local_dir = _world_dir_to_local_move(strafe_vec)
 		move_direction(local_dir, speed_scale, fighting_pose)
 	else:
+		_dbg("strafe_around_point: Already at target, stopping movement")
 		stop_movement()
 
 # Stop all movement
 func stop_movement() -> void:
+	_dbg("stop_movement: velocity set to zero")
 	velocity.x = 0.0
 	velocity.z = 0.0
 	if animator and animator.has_method("update_locomotion"):
 		animator.update_locomotion(Vector2.ZERO, 0.0)
 
-
 ## --- Targeting Functions
 func set_target(t: Variant, mode: int = TargetMode.FIGHT) -> void:
+	_dbg("set_target: t=%s, mode=%s" % [str(t), str(mode)])
 	target_node = t if t is Node3D else null
 	has_target = target_node != null
 	target_mode = mode
 
 func set_move_target(t: Variant) -> void:
+	_dbg("set_move_target: t=%s" % str(t))
 	set_target(t, TargetMode.MOVE)
+	state = State.AUTO_MOVE
+	_dbg("set_move_target: state set to AUTO_MOVE")
 
 func set_fight_target(t: Variant) -> void:
+	_dbg("set_fight_target: t=%s" % str(t))
 	set_target(t, TargetMode.FIGHT)
+	state = State.AUTO_MOVE
+	_dbg("set_fight_target: state set to AUTO_MOVE")
 
 func clear_target() -> void:
+	_dbg("clear_target: clearing target_node and has_target")
 	target_node = null
 	has_target = false
 	target_mode = TargetMode.NONE
-
 
 # Helper: convert world direction to local move intent
 func _world_dir_to_local_move(dir: Vector3) -> Vector2:
@@ -189,7 +201,6 @@ func _world_dir_to_local_move(dir: Vector3) -> Vector2:
 	var local_x = right.normalized().dot(dir)
 	var local_y = forward.normalized().dot(dir)
 	return Vector2(local_x, local_y)
-
 
 func _dbg(msg: String) -> void:
 	if debug_enabled: print("[base_character.gd] " + msg)

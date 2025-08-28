@@ -134,26 +134,37 @@ func _calculate_combo(attacks: Array) -> Dictionary:
 	if not character or not character.attack_set_data or not character.attack_library:
 		return {}
 
-	var ids: Array = []
-	for entry in attacks:
-		if entry.has("id"):
-			ids.append(entry["id"])
+	# Get combo parameters from attack_set_data or use defaults
+	var combo_required_count := 0
+	var combo_each_min_force := 0.0
+	var combo_window_sec := -1.0
 
-	if character.attack_set_data.has_method("get_combo_ids"):
-		var combos: Array = character.attack_set_data.get_combo_ids()
-		for combo_id in combos:
-			var combo_spec = character.attack_library.get_spec(combo_id)
-			var has_seq = combo_spec and combo_spec.sequence != null
-			if has_seq:
-				var seq: Array = combo_spec.sequence
-				if ids.size() >= seq.size():
-					var window_seq = ids.slice(ids.size() - seq.size(), ids.size())
-					if window_seq == seq:
-						return {
-							"combo_id": combo_id,
-							"sequence": seq,
-							"attacks": attacks.slice(ids.size() - seq.size(), ids.size())
-						}
+	if "combo_required_count" in character.attack_set_data:
+		combo_required_count = int(character.attack_set_data.combo_required_count)
+	if "combo_each_min_force" in character.attack_set_data:
+		combo_each_min_force = float(character.attack_set_data.combo_each_min_force)
+	if "combo_window_sec" in character.attack_set_data:
+		combo_window_sec = float(character.attack_set_data.combo_window_sec)
+	if combo_window_sec <= 0.0 and "attack_window_sec" in character:
+		combo_window_sec = float(character.attack_window_sec)
+
+	if combo_required_count <= 0 or combo_each_min_force <= 0.0 or combo_window_sec <= 0.0:
+		return {}
+
+	var now := _now()
+	var valid_attacks: Array = []
+	for entry in attacks:
+		if entry.has("queued_at") and entry.has("force"):
+			var t = float(entry["queued_at"])
+			var f = float(entry["force"])
+			if now - t <= combo_window_sec and f >= combo_each_min_force:
+				valid_attacks.append(entry)
+
+	if valid_attacks.size() >= combo_required_count:
+		return {
+			"combo_id": "force_combo",
+			"attacks": valid_attacks.slice(valid_attacks.size() - combo_required_count, valid_attacks.size())
+		}
 	return {}
 
 # --- Force-based Selection ---

@@ -8,6 +8,10 @@ var _knockback_until: float = 0.0
 var _knockback_velocity: Vector3 = Vector3.ZERO
 var _prev_state: int = BaseCharacter.State.IDLE
 
+# Mash-out logic
+var _mash_count: int = 0
+var mash_threshold: int = 5 # Number of punches to break out
+
 func _ready() -> void:
 	if character == null:
 		push_warning("HitResponseController: No character assigned!")
@@ -70,8 +74,31 @@ func on_hit_received(attacker, spec, impact_force) -> void:
 		_knockback_velocity = Vector3.ZERO
 		_knockback_until = 0.0
 
+	# Reset mash count on new hit
+	_mash_count = 0
+
+func handle_punch(source_id: int, force: float) -> void:
+	# Called by BaseCharacter when a punch is received during HIT_RESPONSE
+	_mash_count += 1
+	if character.debug_enabled:
+		print("[HitResponseController] handle_punch: mash_count=%d" % _mash_count)
+	if _mash_count >= mash_threshold:
+		# Allow break out: go to ATTACKING state
+		character.state = BaseCharacter.State.ATTACKING
+		if character.debug_enabled:
+			print("[HitResponseController] Mash threshold reached! Breaking out to ATTACKING.")
+		# Optionally reset hit response timers
+		_knockback_velocity = Vector3.ZERO
+		_knockback_until = 0.0
+		_stagger_until = 0.0
+		_mash_count = 0
+
 func process(delta: float) -> void:
 	var now = _now()
+	# If broken out, do nothing
+	if character.state != BaseCharacter.State.HIT_RESPONSE:
+		return
+
 	# Handle knockback if active
 	if now < _knockback_until:
 		character.velocity.x = _knockback_velocity.x
@@ -90,6 +117,7 @@ func process(delta: float) -> void:
 	_knockback_until = 0.0
 	_stagger_until = 0.0
 	character.state = _prev_state
+	_mash_count = 0
 
 func _now() -> float:
 	return Time.get_ticks_msec() / 1000.0

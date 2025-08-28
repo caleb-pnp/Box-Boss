@@ -1,5 +1,5 @@
 extends CharacterBody3D
-class_name BaseCharacter
+class_name BaseCharacter_Old
 
 # --- Attack Queue System ---
 # All attack requests are queued with timestamps.
