@@ -47,7 +47,7 @@ func set_input_source_id(id: int) -> void:
 @onready var hurtbox: Hurtbox3D = $Hurtbox3D
 
 # --- Internal Variables ---
-var debug_enabled: bool = true
+var debug_enabled: bool = false
 
 func _ready():
 	_dbg("_ready: Assigning self to controllers")

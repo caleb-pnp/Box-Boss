@@ -32,6 +32,26 @@ var character: BaseCharacter = null
 @export var step_in_mag: float = 0.25
 @export var step_back_mag: float = 0.25
 
+# --- Rush/Bait Variables
+@export var standoff_hysteresis_m: float = 0.15
+@export var rush_timeout_sec: float = 1.5
+@export var engage_backoff_m: float = 1.0
+@export var random_bait_backstep_prob: float = 0.3
+@export var bait_backstep_min_sec: float = 0.35
+@export var bait_backstep_max_sec: float = 0.7
+@export var bait_backstep_mag: float = 0.35
+
+# --- Hold Time
+@export var idle_activity_prob: float = 0.15 # Try 0.35 or higher for more idling
+@export var think_time_min: float = 0.25
+@export var think_time_max: float = 2.5
+
+# Rush/bait state and tuning
+var _rush_active: bool = false
+var _rush_stop_dist: float = 0.0
+var _rush_giveup_at: float = 0.0
+var _recent_backstep_until: float = 0.0
+
 # Internal state
 var _rng := RandomNumberGenerator.new()
 var _strafe_dir: int = 1
@@ -52,7 +72,6 @@ var _next_decision_at: float = 0.0
 
 func _ready():
 	_rng.randomize()
-	# Do NOT call _reset_strafe_state() here!
 
 func setup(character_ref):
 	character = character_ref
@@ -84,7 +103,7 @@ func _update_autopilot_intents() -> void:
 		character.stop_movement()
 		return
 
-	var now: float = _now() / 1000.0 # Convert ms to seconds for intent timing
+	var now: float = _now() / 1000.0 # ms to seconds
 	var ml: Vector2 = Vector2.ZERO
 
 	# --- Distance to target ---
@@ -92,25 +111,65 @@ func _update_autopilot_intents() -> void:
 	to_target.y = 0.0
 	var dist = to_target.length()
 
-	# Use self for all AI/autopilot tuning variables
-	if now >= _intent_until:
-		var r = _rng.randf()
-		if r < self.strafe_activity_prob:
-			_intent = (Intent.STRAFE_L if _rng.randf() < 0.5 else Intent.STRAFE_R)
-			_intent_until = now + _rng.randf_range(self.strafe_on_time_min, self.strafe_on_time_max)
-		elif r < self.strafe_activity_prob + 0.2:
+	var high_band = self.hold_distance + self.hold_tolerance
+	var low_band = self.hold_distance - self.hold_tolerance
+
+	var is_strafing = _intent == Intent.STRAFE_L or _intent == Intent.STRAFE_R
+	var is_stepping = _intent == Intent.STEP_IN or _intent == Intent.STEP_BACK
+
+	# --- Only update intent if expired, or if continuing a rush ---
+	if _rush_active:
+		if dist > (_rush_stop_dist + self.standoff_hysteresis_m):
+			_intent = Intent.STEP_IN
+			ml.y = 1.0
+			if now > _rush_giveup_at:
+				_rush_active = false
+		else:
+			_rush_active = false
 			_intent = Intent.HOLD
-			_intent_until = now + _rng.randf_range(self.strafe_off_time_min, self.strafe_off_time_max)
-		elif dist > (self.hold_distance + self.hold_tolerance):
+			_intent_until = now + _rng.randf_range(self.think_time_min, self.think_time_max)
+			print("[AutoMove] Intent: RUSH END -> HOLD for %.2fs" % (_intent_until - now))
+	elif now >= _intent_until:
+		# Only pick a new intent if the previous one expired!
+		# Rush-in: Only sometimes, and only if not already strafing or stepping
+		if not is_strafing and not is_stepping and dist > (high_band + 0.4) and _rng.randf() < 0.45:
+			_rush_active = true
+			_rush_stop_dist = max(0.2, self.hold_distance - self.engage_backoff_m)
+			_rush_giveup_at = now + self.rush_timeout_sec
 			_intent = Intent.STEP_IN
 			_intent_until = now + _rng.randf_range(self.step_in_min_sec, self.step_in_max_sec)
-		elif dist < (self.hold_distance - self.hold_tolerance):
+			print("[AutoMove] Intent: RUSH-IN (STEP_IN) for %.2fs" % (_intent_until - now))
+		# Bait backstep: Only if not already strafing or stepping, and not recently done
+		elif not is_strafing and not is_stepping and now >= _recent_backstep_until and _rng.randf() < self.random_bait_backstep_prob:
 			_intent = Intent.STEP_BACK
-			_intent_until = now + _rng.randf_range(self.step_back_min_sec, self.step_back_max_sec)
+			_intent_until = now + _rng.randf_range(self.bait_backstep_min_sec, self.bait_backstep_max_sec)
+			_recent_backstep_until = _intent_until
+			ml.y = -min(self.bait_backstep_mag, self.retreat_max_mag)
+			print("[AutoMove] Intent: BAIT BACKSTEP for %.2fs" % (_intent_until - now))
 		else:
-			_intent = Intent.HOLD
-			_intent_until = now + _rng.randf_range(self.strafe_off_time_min, self.strafe_off_time_max)
+			var r = _rng.randf()
+			if r < self.strafe_activity_prob:
+				_intent = (Intent.STRAFE_L if _rng.randf() < 0.5 else Intent.STRAFE_R)
+				_intent_until = now + _rng.randf_range(self.strafe_on_time_min, self.strafe_on_time_max)
+				print("[AutoMove] Intent: STRAFE %s for %.2fs" % (["LEFT" if _intent == Intent.STRAFE_L else "RIGHT", _intent_until - now]))
+			elif r < self.strafe_activity_prob + self.idle_activity_prob:
+				_intent = Intent.HOLD
+				_intent_until = now + _rng.randf_range(self.think_time_min, self.think_time_max)
+				print("[AutoMove] Intent: HOLD for %.2fs" % (_intent_until - now))
+			elif dist > (self.hold_distance + self.hold_tolerance):
+				_intent = Intent.STEP_IN
+				_intent_until = now + _rng.randf_range(self.step_in_min_sec, self.step_in_max_sec)
+				print("[AutoMove] Intent: STEP_IN for %.2fs" % (_intent_until - now))
+			elif dist < (self.hold_distance - self.hold_tolerance):
+				_intent = Intent.STEP_BACK
+				_intent_until = now + _rng.randf_range(self.step_back_min_sec, self.step_back_max_sec)
+				print("[AutoMove] Intent: STEP_BACK for %.2fs" % (_intent_until - now))
+			else:
+				_intent = Intent.HOLD
+				_intent_until = now + _rng.randf_range(self.think_time_min, self.think_time_max)
+				print("[AutoMove] Intent: HOLD for %.2fs" % (_intent_until - now))
 
+	# --- Build movement vector from intent ---
 	match _intent:
 		Intent.STRAFE_L:
 			ml.x = -clampf(_my_strafe_mag, 0.0, 1.0)
@@ -127,23 +186,20 @@ func _update_autopilot_intents() -> void:
 		Intent.HOLD, Intent.NONE:
 			ml = Vector2.ZERO
 
-	# Center seeking (unchanged)
-	if self.center_seek_enabled and character.arena_radius_hint > 0.001:
-		var to_center: Vector3 = character.arena_center - character.global_position
-		to_center.y = 0.0
-		var dist_from_center: float = to_center.length()
-		if dist_from_center > 0.001:
-			var inward_local: Vector2 = _world_dir_to_local_move(to_center.normalized())
-			var t_center: float = clamp(dist_from_center / max(character.arena_radius_hint, 0.001), 0.0, 1.0)
-			ml += inward_local * (self.center_seek_strength * t_center)
+	# --- Center seeking: only if not idling ---
+	if _intent != Intent.HOLD and _intent != Intent.NONE:
+		if self.center_seek_enabled and character.arena_radius_hint > 0.001:
+			var to_center: Vector3 = character.arena_center - character.global_position
+			to_center.y = 0.0
+			var dist_from_center: float = to_center.length()
+			if dist_from_center > 0.001:
+				var inward_local: Vector2 = _world_dir_to_local_move(to_center.normalized())
+				var t_center: float = clamp(dist_from_center / max(character.arena_radius_hint, 0.001), 0.0, 1.0)
+				ml += inward_local * (self.center_seek_strength * t_center)
 
-	# Clamp retreat intent so we never blast backward
-	if ml.y < 0.0:
-		ml.y = max(ml.y, -clampf(self.retreat_max_mag, 0.0, 1.0))
-
-	# Final clamp
-	if ml.length() > 1.0:
-		ml = ml.normalized()
+	# --- Clamp tiny movement to zero ---
+	if ml.length() < 0.01:
+		ml = Vector2.ZERO
 
 	move_local = ml
 	run = false
