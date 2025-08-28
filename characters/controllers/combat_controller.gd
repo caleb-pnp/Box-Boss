@@ -3,7 +3,8 @@ class_name CombatController
 
 @export var max_attack_setup_time: float = 5.0
 @export var combo_close_window_time: float = 1.0
-@export var combo_close_window_max_time: float = 7.0
+@export var combo_close_window_max_time: float = 5.0
+@export var retreat_buffer: float = 0.15
 
 var character: BaseCharacter = null
 
@@ -18,9 +19,12 @@ var setup_window_close_time: float = 0.0
 var setup_option: String = "fixed" # "fixed", "closing", "instant"
 
 # --- Attack Phases ---
-enum Phase { NONE, SETUP, SWING, POST_SWING }
+enum Phase { NONE, SETUP, SWING, POST_SWING, RETREAT, REPOSITION }
 var phase: int = Phase.NONE
 var phase_until: float = 0.0
+
+var debug_enabled: bool = true
+
 
 func reset() -> void:
 	attack_queue.clear()
@@ -49,6 +53,10 @@ func process(delta: float) -> void:
 			_process_swing_phase()
 		Phase.POST_SWING:
 			_process_post_swing_phase()
+		Phase.RETREAT:
+			_process_retreat_phase()
+		Phase.REPOSITION:
+			_process_reposition_phase()
 
 # --- Handle Punch Input (from BaseCharacter) ---
 func handle_punch(source_id: int, force: float) -> void:
@@ -89,18 +97,33 @@ func _process_attack_queue() -> void:
 # --- Setup Phase ---
 func _process_setup_phase() -> void:
 	var now := _now()
-	var dist: float = (setup_target_position - character.global_position).length()
-	var arrived: bool = dist < 0.2 # Tweak as needed
+	var target_pos = character.target_node.global_position if character.target_node else setup_target_position
+	var attack_id = current_attack.get("id", "")
+	var enter_distance = _get_attack_enter_distance(attack_id)
+	var min_distance = _get_attack_min_distance(attack_id)
+	var to_target = target_pos - character.global_position
+	to_target.y = 0.0
+	var dist = to_target.length()
+	var buffer = 0.1
+	var arrived: bool = dist <= enter_distance + buffer # Add a small buffer
 
-	# Use shared movement helper
-	if not arrived:
-		character.move_towards_point(setup_target_position, 1.0, true)
+	# Always face the target
+	_face_target()
+
+	# Move toward or away to respect both min and max distance
+	if dist > enter_distance + buffer:
+		var approach_pos = target_pos - to_target.normalized() * enter_distance
+		character.move_towards_point(approach_pos, 1.0, true)
+	elif dist < min_distance - buffer:
+		_log("SETUP PHASE: Too close for attack %s, entering REPOSITION phase (dist=%.3f < min=%.3f)" % [str(attack_id), dist, min_distance - buffer])
+		phase = Phase.REPOSITION
+		return
 	else:
 		character.stop_movement()
 
 	# Combo window logic
 	if setup_option == "fixed":
-		if now - setup_start_time >= max_attack_setup_time:
+		if arrived or now - setup_start_time >= max_attack_setup_time:
 			_finalize_combo_and_swing()
 	elif setup_option == "closing":
 		if arrived:
@@ -114,6 +137,8 @@ func _process_setup_phase() -> void:
 	elif setup_option == "instant":
 		if arrived:
 			_finalize_combo_and_swing()
+
+	_log("SETUP PHASE: attack_id=%s, dist=%.3f, min_distance=%.3f, enter_distance=%.3f" % [str(attack_id), dist, min_distance, enter_distance])
 
 func _finalize_combo_and_swing() -> void:
 	setup_window_open = false
@@ -283,14 +308,93 @@ func _process_post_swing_phase() -> void:
 	var now := _now()
 	character.stop_movement()
 	if now >= phase_until:
+		phase = Phase.RETREAT
+		phase_until = now + 1.0 # Optional: max time to try retreating
+		# Deactivate hitbox at end of swing
+		if character.hitbox:
+			character.hitbox.deactivate()
+			_log("CombatController: Hitbox deactivated at end of swing.")
+
+
+# --- Retreat Phase ---
+func _process_retreat_phase() -> void:
+	var now := _now()
+	var desired_space = 2.5 # meters
+	var max_retreat_dist = 5.0 # safety: don't chase forever
+	var buffer = retreat_buffer
+
+	if not character or not character.target_node:
 		phase = Phase.NONE
+		if character:
+			character.on_attack_finished()
+		return
+
+	var char_pos = character.global_position
+	var target_pos = character.target_node.global_position
+	var to_target = target_pos - char_pos
+	to_target.y = 0.0
+	var dist = to_target.length()
+
+	_log("RETREAT PHASE: char_pos=%s, target_pos=%s, to_target=%s, dist=%.3f" % [str(char_pos), str(target_pos), str(to_target), dist])
+
+	if dist < desired_space - buffer and dist < max_retreat_dist:
+		var retreat_dir = -to_target.normalized()
+		var retreat_amount = max(desired_space - dist, 0.3)
+		var retreat_vec = retreat_dir * retreat_amount
+		var retreat_pos = char_pos + retreat_vec
+		_log("RETREAT: retreat_dir=%s, retreat_amount=%.3f, retreat_vec=%s, retreat_pos=%s" % [str(retreat_dir), retreat_amount, str(retreat_vec), str(retreat_pos)])
+		character.move_towards_point(retreat_pos, 0.5, true)
+	else:
+		_log("RETREAT: stopping, final dist=%.3f" % dist)
+		character.stop_movement()
+		phase = Phase.NONE
+		if character:
+			character.on_attack_finished()
+		return
+
+	# Safety: timeout
+	if now >= phase_until:
+		_log("RETREAT: timeout, stopping movement")
+		character.stop_movement()
+		phase = Phase.NONE
+		if character:
+			character.on_attack_finished()
+
+# --- Reposition Phase ---
+func _process_reposition_phase() -> void:
+	var attack_id = current_attack.get("id", "")
+	var min_distance = _get_attack_min_distance(attack_id)
+	var buffer = 0.1
+	if not character or not character.target_node:
+		phase = Phase.NONE
+		return
+
+	var char_pos = character.global_position
+	var target_pos = character.target_node.global_position
+	var to_target = target_pos - char_pos
+	to_target.y = 0.0
+	var dist = to_target.length()
+
+	_log("REPOSITION PHASE: char_pos=%s, target_pos=%s, to_target=%s, dist=%.3f, min_distance=%.3f" % [str(char_pos), str(target_pos), str(to_target), dist, min_distance])
+
+	if dist < min_distance - buffer:
+		var retreat_dir = -to_target.normalized()
+		var retreat_amount = max(min_distance - dist, 0.3)
+		var retreat_vec = retreat_dir * retreat_amount
+		var retreat_pos = char_pos + retreat_vec
+		_log("REPOSITION: retreat_dir=%s, retreat_amount=%.3f, retreat_vec=%s, retreat_pos=%s" % [str(retreat_dir), retreat_amount, str(retreat_vec), str(retreat_pos)])
+		character.move_towards_point(retreat_pos, 1.0, true)
+	else:
+		_log("REPOSITION: reached min launch distance, returning to SETUP phase")
+		character.stop_movement()
+		phase = Phase.SETUP
 
 # --- Utility ---
 func _now() -> float:
 	return Time.get_ticks_msec() / 1000.0
 
 func _log(msg: String) -> void:
-	if character and character.debug_enabled:
+	if debug_enabled:
 		print("[CombatController] " + msg)
 
 # --- Swing Logic ---
@@ -307,3 +411,40 @@ func _start_swing(attack: Dictionary) -> void:
 			character.hitbox.attacker = character
 			character.hitbox.activate_for_attack(attack_id, spec, impact_force)
 			_log("CombatController: Hitbox activated for attack: %s (force=%.2f)" % [String(attack_id), impact_force])
+
+func _face_target() -> void:
+	if not character or not character.has_target or character.target_node == null:
+		return
+	var to_target = character.target_node.global_position - character.global_position
+	to_target.y = 0.0
+	if to_target.length() < 0.01:
+		return
+	var desired_yaw = atan2(-to_target.x, -to_target.z)
+	var current_yaw = character.rotation.y
+	var max_step = deg_to_rad(character.turn_speed_deg) * get_process_delta_time()
+	var diff = wrapf(desired_yaw - current_yaw, -PI, PI)
+	if absf(diff) <= max_step:
+		character.rotation.y = desired_yaw
+	else:
+		character.rotation.y = current_yaw + clampf(diff, -max_step, max_step)
+
+
+func _get_attack_enter_distance(attack_id: StringName) -> float:
+	if not character or not character.attack_library:
+		return 1.0 # Default
+	var spec = character.attack_library.get_spec(attack_id)
+	if spec and "enter_distance" in spec:
+		return float(spec.enter_distance)
+	if spec and "range" in spec:
+		return float(spec.range)
+	return 1.0 # Fallback
+
+func _get_attack_min_distance(attack_id: StringName) -> float:
+	if not character or not character.attack_library:
+		return 0.0 # Default: no min
+	var spec = character.attack_library.get_spec(attack_id)
+	if spec and "min_distance" in spec:
+		return float(spec.min_distance)
+	if spec and "launch_min_distance" in spec:
+		return float(spec.launch_min_distance)
+	return 0.5 # Fallback

@@ -6,7 +6,7 @@ const LAYER_HITBOX := 2
 const LAYER_HURTBOX := 3
 
 @export var attacker: Node = null
-@export var debug_hitbox: bool = true
+@export var debug_hitbox: bool = false
 @export var rehit_interval_sec: float = 0.25
 @export var max_rehits_per_target: int = 4
 @export var disable_shape_when_inactive: bool = true

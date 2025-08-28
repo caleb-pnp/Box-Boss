@@ -10,6 +10,7 @@ enum TargetMode { NONE, MOVE, FIGHT }
 
 # --- Shared Character State, Target and Movement Variables ---
 var state: int = State.IDLE
+var prev_state: int = State.IDLE
 var auto_target_enabled: bool = false
 var target_node: Node3D = null
 var target_point: Vector3 = Vector3.ZERO
@@ -111,8 +112,14 @@ func _on_punched(source_id: int, force: float) -> void:
 		if combat:
 			_dbg("_on_punched: forwarding to combat.handle_punch")
 			combat.handle_punch(source_id, force)
+			# Only save prev_state if not already attacking
+			if state != State.ATTACKING:
+				prev_state = state
 			state = State.ATTACKING
 			_dbg("_on_punched: state set to ATTACKING")
+
+func on_attack_finished():
+	state = prev_state
 
 ## ---- MOVEMENT PUBLIC FUNCTIONS -----
 # Move in a direction (local or world), with a speed scale (0..1), and pose/stance

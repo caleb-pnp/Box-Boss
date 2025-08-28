@@ -46,6 +46,9 @@ var character: BaseCharacter = null
 @export var think_time_min: float = 0.25
 @export var think_time_max: float = 2.5
 
+# --- Debug
+@export var debug_autopilot: bool = false
+
 # Rush/bait state and tuning
 var _rush_active: bool = false
 var _rush_stop_dist: float = 0.0
@@ -128,7 +131,7 @@ func _update_autopilot_intents() -> void:
 			_rush_active = false
 			_intent = Intent.HOLD
 			_intent_until = now + _rng.randf_range(self.think_time_min, self.think_time_max)
-			print("[AutoMove] Intent: RUSH END -> HOLD for %.2fs" % (_intent_until - now))
+			_dbg("[AutoMove] Intent: RUSH END -> HOLD for %.2fs" % (_intent_until - now))
 	elif now >= _intent_until:
 		# Only pick a new intent if the previous one expired!
 		# Rush-in: Only sometimes, and only if not already strafing or stepping
@@ -138,36 +141,36 @@ func _update_autopilot_intents() -> void:
 			_rush_giveup_at = now + self.rush_timeout_sec
 			_intent = Intent.STEP_IN
 			_intent_until = now + _rng.randf_range(self.step_in_min_sec, self.step_in_max_sec)
-			print("[AutoMove] Intent: RUSH-IN (STEP_IN) for %.2fs" % (_intent_until - now))
+			_dbg("[AutoMove] Intent: RUSH-IN (STEP_IN) for %.2fs" % (_intent_until - now))
 		# Bait backstep: Only if not already strafing or stepping, and not recently done
 		elif not is_strafing and not is_stepping and now >= _recent_backstep_until and _rng.randf() < self.random_bait_backstep_prob:
 			_intent = Intent.STEP_BACK
 			_intent_until = now + _rng.randf_range(self.bait_backstep_min_sec, self.bait_backstep_max_sec)
 			_recent_backstep_until = _intent_until
 			ml.y = -min(self.bait_backstep_mag, self.retreat_max_mag)
-			print("[AutoMove] Intent: BAIT BACKSTEP for %.2fs" % (_intent_until - now))
+			_dbg("[AutoMove] Intent: BAIT BACKSTEP for %.2fs" % (_intent_until - now))
 		else:
 			var r = _rng.randf()
 			if r < self.strafe_activity_prob:
 				_intent = (Intent.STRAFE_L if _rng.randf() < 0.5 else Intent.STRAFE_R)
 				_intent_until = now + _rng.randf_range(self.strafe_on_time_min, self.strafe_on_time_max)
-				print("[AutoMove] Intent: STRAFE %s for %.2fs" % (["LEFT" if _intent == Intent.STRAFE_L else "RIGHT", _intent_until - now]))
+				_dbg("[AutoMove] Intent: STRAFE %s for %.2fs" % (["LEFT" if _intent == Intent.STRAFE_L else "RIGHT", _intent_until - now]))
 			elif r < self.strafe_activity_prob + self.idle_activity_prob:
 				_intent = Intent.HOLD
 				_intent_until = now + _rng.randf_range(self.think_time_min, self.think_time_max)
-				print("[AutoMove] Intent: HOLD for %.2fs" % (_intent_until - now))
+				_dbg("[AutoMove] Intent: HOLD for %.2fs" % (_intent_until - now))
 			elif dist > (self.hold_distance + self.hold_tolerance):
 				_intent = Intent.STEP_IN
 				_intent_until = now + _rng.randf_range(self.step_in_min_sec, self.step_in_max_sec)
-				print("[AutoMove] Intent: STEP_IN for %.2fs" % (_intent_until - now))
+				_dbg("[AutoMove] Intent: STEP_IN for %.2fs" % (_intent_until - now))
 			elif dist < (self.hold_distance - self.hold_tolerance):
 				_intent = Intent.STEP_BACK
 				_intent_until = now + _rng.randf_range(self.step_back_min_sec, self.step_back_max_sec)
-				print("[AutoMove] Intent: STEP_BACK for %.2fs" % (_intent_until - now))
+				_dbg("[AutoMove] Intent: STEP_BACK for %.2fs" % (_intent_until - now))
 			else:
 				_intent = Intent.HOLD
 				_intent_until = now + _rng.randf_range(self.think_time_min, self.think_time_max)
-				print("[AutoMove] Intent: HOLD for %.2fs" % (_intent_until - now))
+				_dbg("[AutoMove] Intent: HOLD for %.2fs" % (_intent_until - now))
 
 	# --- Build movement vector from intent ---
 	match _intent:
@@ -266,3 +269,7 @@ func _world_dir_to_local_move(dir: Vector3) -> Vector2:
 
 func _now() -> float:
 	return Time.get_ticks_msec()
+
+func _dbg(msg: String) -> void:
+	if debug_autopilot:
+		print(msg)
