@@ -16,8 +16,9 @@ signal serial_connection_opened()
 signal device_connected(device_id:String)
 signal device_connection_failed(device_id:String)
 signal device_disconnected(device_id:String)
-signal data_update(device_id:String, data:float, type:Type)
-signal scan_update(dev_name:String, dev_address: String)
+signal data_update(device_id:String, data:float, type:Type) # FTMS
+signal scan_update(dev_name:String, dev_address: String) # FTMS
+signal force_update(player_id:int, force:float) # Accelerometer
 
 # Class variables
 var serial := GdSerial.new()
@@ -244,9 +245,18 @@ func _on_data_received():
 						scan_update.emit(devName, devAdr)
 					"ADDRESS":
 						pass
+					"P1":
+						var force = float(value_string)
+						print("P1: " + str(force))
+						force_update.emit(1, force)
+					"P2":
+						var force = float(value_string)
+						print("P2: " + str(force))
+						force_update.emit(2, force)
 					_:
 						print("Unknown prefix received: " + prefix)
 		else:
+			print("DEBUG:" + data_string)
 			pass
 
 
