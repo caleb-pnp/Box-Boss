@@ -403,10 +403,20 @@ func _fire_oneshot(req_param: StringName) -> void:
 		await get_tree().create_timer(wait_s).timeout
 	_tree.set(req, 1)
 
-# Abort all OneShots (for use when entering Hit state)
+# Abort all OneShots (for use when entering a Hit state, etc.)
 func _abort_all_oneshots() -> void:
 	if not _tree:
 		return
+
+	# Iterate through all known animation tree parameters
 	for name in _param_names:
+		# 1. Find the one-shots that are currently active
 		if name.ends_with("/active") and bool(_tree.get(name)):
-			_tree.set(name, false)
+			# 2. Construct the path to its "request" parameter
+			var request_path = name.replace("/active", "/request")
+
+			# 3. Send the abort signal (-1) to the request path
+			#    It's good practice to check if it exists first.
+			if _param_exists(request_path):
+				# Using the enum is cleaner than using -1 directly
+				_tree.set(request_path, 2) # Use 2 for ONE_SHOT_REQUEST_ABORT

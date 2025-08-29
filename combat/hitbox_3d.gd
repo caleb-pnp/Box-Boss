@@ -24,12 +24,17 @@ var _timer_activate: Timer = null
 var _shape_cs: CollisionShape3D = null
 var _box: BoxShape3D = null
 
+var _attack_instance_id: int = 0
+var _attack_id_counter: int = 1 # static/global if you want unique across all hitboxes
+
 # --- Public API ---
 func activate_for_attack(attack_id: StringName, spec: Resource, impact_force: float) -> void:
 	_active = true
 	monitoring = true
 	_attack_id = attack_id
 	_impact_force = impact_force
+	_attack_instance_id = _attack_id_counter
+	_attack_id_counter += 1
 	configure_from_spec(spec)
 	var start_off: float = 0.05
 	var end_off: float = 0.20
@@ -139,7 +144,7 @@ func _try_apply_hit(target_hurtbox: Hurtbox3D, now_time: float) -> void:
 	if target_hurtbox == null or not is_instance_valid(target_hurtbox):
 		return
 	if target_hurtbox.has_method("receive_hit"):
-		target_hurtbox.receive_hit(character, _spec, _impact_force)
+		target_hurtbox.receive_hit(character, _spec, _impact_force, _attack_instance_id)
 	else:
 		_log("target missing apply_hit(attacker, spec, force)")
 

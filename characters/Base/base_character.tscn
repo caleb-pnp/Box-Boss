@@ -64,6 +64,10 @@ shape = SubResource("CapsuleShape3D_q1v0g")
 collision_layer = 4
 collision_mask = 8
 script = ExtResource("5_q1v0g")
+debug_hitbox = null
+rehit_interval_sec = null
+max_rehits_per_target = null
+disable_shape_when_inactive = null
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox3D"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.75)

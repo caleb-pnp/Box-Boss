@@ -29,6 +29,10 @@ func on_hit_received(attacker, spec, impact_force) -> void:
 	if debug:
 		print("[HitResponseController] on_hit_received: attacker=%s, force=%.2f, spec=%s" % [str(attacker), impact_force, str(spec)])
 
+	# --- Cancel all attacks
+	if character.combat:
+		character.combat.cancel_attack()
+
 	# --- Determine stagger duration ---
 	var stagger_sec: float = 0.2
 	if spec and spec.stagger_sec != null:
@@ -51,11 +55,14 @@ func on_hit_received(attacker, spec, impact_force) -> void:
 	else:
 		anim_type = "body"
 
+
 	# --- Play hit animation ---
 	if character.animator and character.animator.has_method("play_hit"):
 		character.animator.play_hit(anim_type)
 		if debug:
 			print("[HitResponseController] Played hit animation: %s" % anim_type)
+
+
 
 	# --- Store previous state and set HIT_RESPONSE ---
 	_prev_state = character.state
@@ -82,20 +89,21 @@ func on_hit_received(attacker, spec, impact_force) -> void:
 	_mash_count = 0
 
 func handle_punch(source_id: int, force: float) -> void:
-	# Called by BaseCharacter when a punch is received during HIT_RESPONSE
-	_mash_count += 1
-	if debug:
-		print("[HitResponseController] handle_punch: mash_count=%d" % _mash_count)
-	if _mash_count >= mash_threshold:
-		# Allow break out: go to ATTACKING state
-		character.state = BaseCharacter.State.ATTACKING
-		if debug:
-			print("[HitResponseController] Mash threshold reached! Breaking out to ATTACKING.")
-		# Optionally reset hit response timers
-		_knockback_velocity = Vector3.ZERO
-		_knockback_until = 0.0
-		_stagger_until = 0.0
-		_mash_count = 0
+	return # no more break out
+	## Called by BaseCharacter when a punch is received during HIT_RESPONSE
+	#_mash_count += 1
+	#if debug:
+		#print("[HitResponseController] handle_punch: mash_count=%d" % _mash_count)
+	#if _mash_count >= mash_threshold:
+		## Allow break out: go to ATTACKING state
+		#character.state = BaseCharacter.State.ATTACKING
+		#if debug:
+			#print("[HitResponseController] Mash threshold reached! Breaking out to ATTACKING.")
+		## Optionally reset hit response timers
+		#_knockback_velocity = Vector3.ZERO
+		#_knockback_until = 0.0
+		#_stagger_until = 0.0
+		#_mash_count = 0
 
 func process(delta: float) -> void:
 	# If broken out, do nothing

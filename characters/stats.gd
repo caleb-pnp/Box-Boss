@@ -31,7 +31,9 @@ func regenerate_stamina(delta: float) -> void:
 func take_damage(amount: int) -> void:
 	if amount <= 0:
 		return
+	print("Taking damage:", amount, "Current health:", health)
 	health = max(0, health - amount)
+	print("Health after:", health)
 	emit_signal("health_changed", health, max_health)
 	if health == 0:
 		emit_signal("died")

@@ -1,6 +1,8 @@
 extends Node
 class_name CombatController
 
+signal attack_queued(display_name: String, force: float)
+
 @export var max_attack_setup_time: float = 2.0
 @export var retreat_distance: float = 1.0
 @export var retreat_duration: float = 1.5
@@ -72,6 +74,12 @@ func handle_punch(source_id: int, force: float) -> void:
 			if phase == Phase.NONE:
 				_process_attack_queue()
 
+		# --- Emit attack_queued signal for HUD ---
+		if character and character.attack_library:
+			var spec = character.attack_library.get_spec(attack_id)
+			var display_name = spec.display_name if spec and "display_name" in spec else String(attack_id)
+			emit_signal("attack_queued", display_name, force)
+
 func _on_chase_success():
 	print("Chase succeeded! Begin attack.")
 	_finalize_combo_and_swing()
@@ -80,13 +88,17 @@ func _on_chase_failed():
 	_log("Chase failed (timeout). Optionally attack and miss or abort.")
 	_finalize_combo_and_swing()
 
-func queue_attack(attack_id: StringName, force: float = 0.0) -> void:
-	if String(attack_id) == "":
-		return
-	var now := _now()
-	var entry = { "id": attack_id, "queued_at": now, "force": force }
-	attack_queue.append(entry)
-	_log("CombatController: Attack queued: %s" % String(attack_id))
+func cancel_attack():
+	# Cancel any attack in progress, including hitboxes and queued attacks
+	phase = Phase.NONE
+	attack_queue.clear()
+	chase_window_attacks.clear()
+	current_attack = {}
+	if character and character.hitbox:
+		character.hitbox.deactivate()
+		_log("CombatController: Attack cancelled and hitbox deactivated.")
+	else:
+		_log("CombatController: Attack cancelled.")
 
 func _process_attack_queue() -> void:
 	if attack_queue.is_empty():
