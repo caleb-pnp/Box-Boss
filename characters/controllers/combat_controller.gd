@@ -1,43 +1,42 @@
 extends Node
 class_name CombatController
 
-@export var max_attack_setup_time: float = 5.0
-@export var combo_close_window_time: float = 0.5
-@export var combo_close_window_max_time: float = 5.0
-@export var combo_close_window_extension_time: float = 0.3
-@export var retreat_buffer: float = 0.15
+@export var max_attack_setup_time: float = 2.0
+@export var retreat_distance: float = 1.0
+@export var retreat_duration: float = 1.5
 
 var character: BaseCharacter = null
 
 # --- Attack Queue and Combo State ---
 var attack_queue: Array = []
 var current_attack: Dictionary = {}
-var setup_target_position: Vector3 = Vector3.ZERO
-var setup_start_time: float = 0.0
-var setup_window_attacks: Array = []
-var setup_window_open: bool = false
-var setup_window_close_time: float = 0.0
-var setup_window_last_attack_time: float = 0.0
-var setup_option: String = "instant" # "fixed", "closing", "instant", "sliding"
+var chase_window_attacks: Array = []
 
 # --- Attack Phases ---
-enum Phase { NONE, SETUP, SWING, POST_SWING, RETREAT, REPOSITION }
+enum Phase { NONE, CHASE, SWING, POST_SWING, RETREAT }
 var phase: int = Phase.NONE
 var phase_until: float = 0.0
 
-var debug_enabled: bool = false
+var debug_enabled: bool = true
 var debug_combos: bool = false
 
+func setup(character_ref):
+	character = character_ref
+	character.connect("chase_success", Callable(self, "_on_chase_success"))
+	character.connect("chase_failed", Callable(self, "_on_chase_failed"))
+	character.connect("retreat_success", Callable(self, "_on_retreat_success"))
+	character.connect("retreat_failed", Callable(self, "_on_retreat_failed"))
+
+func _ready() -> void:
+	pass
 
 func reset() -> void:
 	attack_queue.clear()
 	current_attack = {}
-	setup_window_attacks.clear()
-	setup_window_open = false
+	chase_window_attacks.clear()
 	phase = Phase.NONE
 	phase_until = 0.0
 	if character:
-		character.stop_movement()
 		if character.hitbox:
 			character.hitbox.deactivate()
 		_log("CombatController: Reset and deactivated hitbox.")
@@ -50,25 +49,36 @@ func process(delta: float) -> void:
 	match phase:
 		Phase.NONE:
 			_process_attack_queue()
-		Phase.SETUP:
-			_process_setup_phase()
+		Phase.CHASE:
+			pass # do nothing hear, signal driven
 		Phase.SWING:
 			_process_swing_phase()
 		Phase.POST_SWING:
 			_process_post_swing_phase()
 		Phase.RETREAT:
 			_process_retreat_phase()
-		Phase.REPOSITION:
-			_process_reposition_phase()
 
-# --- Handle Punch Input (from BaseCharacter) ---
 func handle_punch(source_id: int, force: float) -> void:
 	if not character or not character.round_active or character.state == character.State.KO:
 		return
 	var attack_id: StringName = _select_attack_by_force_from_set(force)
 	if String(attack_id) != "":
 		_log("CombatController: Queued attack from punch input: %s (force=%.2f)" % [String(attack_id), force])
-		queue_attack(attack_id, force)
+		var entry = { "id": attack_id, "queued_at": _now(), "force": force }
+		if phase == Phase.CHASE:
+			chase_window_attacks.append(entry)
+		else:
+			attack_queue.append(entry)
+			if phase == Phase.NONE:
+				_process_attack_queue()
+
+func _on_chase_success():
+	print("Chase succeeded! Begin attack.")
+	_finalize_combo_and_swing()
+
+func _on_chase_failed():
+	_log("Chase failed (timeout). Optionally attack and miss or abort.")
+	_finalize_combo_and_swing()
 
 func queue_attack(attack_id: StringName, force: float = 0.0) -> void:
 	if String(attack_id) == "":
@@ -76,115 +86,40 @@ func queue_attack(attack_id: StringName, force: float = 0.0) -> void:
 	var now := _now()
 	var entry = { "id": attack_id, "queued_at": now, "force": force }
 	attack_queue.append(entry)
-	if setup_window_open:
-		setup_window_attacks.append(entry)
 	_log("CombatController: Attack queued: %s" % String(attack_id))
 
-# --- Main Attack Queue Processing ---
 func _process_attack_queue() -> void:
 	if attack_queue.is_empty():
 		return
 
-	# Pop the oldest attack and start setup
 	current_attack = attack_queue.pop_front()
-	if character.target_node:
-		setup_target_position = character.target_node.global_position
-	else:
-		setup_target_position = character.global_position
-	setup_start_time = _now()
-	setup_window_attacks = [current_attack]
-	setup_window_open = true
-	setup_window_close_time = setup_start_time + max_attack_setup_time
-	phase = Phase.SETUP
-	_log("CombatController: Started setup phase for attack: %s" % String(current_attack.get("id", "")))
+	chase_window_attacks.clear()
+	_log("CombatController: Started chase phase for attack: %s" % String(current_attack.get("id", "")))
 
-# --- Setup Phase ---
-func _process_setup_phase() -> void:
-	var now := _now()
-	var target_pos = character.target_node.global_position if character.target_node else setup_target_position
 	var attack_id = current_attack.get("id", "")
 	var enter_distance = _get_attack_enter_distance(attack_id)
-	var min_distance = _get_attack_min_distance(attack_id)
-	var to_target = target_pos - character.global_position
-	to_target.y = 0.0
-	var dist = to_target.length()
-	var buffer = 0.15
-	var arrived = dist <= enter_distance + buffer and dist >= min_distance - buffer
+	var timeout = max_attack_setup_time
+	character.start_chase(enter_distance, timeout)
+	phase = Phase.CHASE
 
-	_face_target()
 
-	if dist > enter_distance + buffer:
-		var approach_pos = target_pos - to_target.normalized() * enter_distance
-		character.move_towards_point(approach_pos, 1.0, true)
-	elif dist < min_distance - buffer:
-		_log("SETUP PHASE: Too close for attack %s, entering REPOSITION phase (dist=%.3f < min=%.3f)" % [str(attack_id), dist, min_distance - buffer])
-		phase = Phase.REPOSITION
-		return
-	else:
-		character.stop_movement()
-
-	# Combo window logic
-	if setup_option == "fixed":
-		if arrived or now - setup_start_time >= max_attack_setup_time:
-			_finalize_combo_and_swing()
-	elif setup_option == "closing":
-		if arrived:
-			if not setup_window_open:
-				setup_window_open = true
-				setup_window_close_time = now + combo_close_window_time
-			elif now >= setup_window_close_time or (now - setup_start_time) >= combo_close_window_max_time:
-				_finalize_combo_and_swing()
-		else:
-			setup_window_close_time = now + combo_close_window_time
-	elif setup_option == "instant":
-		if arrived:
-			_finalize_combo_and_swing()
-	elif setup_option == "sliding":
-		if not arrived:
-			# Move smoothly toward the spot
-			var approach_pos = target_pos - to_target.normalized() * enter_distance
-			character.move_towards_point(approach_pos, 1.0, true)
-			return
-
-		# Arrived at attack spot
-		if not setup_window_open:
-			setup_window_open = true
-			setup_start_time = now
-			setup_window_close_time = now + combo_close_window_time
-			setup_window_last_attack_time = now
-			character.stop_movement()
-
-		# If a new punch is queued, extend the window (but not beyond max time)
-		if attack_queue.size() > 0:
-			setup_window_close_time = min(
-				now + combo_close_window_extension_time,
-				setup_start_time + combo_close_window_max_time
-			)
-			setup_window_last_attack_time = now
-			attack_queue.clear() # Move attacks to setup_window_attacks as usual
-
-		# Always check if the close time has elapsed
-		if now >= setup_window_close_time or (now - setup_start_time) >= combo_close_window_max_time:
-			_finalize_combo_and_swing()
-
-	_log("SETUP PHASE: attack_id=%s, dist=%.3f, min_distance=%.3f, enter_distance=%.3f" % [str(attack_id), dist, min_distance, enter_distance])
 func _finalize_combo_and_swing() -> void:
-	setup_window_open = false
-	var combo = _calculate_combo(setup_window_attacks)
-	if debug_combos:
-		print("[ComboDebug] Combo result: ", combo)
+	var all_attacks = [current_attack] + chase_window_attacks
+	var combo = _calculate_combo(all_attacks)
 	if combo.has("combo_id"):
 		_log("CombatController: Combo detected: %s" % String(combo["combo_id"]))
 		current_attack = combo
 		_start_swing(combo)
 	else:
-		var best = _pick_biggest_force_attack(setup_window_attacks)
+		var best = _pick_biggest_force_attack(chase_window_attacks)
 		_log("CombatController: No combo, using biggest force attack: %s" % String(best.get("id", "")))
 		current_attack = best
 		_start_swing(best)
-	setup_window_attacks.clear()
 	phase = Phase.SWING
 	phase_until = _now() + _get_swing_duration(current_attack)
+	chase_window_attacks.clear()
+	current_attack = {}
+
 	if debug_combos:
 		print("[CombatController] SWING: attack_id=%s, swing_time_sec=%.2f" % [
 			str(current_attack.get("id", "")),
@@ -364,104 +299,52 @@ func _select_attack_by_force_from_set(force: float) -> StringName:
 	_log("CombatController: Selected attack by force (below): %s" % String(below[0]["id"]))
 	return below[0]["id"]
 
-# --- Swing Phase ---
 func _process_swing_phase() -> void:
 	var now := _now()
-	character.stop_movement()
 	if now >= phase_until:
 		phase = Phase.POST_SWING
-		phase_until = now + 0.3 # Post-swing freeze
-		# Deactivate hitbox at end of swing
+		phase_until = now + 0.3
 		if character.hitbox:
 			character.hitbox.deactivate()
 			_log("CombatController: Hitbox deactivated at end of swing.")
 
-# --- Post-Swing Phase ---
 func _process_post_swing_phase() -> void:
 	var now := _now()
-	character.stop_movement()
 	if now >= phase_until:
-		character.move_locked = false
 		phase = Phase.RETREAT
-		phase_until = now + 1.0 # Optional: max time to try retreating
-		# Deactivate hitbox at end of swing
+		phase_until = now + retreat_duration
 		if character.hitbox:
 			character.hitbox.deactivate()
 			_log("CombatController: Hitbox deactivated at end of swing.")
 
-
-# --- Retreat Phase ---
 func _process_retreat_phase() -> void:
-	var now := _now()
-	var desired_space = 2.5 # meters
-	var max_retreat_dist = 5.0 # safety: don't chase forever
-	var buffer = retreat_buffer
-
 	if not character or not character.target_node:
 		phase = Phase.NONE
 		if character:
 			character.on_attack_finished()
 		return
 
-	var char_pos = character.global_position
-	var target_pos = character.target_node.global_position
-	var to_target = target_pos - char_pos
-	to_target.y = 0.0
-	var dist = to_target.length()
+	# Only start retreat if not already retreating
+	if not character.retreating:
+		var desired_space = retreat_distance # meters
+		var timeout = retreat_duration # seconds, adjust as needed
+		character.start_retreat(desired_space, timeout)
+		_log("RETREAT PHASE: Started retreat to %.2f meters for %.2f seconds" % [desired_space, timeout])
+	# Do nothing else; wait for retreat_success or retreat_failed signals
 
-	_log("RETREAT PHASE: char_pos=%s, target_pos=%s, to_target=%s, dist=%.3f" % [str(char_pos), str(target_pos), str(to_target), dist])
+func _on_retreat_success():
+	_log("RETREAT: Success, reached desired distance.")
+	character.stop_retreat()
+	phase = Phase.NONE
+	if character:
+		character.on_attack_finished()
 
-	if dist < desired_space - buffer and dist < max_retreat_dist:
-		var retreat_dir = -to_target.normalized()
-		var retreat_amount = max(desired_space - dist, 0.3)
-		var retreat_vec = retreat_dir * retreat_amount
-		var retreat_pos = char_pos + retreat_vec
-		_log("RETREAT: retreat_dir=%s, retreat_amount=%.3f, retreat_vec=%s, retreat_pos=%s" % [str(retreat_dir), retreat_amount, str(retreat_vec), str(retreat_pos)])
-		character.move_towards_point(retreat_pos, 0.5, true)
-	else:
-		_log("RETREAT: stopping, final dist=%.3f" % dist)
-		character.stop_movement()
-		phase = Phase.NONE
-		if character:
-			character.on_attack_finished()
-		return
-
-	# Safety: timeout
-	if now >= phase_until:
-		_log("RETREAT: timeout, stopping movement")
-		character.stop_movement()
-		phase = Phase.NONE
-		if character:
-			character.on_attack_finished()
-
-# --- Reposition Phase ---
-func _process_reposition_phase() -> void:
-	var attack_id = current_attack.get("id", "")
-	var min_distance = _get_attack_min_distance(attack_id)
-	var buffer = 0.1
-	if not character or not character.target_node:
-		phase = Phase.NONE
-		return
-
-	var char_pos = character.global_position
-	var target_pos = character.target_node.global_position
-	var to_target = target_pos - char_pos
-	to_target.y = 0.0
-	var dist = to_target.length()
-
-	_log("REPOSITION PHASE: char_pos=%s, target_pos=%s, to_target=%s, dist=%.3f, min_distance=%.3f" % [str(char_pos), str(target_pos), str(to_target), dist, min_distance])
-
-	if dist < min_distance - buffer:
-		var retreat_dir = -to_target.normalized()
-		var retreat_amount = max(min_distance - dist, 0.3)
-		var retreat_vec = retreat_dir * retreat_amount
-		var retreat_pos = char_pos + retreat_vec
-		_log("REPOSITION: retreat_dir=%s, retreat_amount=%.3f, retreat_vec=%s, retreat_pos=%s" % [str(retreat_dir), retreat_amount, str(retreat_vec), str(retreat_pos)])
-		character.move_towards_point(retreat_pos, 1.0, true)
-	else:
-		_log("REPOSITION: reached min launch distance, returning to SETUP phase")
-		character.stop_movement()
-		phase = Phase.SETUP
+func _on_retreat_failed():
+	_log("RETREAT: Failed (timeout).")
+	character.stop_retreat()
+	phase = Phase.NONE
+	if character:
+		character.on_attack_finished()
 
 # --- Utility ---
 func _now() -> float:
@@ -473,8 +356,6 @@ func _log(msg: String) -> void:
 
 # --- Swing Logic ---
 func _start_swing(attack: Dictionary) -> void:
-	if character:
-		character.move_locked = true
 	var attack_id = attack.get("id", "")
 	if character.animator and character.animator.has_method("play_attack_id") and attack_id != "":
 		character.animator.play_attack_id(attack_id)
@@ -487,22 +368,6 @@ func _start_swing(attack: Dictionary) -> void:
 			character.hitbox.attacker = character
 			character.hitbox.activate_for_attack(attack_id, spec, impact_force)
 			_log("CombatController: Hitbox activated for attack: %s (force=%.2f)" % [String(attack_id), impact_force])
-
-func _face_target() -> void:
-	if not character or not character.has_target or character.target_node == null:
-		return
-	var to_target = character.target_node.global_position - character.global_position
-	to_target.y = 0.0
-	if to_target.length() < 0.01:
-		return
-	var desired_yaw = atan2(-to_target.x, -to_target.z)
-	var current_yaw = character.rotation.y
-	var max_step = deg_to_rad(character.turn_speed_deg) * get_process_delta_time()
-	var diff = wrapf(desired_yaw - current_yaw, -PI, PI)
-	if absf(diff) <= max_step:
-		character.rotation.y = desired_yaw
-	else:
-		character.rotation.y = current_yaw + clampf(diff, -max_step, max_step)
 
 
 func _get_attack_enter_distance(attack_id: StringName) -> float:
