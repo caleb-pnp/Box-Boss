@@ -39,13 +39,13 @@ class_name AttackSpec
 @export var min_damage: float = 5.0
 @export var max_damage: float = 25.0
 @export var stagger_sec: float = 0.2
-@export var knockback_meters: float = 0.5
-@export var knockback_duration_sec: float = 0.5
+@export var knockback_velocity: float = 5 # meters/second
+@export var knockback_duration : float = 0.25 # seconds
 
 @export_category("Hitbox Timing")
-@export var active_start_sec: float = 0.25 # when the hitbox becomes active in the attack
-@export var active_end_sec: float = 1.25    # when it stops being active
-@export var rehit_interval_sec: float = 0.50  # if overlapping, how often to re-apply a hit
+@export var active_start_sec: float = 0.5 # when the hitbox becomes active in the attack
+@export var active_end_sec: float = 1.0    # when it stops being active
+@export var rehit_interval_sec: float = 0.25  # if overlapping, how often to re-apply a hit
 @export var max_rehits_per_target: int = 1    # safety limit for multi-hit attacks
 
 # Optional: add _to_string for debugging

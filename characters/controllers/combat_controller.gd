@@ -17,8 +17,8 @@ enum Phase { NONE, CHASE, SWING, POST_SWING, RETREAT }
 var phase: int = Phase.NONE
 var phase_until: float = 0.0
 
-var debug_enabled: bool = true
-var debug_combos: bool = false
+var debug_enabled: bool = false
+var debug_combos: bool = true
 
 func setup(character_ref):
 	character = character_ref

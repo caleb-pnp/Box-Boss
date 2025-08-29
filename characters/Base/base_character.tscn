@@ -51,18 +51,18 @@ script = ExtResource("5_5df2l")
 [node name="Stats" type="Node" parent="."]
 script = ExtResource("11_a2t2k")
 
-[node name="Hurtbox3D" type="Area3D" parent="." node_paths=PackedStringArray("owner_character")]
-collision_layer = 4
-collision_mask = 2
+[node name="Hurtbox3D" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 4
+monitoring = false
 script = ExtResource("4_4ts41")
-owner_character = NodePath("..")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hurtbox3D"]
 shape = SubResource("CapsuleShape3D_q1v0g")
 
 [node name="Hitbox3D" type="Area3D" parent="."]
-collision_layer = 2
-collision_mask = 4
+collision_layer = 4
+collision_mask = 8
 script = ExtResource("5_q1v0g")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Hitbox3D"]

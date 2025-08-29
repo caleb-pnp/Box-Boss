@@ -33,7 +33,6 @@ var has_target: bool = false
 var target_mode: int = TargetMode.NONE
 
 var agent: NavigationAgent3D = null
-var stats: Node = null
 
 var round_active: bool = false
 var arena_center: Vector3 = Vector3.ZERO
@@ -62,6 +61,7 @@ func set_input_source_id(id: int) -> void:
 @onready var hitbox: Hitbox3D = $Hitbox3D
 @onready var hurtbox: Hurtbox3D = $Hurtbox3D
 @onready var nav_agent: NavigationAgent3D = $NavigationAgent3D
+@onready var stats: Stats = $Stats
 
 # --- Internal Variables ---
 var debug_enabled: bool = false
@@ -77,6 +77,8 @@ func _ready():
 	auto_move.setup(self)
 	combat.setup(self)
 	hit_response.character = self
+	hitbox.character = self
+	hurtbox.character = self
 
 	# connect punch input to self
 	_connect_punch_input()
@@ -99,9 +101,11 @@ func _physics_process(delta):
 	_dbg("_physics_process: state=%s" % str(state))
 	match state:
 		State.HIT_RESPONSE:
-			pass
-			#_dbg("_physics_process: HIT_RESPONSE, calling hit_response.process")
-			#hit_response.process(delta)
+			_dbg("_physics_process: HIT_RESPONSE, calling hit_response.process")
+			hit_response.process(delta)
+			move_and_slide()
+			update_locomotion_animation()
+			return
 		State.ATTACKING:
 			_dbg("_physics_process: ATTACKING, calling combat.process")
 			combat.process(delta)
@@ -109,6 +113,7 @@ func _physics_process(delta):
 			_dbg("_physics_process: AUTO_MOVE, calling auto_move.process")
 			auto_move.process(delta)
 			move_and_slide()
+			update_locomotion_animation()
 			return
 		State.IDLE:
 			_dbg("_physics_process: IDLE")
@@ -300,7 +305,6 @@ func strafe_around_point(target: Vector3, strafe_dir: float, speed_scale: float 
 
 # Stop all movement
 func stop_movement() -> void:
-	print("Stop Movement")
 	_dbg("stop_movement: velocity set to zero")
 	velocity.x = 0.0
 	velocity.z = 0.0

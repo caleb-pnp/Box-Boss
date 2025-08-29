@@ -1,18 +1,33 @@
 extends Area3D
 class_name Hitbox3D
 
-# Layers: must match Hurtbox3D
-const LAYER_HITBOX := 2
-const LAYER_HURTBOX := 3
-
 @export var attacker: Node = null
-@export var debug_hitbox: bool = false
+@export var debug_hitbox: bool = true
 @export var rehit_interval_sec: float = 0.25
 @export var max_rehits_per_target: int = 4
 @export var disable_shape_when_inactive: bool = true
 
+var character: BaseCharacter = null
+
+# --- Internal/Private (unchanged from your version) ---
+
+var _active: bool = false
+var _active_until: float = 0.0
+var _activation_delay_sec: float = 0.0
+var _activation_duration_sec: float = 0.0
+var _rehit_next_time: Dictionary = {}
+var _rehit_count: Dictionary = {}
+var _attack_id: StringName = &""
+var _spec: Resource = null # the current hit spec
+var _impact_force: float = 0.0 # the current hit impact force
+var _timer_activate: Timer = null
+var _shape_cs: CollisionShape3D = null
+var _box: BoxShape3D = null
+
 # --- Public API ---
 func activate_for_attack(attack_id: StringName, spec: Resource, impact_force: float) -> void:
+	_active = true
+	monitoring = true
 	_attack_id = attack_id
 	_impact_force = impact_force
 	configure_from_spec(spec)
@@ -63,20 +78,7 @@ func set_reach_meters(reach_m: float) -> void:
 	_shape_cs.transform = xf
 	_log("reach set -> size.z=" + str(reach_m) + " offset.z=" + str(xf.origin.z))
 
-# --- Internal/Private (unchanged from your version) ---
 
-var _active: bool = false
-var _active_until: float = 0.0
-var _activation_delay_sec: float = 0.0
-var _activation_duration_sec: float = 0.0
-var _rehit_next_time: Dictionary = {}
-var _rehit_count: Dictionary = {}
-var _attack_id: StringName = &""
-var _spec: Resource = null
-var _impact_force: float = 0.0
-var _timer_activate: Timer = null
-var _shape_cs: CollisionShape3D = null
-var _box: BoxShape3D = null
 
 func _log(msg: String) -> void:
 	if debug_hitbox:
@@ -86,18 +88,11 @@ func _log(msg: String) -> void:
 		print("[Hitbox] ", msg, " | atk=", atk_path)
 
 func _ready() -> void:
-	monitoring = false
-	monitorable = true
-	set_collision_layer_value(LAYER_HITBOX, true)
-	set_collision_mask_value(LAYER_HURTBOX, true)
 	_find_predefined_shape()
-	connect("area_entered", Callable(self, "_on_area_entered"))
 	_timer_activate = Timer.new()
 	_timer_activate.one_shot = true
 	add_child(_timer_activate)
 	_timer_activate.connect("timeout", Callable(self, "_on_activation_timer_timeout"))
-	set_physics_process(true)
-	_log("ready()")
 
 func _find_predefined_shape() -> void:
 	_shape_cs = null
@@ -134,37 +129,17 @@ func _physics_process(delta: float) -> void:
 	var areas := get_overlapping_areas()
 	for area in areas:
 		var hb := area as Hurtbox3D
-		if hb == null or hb.owner_character == null:
+		if hb == null or hb.character == null:
 			continue
-		if attacker != null and hb.owner_character == attacker:
+		if attacker != null and hb.character == attacker:
 			continue
-		_try_apply_hit(hb.owner_character, now_time)
+		_try_apply_hit(hb, now_time)
 
-func _on_area_entered(area: Area3D) -> void:
-	if not _active:
+func _try_apply_hit(target_hurtbox: Hurtbox3D, now_time: float) -> void:
+	if target_hurtbox == null or not is_instance_valid(target_hurtbox):
 		return
-	var hb := area as Hurtbox3D
-	if hb == null or hb.owner_character == null:
-		return
-	if attacker != null and hb.owner_character == attacker:
-		return
-	_try_apply_hit(hb.owner_character, Time.get_ticks_msec() / 1000.0)
-
-func _try_apply_hit(target: Node, now_time: float) -> void:
-	if target == null or not is_instance_valid(target):
-		return
-	var key := target.get_instance_id()
-	var next_ok: float = float(_rehit_next_time.get(key, -1.0))
-	var count: int = int(_rehit_count.get(key, 0))
-	if count >= max_rehits_per_target:
-		return
-	if next_ok >= 0.0 and now_time < next_ok:
-		return
-	_rehit_next_time[key] = now_time + rehit_interval_sec
-	_rehit_count[key] = count + 1
-	if target.has_method("receive_hit"):
-		_log("HIT -> " + str(target.get_path()) + " #" + str(_rehit_count[key]) + " force=" + str(_impact_force))
-		target.receive_hit(attacker, _spec, _impact_force)
+	if target_hurtbox.has_method("receive_hit"):
+		target_hurtbox.receive_hit(character, _spec, _impact_force)
 	else:
 		_log("target missing apply_hit(attacker, spec, force)")
 
