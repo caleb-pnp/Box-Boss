@@ -106,16 +106,10 @@ func _physics_process(delta):
 			_dbg("_physics_process: ATTACKING, calling combat.process")
 			combat.process(delta)
 		State.AUTO_MOVE:
-			pass
-			#_dbg("_physics_process: AUTO_MOVE, calling auto_move.process")
-			#auto_move.process(delta)
-#
-			## Manual calculations
-			#move_and_slide()
-			## Always update animator
-			#if animator and animator.has_method("update_locomotion"):
-				#animator.update_locomotion(Vector2(velocity.x, velocity.z), velocity.length())
-			#return
+			_dbg("_physics_process: AUTO_MOVE, calling auto_move.process")
+			auto_move.process(delta)
+			move_and_slide()
+			return
 		State.IDLE:
 			_dbg("_physics_process: IDLE")
 			pass
@@ -164,7 +158,10 @@ func _physics_process(delta):
 
 	# move and slide
 	move_and_slide()
+	update_locomotion_animation()
 
+
+func update_locomotion_animation() -> void:
 	# --- CORRECTED ANIMATION UPDATE ---
 	if animator and animator.has_method("update_locomotion"):
 		# Only calculate if the character is actually moving
