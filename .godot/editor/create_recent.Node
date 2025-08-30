@@ -1,10 +1,10 @@
+Label
+Control
 Node
 Node3D
 CollisionShape3D
 Area3D
 StaticBody3D
-Label
-Control
 CanvasLayer
 Camera3D
 Marker3D

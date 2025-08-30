@@ -10,6 +10,7 @@ signal scene_command(command: String, args: Array)
 # Settings
 const SETTINGS_FILE_PATH = "user://client_settings.tres"
 var settings: ClientSettings
+var auto_host_join:bool = true
 
 # Network role
 enum NetworkRole { ROLE_NONE, ROLE_SERVER, ROLE_CLIENT }

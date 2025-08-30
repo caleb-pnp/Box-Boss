@@ -35,7 +35,7 @@ func take_damage(amount: int) -> void:
 	health = max(0, health - amount)
 	print("Health after:", health)
 	emit_signal("health_changed", health, max_health)
-	if health == 0:
+	if health <= 0:
 		emit_signal("died")
 
 func try_spend_stamina(cost: float) -> bool:

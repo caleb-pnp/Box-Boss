@@ -5,6 +5,7 @@ signal chase_success
 signal chase_failed
 signal retreat_success
 signal retreat_failed
+signal knocked_out
 
 enum State { IDLE, AUTO_MOVE, ATTACKING, HIT_RESPONSE, KO }
 enum TargetMode { NONE, MOVE, FIGHT }
@@ -79,6 +80,7 @@ func _ready():
 	hit_response.character = self
 	hitbox.character = self
 	hurtbox.character = self
+	stats.connect("died", _on_died)
 
 	# connect punch input to self
 	_connect_punch_input()
@@ -96,6 +98,27 @@ func _connect_punch_input() -> void:
 	else:
 		if debug_enabled:
 			_dbg("[BC] PunchInput autoload not found at /root/PunchInput")
+
+func _on_died() -> void:
+	# only die once
+	if state == State.KO:
+		return
+
+	# set state to KO
+	state = State.KO
+
+	# stop everything
+	stop_chase()
+	stop_movement()
+	stop_nav_agent()
+	stop_retreat()
+
+	# play animation
+	animator.play_ko()
+
+	# emit signal
+	knocked_out.emit()
+
 
 func _physics_process(delta):
 	_dbg("_physics_process: state=%s" % str(state))
@@ -120,7 +143,8 @@ func _physics_process(delta):
 			pass
 		State.KO:
 			_dbg("_physics_process: KO")
-			pass
+			# dead, do nothing
+			return
 
 	if chasing and target_node:
 		_chase_timer += delta

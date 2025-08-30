@@ -1,4 +1,6 @@
-[gd_resource type="Theme" load_steps=8 format=3 uid="uid://bc7ta7mukaaxi"]
+[gd_resource type="Theme" load_steps=9 format=3 uid="uid://bc7ta7mukaaxi"]
+
+[ext_resource type="FontFile" uid="uid://5xos3lpqjchc" path="res://fonts/RussoOne-Regular.ttf" id="1_0avsd"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0avsd"]
 content_margin_left = 10.0
@@ -42,8 +44,9 @@ bg_color = Color(0.176471, 0.176471, 0.176471, 0.929412)
 bg_color = Color(0.133333, 0.133333, 0.133333, 0.917647)
 
 [resource]
+default_font = ExtResource("1_0avsd")
 Button/font_sizes/font_size = 18
-Button/fonts/font = null
+Button/fonts/font = ExtResource("1_0avsd")
 Button/styles/disabled = SubResource("StyleBoxFlat_0avsd")
 Button/styles/focus = SubResource("StyleBoxFlat_wykhr")
 Button/styles/hover = SubResource("StyleBoxFlat_78ekx")
@@ -58,10 +61,10 @@ Label/constants/shadow_offset_x = 0
 Label/constants/shadow_offset_y = 0
 Label/constants/shadow_outline_size = 0
 Label/font_sizes/font_size = 24
-Label/fonts/font = null
+Label/fonts/font = ExtResource("1_0avsd")
 Label/styles/normal = null
 LineEdit/font_sizes/font_size = 18
 PanelContainer/styles/panel = SubResource("StyleBoxFlat_k5u3e")
 TabContainer/font_sizes/font_size = 18
-TabContainer/fonts/font = null
+TabContainer/fonts/font = ExtResource("1_0avsd")
 TabContainer/styles/panel = SubResource("StyleBoxFlat_kx4sy")

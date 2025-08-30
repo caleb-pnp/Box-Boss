@@ -6,12 +6,14 @@ class_name FightHUD
 @export var overlay_layer_path: NodePath = ^"OverlayLayer"
 @export var countdown_node_path: NodePath = ^"OverlayLayer/CountdownOverlay"
 @export var stats_node_path: NodePath = ^"StatsLayer/VersusStats"
+@export var winner_banner_path: NodePath = ^"OverlayLayer/WinnerBanner"
 @export var canvas_layer_order: int = 10  # keep on top of other UI
 
 var _countdown: Node
 var _stats: Node
 var _stats_layer: Control
 var _overlay_layer: Control
+var _winner_banner: Control
 
 func _ready() -> void:
 	print("[FightHUD] _ready")
@@ -21,6 +23,8 @@ func _ready() -> void:
 	_overlay_layer = get_node_or_null(overlay_layer_path)
 	_countdown = get_node_or_null(countdown_node_path)
 	_stats = get_node_or_null(stats_node_path)
+	_winner_banner = get_node_or_null(winner_banner_path)
+
 
 	# Force full-rect layout for layers (handy if the scene wasn’t laid out in editor)
 	if _stats_layer:
@@ -29,6 +33,8 @@ func _ready() -> void:
 	if _overlay_layer:
 		_overlay_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 		_overlay_layer.visible = true
+	if _winner_banner:
+		_winner_banner.visible = false
 
 	print("[FightHUD] countdown node: ", str(_countdown))
 	print("[FightHUD] stats node: ", str(_stats))
@@ -61,6 +67,22 @@ func show_countdown(seconds: int = 5) -> void:
 		print("[FightHUD] show_countdown finished")
 	else:
 		print("[FightHUD][ERROR] Countdown node missing or no play() method")
+
+func show_winner_banner(text: String, duration: float = 5.0) -> void:
+	if not _winner_banner:
+		print("[FightHUD][ERROR] WinnerBanner node missing")
+		return
+	var label = _winner_banner.get_node_or_null("Label")
+	if not label:
+		print("[FightHUD][ERROR] WinnerBanner/Label node missing")
+		return
+	label.text = text
+	_winner_banner.visible = true
+	_winner_banner.modulate.a = 1.0
+	# Fade out after duration
+	var tween = create_tween()
+	tween.tween_property(_winner_banner, "modulate:a", 0.0, 0.5).set_delay(duration)
+	tween.tween_callback(Callable(_winner_banner, "hide"))
 
 func set_timer_seconds_left(seconds_left: int) -> void:
 	if _stats and _stats.has_method("set_timer"):

@@ -36,7 +36,7 @@ layout_mode = 2
 size_flags_vertical = 10
 theme_override_font_sizes/font_size = 48
 theme_override_styles/normal = SubResource("StyleBoxEmpty_xkvi0")
-text = "Game Template"
+text = "Box Boss"
 
 [node name="VBox_Main_Menu" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2

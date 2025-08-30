@@ -21,6 +21,7 @@ class_name VersusModeController
 @export var fight_hud_scene: PackedScene = preload("res://gui/fight_hud.tscn")
 @export var use_countdown: bool = true
 @export_range(1, 10, 1) var countdown_seconds: int = 5
+@export var winner_countdown: float = 8.0
 
 var _players_param: Array[Dictionary] = []
 var _map_id: StringName = &""
@@ -28,6 +29,7 @@ var _map_instance: Node3D = null
 var _spawned: Array[BaseCharacter] = []
 
 var _hud: Node = null     # FightHUD instance (CanvasLayer). We call by method-name to avoid hard type deps.
+
 
 func _init() -> void:
 	requires_map_ready = true
@@ -222,7 +224,6 @@ func _pair_targets() -> void:
 # -------------------------------------------------------
 func _spawn_players_from_boxer_data() -> void:
 	_spawned.clear()
-
 	if not _map_instance:
 		push_warning("[VersusMode] No map instance; cannot spawn players.")
 		return
@@ -298,6 +299,8 @@ func _spawn_players_from_boxer_data() -> void:
 						break
 
 			_spawned.append(actor)
+			if actor.has_signal("knocked_out"):
+				actor.connect("knocked_out", Callable(self, "_on_fighter_knocked_out").bind(actor))
 			print("[VersusMode] Spawned OK: ", actor.name, " at ", str(pose.origin))
 		else:
 			push_warning("[VersusMode] Could not find BaseCharacter in boxer scene for " + String(char_id))
@@ -306,6 +309,45 @@ func _spawn_players_from_boxer_data() -> void:
 		push_warning("[VersusMode] No players spawned. Check boxer data and parameters.")
 	else:
 		print("[VersusMode] Total spawned actors: ", str(_spawned.size()))
+
+func _on_fighter_knocked_out(actor: BaseCharacter) -> void:
+	print("[VersusMode] Fighter knocked out: ", actor.name)
+	_check_for_winner()
+
+func _check_for_winner() -> void:
+	var alive := []
+	for c in _spawned:
+		if c.state != c.State.KO:
+			alive.append(c)
+	if alive.size() == 1:
+		var winner = alive[0]
+		print("[VersusMode] WINNER: ", winner.name)
+		_announce_winner_and_restart(winner)
+	elif alive.size() == 0:
+		print("[VersusMode] No fighters left! Draw?")
+		_announce_winner_and_restart(null)
+
+func _announce_winner_and_restart(winner: BaseCharacter) -> void:
+	var winner_name = winner.name if winner else "No one"
+	var winner_num = ""
+	if winner and winner.name.begins_with("Player_"):
+		winner_num = winner.name.substr(7)
+	else:
+		winner_num = winner_name
+
+	# Show winner message on HUD if available
+	if _hud and _hud.has_method("show_winner_banner"):
+		_hud.show_winner_banner("Player %s Wins!" % winner_num, winner_countdown)
+		await get_tree().create_timer(winner_countdown).timeout
+	else:
+		print("Player %s Wins!" % winner_num)
+		await get_tree().create_timer(winner_countdown).timeout
+
+	# Restart the game
+	if Main and Main.instance and Main.instance.has_method("execute_command"):
+		Main.instance.execute_command("restart")
+	else:
+		print("[VersusMode] Could not restart game: Main.instance missing or invalid.")
 
 func _apply_attack_selection(actor: BaseCharacter, player_params: Dictionary) -> void:
 	if attack_library_default and actor.attack_library == null:

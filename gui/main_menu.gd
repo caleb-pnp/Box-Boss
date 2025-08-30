@@ -5,6 +5,9 @@ extends Control
 func _ready() -> void:
 	_hide_all_submenus()
 
+	if Main.instance.auto_host_join:
+		_on_button_start_game_pressed.call_deferred()
+
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:

@@ -2,9 +2,9 @@ extends GameControllerBase
 class_name PreFightController
 
 @export var char_select_sec: float = 5
-@export var set_select_sec: float = 1
-@export var mode_select_sec: float = 1
-@export var map_select_sec: float = 1
+@export var set_select_sec: float = 5
+@export var mode_select_sec: float = 5
+@export var map_select_sec: float = 5
 @export var summary_sec: float = 1
 
 @export var boxer_library: BoxerLibrary = preload("res://data/BoxerLibrary.tres")
@@ -135,6 +135,13 @@ func on_map_ready(_map_instance: Node3D) -> void:
 
 func tick(delta: float) -> void:
 	if _phase == Phase.DONE and _did_launch:
+		return
+
+	# --- Wait for at least 2 players before starting countdown ---
+	if _phase == Phase.CHARACTER and _players.size() < 2:
+		if _view:
+			_view.set_phase("Waiting for players...")
+			_view.set_timer(0)
 		return
 
 	_time_left = max(0.0, _time_left - delta)
